@@ -1,0 +1,93 @@
+# Use postgres/example user/password credentials
+version: '3.9'
+
+services:
+  auth_service:
+    container_name: auth_service
+    build: ./auth_service
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8001:8000"
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    networks:
+      - transcendence_network
+
+  game_service:
+    container_name: game_service
+    build: ./game_service
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8002:8000"
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      auth_service:
+        condition: service_healthy
+    networks:
+      - transcendence_network
+
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - "3000:80"
+    networks:
+      - transcendence_network
+
+  # Postgres database
+  auth_db:
+    container_name: container_postgres
+    image: postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_AUTH_DB}
+    restart: unless-stopped
+    networks:
+      - transcendence_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}" , "-d", "${POSTGRES_AUTH_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth_db_test:
+    container_name: container_postgres_test
+    image: postgres
+    env_file:
+      - .env
+    hostname: localhost
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_AUTH_DB}
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}" , "-d", "${POSTGRES_AUTH_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    container_name: adminer_container
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - transcendence_network
+
+
+networks:
+  transcendence_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+```
