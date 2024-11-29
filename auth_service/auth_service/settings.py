@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 import json
@@ -25,14 +26,21 @@ with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1!%)%g6uqf7$_a99#l)k&=_qxjcz066zlvs_)m_yiwf$1&i^$z'
+SECRET_KEY = 'django-insecure-t)9lz^r29%az4k4gx9e-m3q&7*ux#_7@ypuf6p2(qe_*ti$8^e'
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_DELTA = timedelta(hours=1)
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
-LOGIN_URL = '/admin/login'
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # Short-lived access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),     # Long-lived refresh token
+}
 
 # Application definition
 
@@ -43,40 +51,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
-    'rest_framework',
-    'oauth2_provider',
+    'rest_framework'
+    'rest_framework_simplejwt.token_blacklist',
+    'auth_app'
+
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# -- Set up DRF to use OAuth2
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-        'rest_framework.authentication.SessionAuthentication', # To keep the Browsable API
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-}
-
-# --- Specify the authentication backends
-
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend' # To keep the Browsable API
-    'oauth2_provider.backends.OAuth2Backend',
-)
 
 ROOT_URLCONF = 'auth_service.urls'
 
@@ -103,7 +92,7 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'users': {
         'ENGINE': 'django.db.backends.postgresql',  # This uses psycopg2
         'NAME': config['DATABASE']['NAME'],
         'USER': config['DATABASE']['USER'],
@@ -112,6 +101,7 @@ DATABASES = {
         'PORT': config['DATABASE']['PORT'],
     }
 }
+
 
 
 # Password validation

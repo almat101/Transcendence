@@ -14,28 +14,6 @@ services:
     networks:
       - transcendence_network
 
-  game_service:
-    container_name: game_service
-    build: ./game_service
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    ports:
-      - "8002:8000"
-    depends_on:
-      auth_db:
-        condition: service_healthy
-      auth_service:
-        condition: service_healthy
-    networks:
-      - transcendence_network
-
-  frontend:
-    container_name: frontend
-    build: ./frontend
-    ports:
-      - "3000:80"
-    networks:
-      - transcendence_network
-
   # Postgres database
   auth_db:
     container_name: container_postgres
@@ -87,7 +65,3 @@ services:
 networks:
   transcendence_network:
     driver: bridge
-
-volumes:
-  postgres_data:
-```

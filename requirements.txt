@@ -1,5 +1,6 @@
-Django
+django
 django-rest-framework
 psycopg2-binary
 django-oauth-toolkit
+djangorestframework_simplejwt
 Pillow
