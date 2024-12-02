@@ -6,6 +6,8 @@ services:
     container_name: auth_service
     build: ./auth_service
     command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
     ports:
       - "8001:8000"
     depends_on:

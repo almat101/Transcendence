@@ -26,13 +26,17 @@ with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t)9lz^r29%az4k4gx9e-m3q&7*ux#_7@ypuf6p2(qe_*ti$8^e'
-JWT_ALGORITHM = 'HS256'
+SECRET_KEY = os.getenv('SECRET_KEY')
+JWT_ALGORITHM = os.getenv('JWT_ALGO')
 JWT_EXPIRATION_DELTA = timedelta(hours=1)
-
+DB_NAME = os.getenv('POSTGRES_AUTH_DB')
+DB_USER = os.getenv('POSTGRES_USER')
+DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+DB_HOST = os.getenv('POSTGRES_HOST')
+DB_PORT = os.getenv('POSTGRES_PORT')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -51,7 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework'
+    'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'auth_app'
 
@@ -94,11 +98,11 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 DATABASES = {
     'users': {
         'ENGINE': 'django.db.backends.postgresql',  # This uses psycopg2
-        'NAME': config['DATABASE']['NAME'],
-        'USER': config['DATABASE']['USER'],
-        'PASSWORD': config['DATABASE']['PASSWORD'],
-        'HOST': config['DATABASE']['HOST'],
-        'PORT': config['DATABASE']['PORT'],
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 
@@ -122,6 +126,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
