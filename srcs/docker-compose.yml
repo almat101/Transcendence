@@ -1,0 +1,122 @@
+# Use postgres/example user/password credentials
+version: '3.9'
+
+services:
+  # proxy service
+  proxy:
+    build:
+      context: ./proxy
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - frontend
+    networks:
+      - public
+      - internal
+    volumes:
+      - ./proxy/logs:/var/log/nginx
+      - ./proxy/logs:/var/log/modsecurity
+
+
+  # frontend service
+  frontend:
+    build:
+      context: ./frontend
+    networks:
+      - internal
+
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./gateway
+    #ports:
+    # - "8000:8000"
+    networks:
+      - internal
+    depends_on:
+      - auth_service
+      - game_service
+
+
+  # Backend services
+  auth_service:
+    container_name: auth_service
+    build: ./backend/auth/auth
+    #deploy:
+    #  replicas: 3
+    #  update_config:
+    #   parallelism: 1
+    #   delay: 10s
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
+    #ports:
+    #  - "8001:8000"
+    networks:
+      - internal
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      interval: 10s
+      retries: 5
+
+  # Postgres database
+  auth_db:
+    container_name: container_postgres
+    image: postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_AUTH_DB}
+    restart: unless-stopped
+    #after remove ports and leave only network
+    ports:
+      - "5432:5432"
+   # networks:
+    #  - internal
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}" , "-d", "${POSTGRES_AUTH_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # Adminer
+  adminer:
+    container_name: adminer_container
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - transcendence_network
+
+
+  # Hashicorp Vault
+  vault:
+    image: hashicorp/vault
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root" # Development mode token
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200" # Listen on all addresses
+    cap_add:
+      - IPC_LOCK # Prevent sensitive data from being swapped
+    volumes:
+      - ./vault/data:/vault/data
+
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    driver: bridge
+

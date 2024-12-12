@@ -11,6 +11,10 @@ COPY requirements.txt ./
 
 RUN pip install -r requirements.txt
 
-COPY auth_service .
+COPY manage.py ./
+
+COPY auth_service ./
+
+COPY auth_app ./
 
 

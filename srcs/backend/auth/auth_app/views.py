@@ -25,7 +25,7 @@ def signup_view(request):
             return JsonResponse({'error': 'Username already taken'}, status=400)
 
         if User.objects.filter(email=email).exists():
-            return JsonResponse({'error': 'Email already registered'}, status=400)
+            return JsonResponse({'error':JWT_ALGORITHM 'Email already registered'}, status=400)
 
         user = User.objects.create(
             username=username,

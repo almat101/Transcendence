@@ -44,6 +44,7 @@ ALLOWED_HOSTS = []
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # Short-lived access token
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),     # Long-lived refresh token
+    "ALGORITHM": JWT_ALGORITHM,
 }
 
 # Application definition
