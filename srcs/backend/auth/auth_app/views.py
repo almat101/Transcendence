@@ -1,68 +1,60 @@
-from django.shortcuts import render
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
-from django.http import JsonResponse
-from django.contrib.auth import authenticate
-import json
-from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
-from .serializers import CustomTokenObtainPairSerializer
+from .models import UserProfile
+from .serializers import UserSerializer
 
 
-# Create your views here.
+# Authentication
 
+@api_view(['POST'])
 def signup_view(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        username = data.get('username')
-        password = data.get('password')
+    serializer = UserSerializer(data=request.data)
 
-        if not email or not username or not password:
-            return JsonResponse({'error': 'All fields are required'}, status=400)
-
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({'error': 'Username already taken'}, status=400)
-
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({'error':JWT_ALGORITHM 'Email already registered'}, status=400)
-
-        user = User.objects.create(
-            username=username,
-            email=email,
-            password=make_password(password)
+    if serializer.is_valid():
+        # Create the user with a hashed password
+        user = serializer.save(
+            password=make_password(serializer.validated_data['password'])
         )
 
-        return JsonResponse({'message': 'User created successfully'}, status=201)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        # Return minimal user info for frontend redirect
+        return Response({
+            'message': 'User created successfully',
+
+            #these under maybe to autofill the login form
+            #'user_id': user.id,
+            #'username': user.username,
+            #'redirect_to': '/login'  # Frontend can use this to know where to redirect
+        }, status=status.HTTP_201_CREATED)
+
+    # If validation fails, return error details
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
 def login_view(request):
-    if request.method == 'POST':
-        # Assume JSON input with 'username' and 'password'
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
+    data = request.data
+    email = data.get('email')
+    password = data.get('password')
 
-        user = authenticate(username=username, password=password)
-        if user:
-            refresh = CustomTokenObtainPairSerializer.get_token(user)
-            response = JsonResponse({
-                "access": str(refresh.access_token),
-            })
-            response.set_cookie(
-                key="refresh_token",
-                value=str(refresh),
-                httponly=True,
-                secure=True,
-                samesite="Strict"
-            )
-            return response
-        else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=401)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    if email is None or password is None:
+        return JsonResponse({'error': 'Please provide both email and password'}, status=400)
+
+    user = UserProfile.objects.get(email=email)
+
+    if not user:
+        return JsonResponse({'error': 'No user with this email'}, status=400)
+
+    if not check_password(password, user.password):
+        return JsonResponse({'error': 'Invalid password'}, status=400)
+
+    access_token = generate_access_token(user)
+    refresh_token = generate_refresh_token(user)
+
+    response = JsonResponse({'access': access_token, 'refresh': refresh_token})
+    response.set_cookie('refresh_token', refresh_token, httponly=True)
+    return response
 
 
 def logout_view(request):
@@ -90,16 +82,94 @@ def refresh_token(request):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
+#USER VIEWS
+
 def user_info_view(request):
     # Assume user_id is passed as a query parameter
     user_id = request.GET.get('user_id')
     try:
-        user = User.objects.get(id=user_id)  # Fetch user from the database
+        user = UserProfile.objects.get(id=user_id)  # Fetch user from the database
         return JsonResponse({
             'user_id': user.id,
             'username': user.username,
             'email': user.email,
             'avatar': user.avatar.url
         })
-    except User.DoesNotExist:
+    except UserProfile.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
+
+def update_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        username = data.get('username')
+        email = data.get('email')
+
+        try:
+            user = UserProfile.objects.get(id=user_id)
+            user.username = username
+            user.email = email
+            user.save()
+            return JsonResponse({'message': 'User updated successfully'})
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def reset_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+
+        try:
+            user = UserProfile.objects.get(email=email)
+            # Send email with reset link
+            return JsonResponse({'message': 'Reset link sent to your email'})
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def reset_password_confirm(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        new_password = data.get('new_password')
+
+        try:
+            user = UserProfile.objects.get(email=email)
+            user.password = make_password(new_password)
+            user.save()
+            return JsonResponse({'message': 'Password reset successfully'})
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def delete_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+
+        try:
+            user = UserProfile.objects.get(id=user_id)
+            user.delete()
+            return JsonResponse({'message': 'User deleted successfully'})
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_all_users(request):
+    users = UserProfile.objects.all()
+    user_list = []
+    for user in users:
+        user_list.append({
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'avatar': user.avatar.url
+        })
+    return JsonResponse({'users': user_list})
+
+
