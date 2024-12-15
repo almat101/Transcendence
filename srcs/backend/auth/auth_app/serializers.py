@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile
+from .models import UserProfile, Friends
 
 
 
@@ -24,3 +24,11 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"username": "This username is already taken"})
 
         return data
+
+
+class FriendsSerializer(serializers.ModelSerializer):
+    friend = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Friends
+        fields = ['friend', 'status', 'friends_since']

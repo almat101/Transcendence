@@ -1,14 +1,16 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, csrf_exempt
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password
-from .models import UserProfile
-from .serializers import UserSerializer
+from .models import UserProfile, Friends
+from .serializers import UserSerializer, FriendsSerializer
 
 
 # Authentication
 
 @api_view(['POST'])
+@csrf_exempt
 def signup_view(request):
     serializer = UserSerializer(data=request.data)
 
@@ -33,6 +35,7 @@ def signup_view(request):
 
 
 @api_view(['POST'])
+@csrf_exempt
 def login_view(request):
     data = request.data
     email = data.get('email')
@@ -56,7 +59,7 @@ def login_view(request):
     response.set_cookie('refresh_token', refresh_token, httponly=True)
     return response
 
-
+@csrf_exempt
 def logout_view(request):
     refresh_token = request.COOKIES.get('refresh_token')
     token = RefreshToken(refresh_token)
@@ -98,6 +101,7 @@ def user_info_view(request):
     except UserProfile.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 
+@csrf_exempt
 def update_user(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -116,6 +120,7 @@ def update_user(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
+@csrf_exempt
 def reset_password(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -130,6 +135,7 @@ def reset_password(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
+@csrf_exempt
 def reset_password_confirm(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -146,6 +152,7 @@ def reset_password_confirm(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
+@csrf_exempt
 def delete_user(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -173,3 +180,106 @@ def get_all_users(request):
     return JsonResponse({'users': user_list})
 
 
+
+#FRIENDS VIEWS
+
+@api_view(['POST'])
+def send_friend_request(request):
+    """Send a friend request to another user"""
+    friend_username = request.data.get('username')
+    friend = get_object_or_404(UserProfile, username=friend_username)
+
+    # Prevent self-friending and duplicate requests
+    if friend == request.user:
+        return Response(
+            {'error': 'You cannot send a friend request to yourself'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if friends already exists
+    existing_friends = Friends.objects.filter(
+        user=request.user,
+        friend=friend
+    ).first()
+
+    if existing_friends:
+        return Response(
+            {'error': 'Friend request already sent or friends exists'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Create friends request
+    Friends.objects.create(
+        user=request.user,
+        friend=friend,
+        status='pending'
+    )
+
+    return Response(
+        {'message': 'Friend request sent'},
+        status=status.HTTP_201_CREATED
+    )
+
+@api_view(['POST'])
+def respond_to_friend_request(request):
+    """Accept or reject a friend request"""
+    friend_username = request.data.get('username')
+    action = request.data.get('action')  # 'accept' or 'reject'
+
+    friend = get_object_or_404(UserProfile, username=friend_username)
+
+    friends = Friends.objects.filter(
+        user=friend,
+        friend=request.user,
+        status='pending'
+    ).first()
+
+    if not friends:
+        return Response(
+            {'error': 'No pending friend request found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if action == 'accept':
+        friends.status = 'accepted'
+        friends.save()
+
+        # Create reciprocal friends
+        Friends.objects.create(
+            user=request.user,
+            friend=friend,
+            status='accepted'
+        )
+
+        return Response(
+            {'message': 'Friend request accepted'},
+            status=status.HTTP_200_OK
+        )
+
+    # If rejected, just delete the friends
+    friends.delete()
+    return Response(
+        {'message': 'Friend request rejected'},
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['GET'])
+def list_friends(request):
+    """List all accepted friends"""
+    friends = Friends.objects.filter(
+        user=request.user,
+        status='accepted'
+    )
+
+    serializer = FriendsSerializer(friends, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def list_friend_requests(request):
+    friend_requests = Friends.objects.filter(
+        friend=request.user,
+        status='pending'
+    )
+
+    serializer = FriendsSerializer(friend_requests, many=True)
+    return Response(serializer.data)
