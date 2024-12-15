@@ -42,15 +42,15 @@ def login_view(request):
     password = data.get('password')
 
     if email is None or password is None:
-        return JsonResponse({'error': 'Please provide both email and password'}, status=400)
+        return JsonResponse({'error': 'Please provide both email and password'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = UserProfile.objects.get(email=email)
 
     if not user:
-        return JsonResponse({'error': 'No user with this email'}, status=400)
+        return JsonResponse({'error': 'No user with this email'}, status=status.HTTP_400_BAD_REQUEST)
 
     if not check_password(password, user.password):
-        return JsonResponse({'error': 'Invalid password'}, status=400)
+        return JsonResponse({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
 
     access_token = generate_access_token(user)
     refresh_token = generate_refresh_token(user)
@@ -73,16 +73,16 @@ def refresh_token(request):
         refresh_token = data.get('refresh_token')
 
         if not refresh_token:
-            return JsonResponse({'error': 'Refresh token is required'}, status=400)
+            return JsonResponse({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             token = RefreshToken(refresh_token)
             new_access_token = str(token.access_token)
             return JsonResponse({'access': new_access_token})
         except Exception as e:
-            return JsonResponse({'error': 'Invalid refresh token'}, status=400)
+            return JsonResponse({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 #USER VIEWS
@@ -99,7 +99,7 @@ def user_info_view(request):
             'avatar': user.avatar.url
         })
     except UserProfile.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
+        return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @csrf_exempt
 def update_user(request):
@@ -116,9 +116,9 @@ def update_user(request):
             user.save()
             return JsonResponse({'message': 'User updated successfully'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 @csrf_exempt
 def reset_password(request):
@@ -131,9 +131,9 @@ def reset_password(request):
             # Send email with reset link
             return JsonResponse({'message': 'Reset link sent to your email'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 @csrf_exempt
 def reset_password_confirm(request):
@@ -148,9 +148,9 @@ def reset_password_confirm(request):
             user.save()
             return JsonResponse({'message': 'Password reset successfully'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 @csrf_exempt
 def delete_user(request):
@@ -163,9 +163,9 @@ def delete_user(request):
             user.delete()
             return JsonResponse({'message': 'User deleted successfully'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 def get_all_users(request):
     users = UserProfile.objects.all()
@@ -180,8 +180,8 @@ def get_all_users(request):
     return JsonResponse({'users': user_list})
 
 
-
 #FRIENDS VIEWS
+
 
 @api_view(['POST'])
 def send_friend_request(request):
