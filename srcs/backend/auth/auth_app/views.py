@@ -263,6 +263,40 @@ def respond_to_friend_request(request):
         status=status.HTTP_200_OK
     )
 
+@api_view(['POST'])
+def block_user(request):
+    """Block a user"""
+    friend_username = request.data.get('username')
+    friend = get_object_or_404(UserProfile, username=friend_username)
+
+    # Prevent self-blocking
+    if friend == request.user:
+        return Response(
+            {'error': 'You cannot block yourself'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if friends already exists
+    existing_friends = Friends.objects.filter(
+        user=request.user,
+        friend=friend
+    ).first()
+
+    if not existing_friends:
+        return Response(
+            {'error': 'No friends found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Block the user
+    existing_friends.status = 'blocked'
+    existing_friends.save()
+
+    return Response(
+        {'message': 'User blocked'},
+        status=status.HTTP_200_OK
+    )
+
 @api_view(['GET'])
 def list_friends(request):
     """List all accepted friends"""
@@ -283,3 +317,15 @@ def list_friend_requests(request):
 
     serializer = FriendsSerializer(friend_requests, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def list_blocked_users(request):
+    blocked_users = Friends.objects.filter(
+        user=request.user,
+        status='blocked'
+    )
+
+    serializer = FriendsSerializer(blocked_users, many=True)
+    return Response(serializer.data)
+
+
