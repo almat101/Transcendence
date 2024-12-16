@@ -251,6 +251,8 @@ def respond_to_friend_request(request):
             status='accepted'
         )
 
+       #request.user.friends.add(friend)
+
         return Response(
             {'message': 'Friend request accepted'},
             status=status.HTTP_200_OK
