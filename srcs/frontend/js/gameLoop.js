@@ -1,7 +1,7 @@
 import { Ball } from './ball.js';
 import { Paddle } from './paddle.js';
 
-export function gameLoop(canvas) {
+export function gameLoop(canvas, endGame) {
   const ctx = canvas.getContext('2d');
   const ball = new Ball(canvas.width / 2, canvas.height / 2, 10, 4, 3, canvas);
   const paddle1 = new Paddle(canvas, 10, 'w', 's');
@@ -18,9 +18,22 @@ export function gameLoop(canvas) {
     player2ScoreElement.textContent = `Player 2: ${score2}`;
   }
 
+  function drawDottedLine() {
+    ctx.setLineDash([5, 15]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
+    ctx.setLineDash([]); // Reset line dash
+  }
+
   function update() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw dotted line
+    drawDottedLine();
 
     // Draw and move ball
     ball.draw();
@@ -43,10 +56,18 @@ export function gameLoop(canvas) {
       score2++;
       ball.reset();
       updateScores();
+      if (score2 >= 5) {
+        endGame('Player 2');
+        return;
+      }
     } else if (ball.x + ball.radius > canvas.width) {
       score1++;
       ball.reset();
       updateScores();
+      if (score1 >= 5) {
+        endGame('Player 1');
+        return;
+      }
     }
 
     // Request next frame
