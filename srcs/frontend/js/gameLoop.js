@@ -18,6 +18,9 @@ export function gameLoop(canvas, endGame) {
     player2ScoreElement.textContent = `Player 2: ${score2}`;
   }
 
+  // Reset scores at the start of the game
+  updateScores();
+
   function drawDottedLine() {
     ctx.setLineDash([5, 15]);
     ctx.beginPath();
@@ -49,6 +52,7 @@ export function gameLoop(canvas, endGame) {
       (ball.x + ball.radius > paddle2.x && ball.y > paddle2.y && ball.y < paddle2.y + paddle2.height)
     ) {
       ball.speedX = -ball.speedX;
+      ball.increaseSpeed(); // Increase speed when the ball hits a paddle
     }
 
     // Check for scoring

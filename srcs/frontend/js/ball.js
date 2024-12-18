@@ -29,10 +29,19 @@ export class Ball {
 		this.speedY = -this.speedY;
 	  }
 	}
-	//when one player scores, reset the ball to the center of the canvas
+
+	// Increase speed slightly
+	increaseSpeed() {
+	  const speedIncreaseFactor = 1.05;
+	  this.speedX *= speedIncreaseFactor;
+	  this.speedY *= speedIncreaseFactor;
+	}
+
+	// Reset the ball to the center of the canvas
 	reset() {
-		this.x = this.canvas.width / 2;
-		this.y = this.canvas.height / 2;
-		this.speedX = -this.speedX; // Change direction
-	  }
+	  this.x = this.canvas.width / 2;
+	  this.y = this.canvas.height / 2;
+	  this.speedX = -this.speedX; // Change direction
+	  this.speedY = (Math.random() > 0.5 ? 1 : -1) * Math.abs(this.speedY); // Randomize vertical direction
+	}
   }
