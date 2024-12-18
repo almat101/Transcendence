@@ -7,6 +7,17 @@ export function gameLoop(canvas) {
   const paddle1 = new Paddle(canvas, 10, 'w', 's');
   const paddle2 = new Paddle(canvas, canvas.width - 20, 'ArrowUp', 'ArrowDown');
 
+  let score1 = 0;
+  let score2 = 0;
+
+  const player1ScoreElement = document.getElementById('player1Score');
+  const player2ScoreElement = document.getElementById('player2Score');
+
+  function updateScores() {
+    player1ScoreElement.textContent = `Player 1: ${score1}`;
+    player2ScoreElement.textContent = `Player 2: ${score2}`;
+  }
+
   function update() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -25,6 +36,17 @@ export function gameLoop(canvas) {
       (ball.x + ball.radius > paddle2.x && ball.y > paddle2.y && ball.y < paddle2.y + paddle2.height)
     ) {
       ball.speedX = -ball.speedX;
+    }
+
+    // Check for scoring
+    if (ball.x - ball.radius < 0) {
+      score2++;
+      ball.reset();
+      updateScores();
+    } else if (ball.x + ball.radius > canvas.width) {
+      score1++;
+      ball.reset();
+      updateScores();
     }
 
     // Request next frame

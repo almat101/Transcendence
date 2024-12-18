@@ -29,4 +29,10 @@ export class Ball {
 		this.speedY = -this.speedY;
 	  }
 	}
+	//when one player scores, reset the ball to the center of the canvas
+	reset() {
+		this.x = this.canvas.width / 2;
+		this.y = this.canvas.height / 2;
+		this.speedX = -this.speedX; // Change direction
+	  }
   }
