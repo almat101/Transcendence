@@ -21,7 +21,12 @@ export class Paddle {
 	}
 
 	draw() {
-	  this.context.fillStyle = 'red';
+	  // Create a gradient for the paddle
+	  const gradient = this.context.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
+	  gradient.addColorStop(0, '#ff00ff'); // Start color
+	  gradient.addColorStop(1, '#00ffff'); // End color
+
+	  this.context.fillStyle = gradient;
 	  this.context.fillRect(this.x, this.y, this.width, this.height);
 	}
   }
