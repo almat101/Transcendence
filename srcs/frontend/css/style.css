@@ -4,9 +4,13 @@
 * {
   font-family: 'Poppins', sans-serif;
 }
-
+/*
 body {
-  text-align: center;
+
+} */
+
+#pong-container{
+   text-align: center;
   background-color: ghostwhite;
   display: flex;
   justify-content: center;
@@ -63,4 +67,14 @@ canvas {
 #startButton:hover, #restartButton:hover {
   background-color: #fff;
   color: #000;
+}
+
+/* navbar component css */
+.navbar {
+  background-color: #f4f4f4;
+  padding: 10px;
+}
+.navbar a {
+  margin-right: 10px;
+  text-decoration: none;
 }

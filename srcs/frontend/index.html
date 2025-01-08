@@ -1,26 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pong</title>
-  <link rel="stylesheet" href="css/style.css"> <!-- Link to CSS -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"> <!-- Pixel art font -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1 id="title">Pong</h1>
-  <div id="menu">
-    <button id="startButton">Start Game</button>
-  </div>
-  <div id="scores" style="display: none;">
-    <span id="player1Score">Player 1: 0</span>
-    <span id="player2Score">Player 2: 0</span>
-  </div>
-  <canvas id="gameCanvas" width="1000" height="500" style="display: none;"></canvas>
-  <div id="winningScreen" style="display: none;">
-    <h2 id="winnerMessage"></h2>
-    <button id="restartButton">Restart Game</button>
-  </div>
-  <script type="module" src="js/app.js"></script>
+  <div id="root"></div>
+  <script type="module" src="js/register.js" defer></script>
 </body>
 </html>
