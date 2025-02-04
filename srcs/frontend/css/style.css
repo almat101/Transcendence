@@ -69,12 +69,9 @@ canvas {
   color: #000;
 }
 
-/* navbar component css */
-.navbar {
-  background-color: #f4f4f4;
-  padding: 10px;
-}
-.navbar a {
-  margin-right: 10px;
-  text-decoration: none;
+/* Apply the pixel art font to the navbar */
+.navbar, .navbar a, .navbar-brand, .nav-link {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 16px;
+  /* color: #000; */
 }

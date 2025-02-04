@@ -1,4 +1,4 @@
-all : create-dirs up
+all : up
 
 up :
 	docker compose -f srcs/docker-compose.yml up --build
@@ -12,14 +12,15 @@ start :
 stop :
 	docker compose -f srcs/docker-compose.yml stop
 
-#clean the docker named volume
-# v-clean : down
-# 	docker compose -f srcs/docker-compose.yml down -v
+#stop and remove all docker volumes
+clean :
+	docker compose -f srcs/docker-compose.yml down -v
 
-#clean the local volume binded to this folder
-lv-clean: down
-	sudo rm -rf /home/${USER}/data/postgres/
+#clean the local volume binded to host folder
+lv-clean:
 	rm -rf /home/${USER}/Desktop/Transcendence/srcs/proxy/logs/*
+#	sudo rm -rf /home/${USER}/data/postgres/
+#	sudo rm -rf /home/${USER}/data/postgres_grafana/
 
 fclean:
 	docker compose -f srcs/docker-compose.yml down -v --rmi all --remove-orphans
@@ -38,18 +39,19 @@ images :
 exec :
 	docker exec -it $(C) /bin/bash || true
 
-logs :
-	docker logs $(C)
-
 list-all :
 	docker ps -a
 
 list-all-id :
 	docker ps -a -q
 
-create-dirs:
-	@echo "Creating directories for test_postgres"
-	mkdir -p /home/${USER}/data/postgres/
+.PHONY: all up down start stop clean lv-clean fclean re prune ps images exec logs list-all list-all-id
+
+# create-dirs:
+# 	@echo "Creating directories"
+# 	mkdir -p /home/${USER}/data/postgres_test/
+# 	mkdir -p /home/${USER}/data/postgres_grafana/
+
 
 # all: down prune build up
 

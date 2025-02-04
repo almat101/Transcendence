@@ -21,8 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-61op!+06a9i1day98msay%#&@orei39raf53zkciead6dm)(66'
-# SECRET_KEY= os.environ.get('TEST_SERVICE_SECRET_KEY')
+
+SECRET_KEY= os.environ.get('TEST_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -30,6 +30,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '0.0.0.0',
     '127.0.0.1',
+	'localhost',
+	'test-service',
 ]
 
 # CORS_ALLOW_HEADERS = (
@@ -57,10 +59,13 @@ INSTALLED_APPS = [
     'corsheaders', # add corsheader
     'rest_framework', #add django restframework
     'test_app', #add also the name of the django app
+	'django_prometheus', #prometheus
+	'watchman', #health check
 ]
 
 MIDDLEWARE = [
-	'corsheaders.middleware.CorsMiddleware', # add this on top of the middleware or cors doesnt works
+    'django_prometheus.middleware.PrometheusBeforeMiddleware', # prometheus
+    'corsheaders.middleware.CorsMiddleware', # add this on top of the middleware or cors doesnt works
 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -69,6 +74,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
+
 ]
 
 ROOT_URLCONF = 'test_service.urls'
@@ -102,25 +110,15 @@ WSGI_APPLICATION = 'test_service.wsgi.application'
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres_db',
-#         'USER': 'postgres',
-#         'PASSWORD': 'password',
-#         'HOST': 'test_postgres', #use the name of the related postgres container
-#         'PORT': '5432',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB'),
+        # 'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_TEST_DB'),
         'USER': os.environ.get('POSTGRES_USER'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST'), #use the name of the  related postgres container
-        'PORT': '5432',
+        'HOST': os.environ.get('POSTGRES_TEST_HOST'), #use the name of the  related postgres container
+        'PORT': os.environ.get('POSTGRES_PORT'),
     }
 }
 

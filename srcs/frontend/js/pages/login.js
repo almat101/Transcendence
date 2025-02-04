@@ -8,6 +8,12 @@ export function renderLoginPage() {
   const navbar = Navbar();
   root.appendChild(navbar);
 
+
+  //
+  // this has to be changed with bootstrap login form
+  //
+
+
   // Add login form
   const loginContainer = document.createElement("div");
   loginContainer.id = "login-container";

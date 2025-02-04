@@ -1,3 +1,4 @@
+import {renderPageNotFound} from "../js/pages/404.js"
 const routes = {};
 
 /**
@@ -18,7 +19,7 @@ export function loadPage(route) {
   if (renderFunction) {
     renderFunction();
   } else {
-    console.error(`Route '${route}' not found.`);
+    renderPageNotFound();
   }
 }
 
@@ -31,16 +32,14 @@ export function navigateTo(route) {
   loadPage(route);
 }
 
-// dinamically load the content of the page based on the route
-window.addEventListener('load', () => {
-  console.log("on load page refresh!");
-  const currentRoute = window.location.pathname || "/"
-  loadPage(currentRoute)
-});
 
-// Handle browser navigation (back/forward buttons)
-window.addEventListener("popstate", () => {
-  console.log("back forward button ");
+// Handle initial load and browser navigation (back/forward buttons)
+function handleNavigation() {
   const currentRoute = window.location.pathname || "/";
   loadPage(currentRoute);
-});
+}
+
+// initial load
+window.addEventListener("load", handleNavigation);
+// back/forward buttons
+window.addEventListener("popstate", handleNavigation);

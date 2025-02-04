@@ -5,6 +5,8 @@ import { renderChatPage } from "./pages/chat.js";
 import { renderPongPage } from "./pages/pong.js";
 import { renderUsersPage } from "./pages/users.js";
 import { renderPostPage } from "./pages/post.js";
+import { renderPageNotFound } from "./pages/404.js";
+import { navigateTo } from "./router.js";
 
 // Register routes
 registerRoute("/", renderHomePage);
@@ -13,8 +15,11 @@ registerRoute("/chat", renderChatPage);
 registerRoute("/pong", renderPongPage);
 registerRoute("/users", renderUsersPage);
 registerRoute("/post", renderPostPage);
+registerRoute("/404", renderPageNotFound);
 
 // Initial page load
-const currentRoute = window.location.pathname || "/";
-loadPage(currentRoute);
-
+if (window.location.pathname === "/") {
+	navigateTo("/login");
+  } else {
+	loadPage(window.location.pathname);
+  }

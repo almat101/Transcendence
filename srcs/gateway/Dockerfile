@@ -2,7 +2,7 @@ FROM nginx:latest
 
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y vim
+RUN apt-get install -y vim netcat-openbsd
 
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 

@@ -3,7 +3,7 @@ FROM nginx:latest
 # Install ModSecurity dependencies
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y openssl vim sudo
+RUN apt-get install -y openssl vim sudo curl net-tools
 	# libmodsecurity3 \
 	# libnginx-mod-security \
 	# modsecurity-crs \

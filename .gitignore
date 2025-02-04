@@ -1,7 +1,8 @@
 #custom files
 django_venv.sh
 matchmaking_django/
-test.env
+#password file for alertmanager
+smtp_password.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
