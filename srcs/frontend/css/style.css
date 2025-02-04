@@ -4,9 +4,13 @@
 * {
   font-family: 'Poppins', sans-serif;
 }
-
+/*
 body {
-  text-align: center;
+
+} */
+
+#pong-container{
+   text-align: center;
   background-color: ghostwhite;
   display: flex;
   justify-content: center;
@@ -63,4 +67,11 @@ canvas {
 #startButton:hover, #restartButton:hover {
   background-color: #fff;
   color: #000;
+}
+
+/* Apply the pixel art font to the navbar */
+.navbar, .navbar a, .navbar-brand, .nav-link {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 16px;
+  /* color: #000; */
 }
