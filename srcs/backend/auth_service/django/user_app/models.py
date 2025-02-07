@@ -6,14 +6,10 @@ from django.utils import timezone
 # Create your models here.
 
 class UserProfile(AbstractUser):
-    email = models.EmailField(unique=True)
+    # AbstractUser existent fields
+    #first_name = models.CharField(max_length=30)
+    #last_name = models.CharField(max_length=150)
     #username = models.CharField(max_length=150, unique=True)
-    avatar = models.ImageField(upload_to='avatars/', default='avatars/default.png', blank=True, null=True)
-    bio = models.TextField(blank=True, max_length=500)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
     # Online status tracking
     #is_online = models.BooleanField(default=False)
     #last_activity = models.DateTimeField(null=True, blank=True)
@@ -22,6 +18,16 @@ class UserProfile(AbstractUser):
     #is_superuser = models.BooleanField(default=False)
 
     #friends = models.ManyToManyField('self', through='Friends', symmetrical=False)
+
+    email = models.EmailField(unique=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, default='avatars/default_avatar.jpg')
+    bio = models.TextField(blank=True, max_length=500)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     def __str__(self):
         return self.username

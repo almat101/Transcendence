@@ -1,16 +1,21 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, csrf_exempt
+from rest_framework import status # type: ignore
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError # type: ignore
+from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.hashers import make_password
-from .models import UserProfile, Friends
+from django.conf import settings
 from .serializers import UserSerializer, FriendsSerializer
+from .models import UserProfile, Friends
+import logging
 
+logger = logging.getLogger(__name__)
 
-# Authentication
+# Create your views here.
 
 @api_view(['POST'])
-@csrf_exempt
+@permission_classes([AllowAny])
 def signup_view(request):
     serializer = UserSerializer(data=request.data)
 
@@ -23,136 +28,124 @@ def signup_view(request):
         # Return minimal user info for frontend redirect
         return Response({
             'message': 'User created successfully',
-
-            #these under maybe to autofill the login form
-            #'user_id': user.id,
-            #'username': user.username,
-            #'redirect_to': '/login'  # Frontend can use this to know where to redirect
         }, status=status.HTTP_201_CREATED)
 
     # If validation fails, return error details
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['POST'])
-@csrf_exempt
-def login_view(request):
-    data = request.data
-    email = data.get('email')
-    password = data.get('password')
-
-    if email is None or password is None:
-        return JsonResponse({'error': 'Please provide both email and password'}, status=status.HTTP_400_BAD_REQUEST)
-
-    user = UserProfile.objects.get(email=email)
-
-    if not user:
-        return JsonResponse({'error': 'No user with this email'}, status=status.HTTP_400_BAD_REQUEST)
-
-    if not check_password(password, user.password):
-        return JsonResponse({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
-
-    access_token = generate_access_token(user)
-    refresh_token = generate_refresh_token(user)
-
-    response = JsonResponse({'access': access_token, 'refresh': refresh_token})
-    response.set_cookie('refresh_token', refresh_token, httponly=True)
-    return response
-
-@csrf_exempt
-def logout_view(request):
-    refresh_token = request.COOKIES.get('refresh_token')
-    token = RefreshToken(refresh_token)
-    token.blacklist()
-    return JsonResponse({"message": "Logged out"})
-
-
-def refresh_token(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        refresh_token = data.get('refresh_token')
-
-        if not refresh_token:
-            return JsonResponse({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            token = RefreshToken(refresh_token)
-            new_access_token = str(token.access_token)
-            return JsonResponse({'access': new_access_token})
-        except Exception as e:
-            return JsonResponse({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-#USER VIEWS
-
-def user_info_view(request):
-    # Assume user_id is passed as a query parameter
-    user_id = request.GET.get('user_id')
+@permission_classes([IsAuthenticated])
+def reset_password(request):
+    """Change password with old password verification"""
     try:
-        user = UserProfile.objects.get(id=user_id)  # Fetch user from the database
-        return JsonResponse({
+        data = request.data
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response({
+                'error': 'Both old and new passwords are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+
+        # Verify old password
+        if not check_password(old_password, user.password):
+            return Response({
+                'error': 'Current password is incorrect'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+
+        return Response({
+            'message': 'Password updated successfully'
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Password change failed: {str(e)}")
+        return Response({
+            'error': 'Unable to change password'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_info(request):
+    """Get user profile information. If no user_id provided, returns current user's info."""
+    user_id = request.query_params.get('user_id')
+
+    try:
+        if user_id:
+            user = get_object_or_404(UserProfile, id=user_id)
+        else:
+            user = request.user
+
+         # Construct avatar URL
+        avatar_url = (
+            request.build_absolute_uri(user.avatar.url)
+            if user.avatar and user.avatar.name
+            else request.build_absolute_uri(f"{settings.MEDIA_URL}avatars/default_avatar.jpg")
+        )
+
+        return Response({
             'user_id': user.id,
             'username': user.username,
             'email': user.email,
-            'avatar': user.avatar.url
+            'avatar': avatar_url,
+            'bio': user.bio,
+            'is_self': user.id == request.user.id
         })
-    except UserProfile.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': f'Failed to fetch user info: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@csrf_exempt
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_avatar(request):
+    user = request.user
+    avatar = request.data.get('avatar')
+
+    if not avatar:
+        return Response({'error': 'Avatar image is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.avatar = avatar
+    user.save()
+
+    return Response({'message': 'Avatar updated successfully'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def update_user(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_id = data.get('user_id')
-        username = data.get('username')
-        email = data.get('email')
+    data = request.data
+    user_id = data.get('user_id')
+    username = data.get('username')
+    email = data.get('email')
 
-        try:
-            user = UserProfile.objects.get(id=user_id)
-            user.username = username
-            user.email = email
-            user.save()
-            return JsonResponse({'message': 'User updated successfully'})
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    if not user_id or not username or not email:
+        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
-def reset_password(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
+    try:
+        user = UserProfile.objects.get(id=user_id)
+        user.username = username
+        user.email = email
+        user.full_clean()  # Validate the model fields
+        user.save()
+        return Response({'message': 'User updated successfully'})
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ValidationError as e:
+        return Response({'error': e.message_dict}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = UserProfile.objects.get(email=email)
-            # Send email with reset link
-            return JsonResponse({'message': 'Reset link sent to your email'})
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+'''
+
 
 @csrf_exempt
-def reset_password_confirm(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        new_password = data.get('new_password')
-
-        try:
-            user = UserProfile.objects.get(email=email)
-            user.password = make_password(new_password)
-            user.save()
-            return JsonResponse({'message': 'Password reset successfully'})
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-@csrf_exempt
+@permission_classes([IsAuthenticated])
 def delete_user(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -161,11 +154,11 @@ def delete_user(request):
         try:
             user = UserProfile.objects.get(id=user_id)
             user.delete()
-            return JsonResponse({'message': 'User deleted successfully'})
+            return Response({'message': 'User deleted successfully'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 def get_all_users(request):
     users = UserProfile.objects.all()
@@ -177,13 +170,12 @@ def get_all_users(request):
             'email': user.email,
             'avatar': user.avatar.url
         })
-    return JsonResponse({'users': user_list})
-
+    return Response({'users': user_list})
 
 #FRIENDS VIEWS
 
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def send_friend_request(request):
     """Send a friend request to another user"""
     friend_username = request.data.get('username')
@@ -221,6 +213,7 @@ def send_friend_request(request):
     )
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
     """Accept or reject a friend request"""
     friend_username = request.data.get('username')
@@ -266,6 +259,7 @@ def respond_to_friend_request(request):
     )
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def block_user(request):
     """Block a user"""
     friend_username = request.data.get('username')
@@ -300,6 +294,7 @@ def block_user(request):
     )
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_friends(request):
     """List all accepted friends"""
     friends = Friends.objects.filter(
@@ -311,6 +306,7 @@ def list_friends(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_friend_requests(request):
     friend_requests = Friends.objects.filter(
         friend=request.user,
@@ -321,6 +317,7 @@ def list_friend_requests(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_blocked_users(request):
     blocked_users = Friends.objects.filter(
         user=request.user,
@@ -331,3 +328,4 @@ def list_blocked_users(request):
     return Response(serializer.data)
 
 
+'''

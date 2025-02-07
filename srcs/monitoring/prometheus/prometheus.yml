@@ -22,9 +22,9 @@ scrape_configs:
     static_configs:
       - targets: ["node-exporter:9100"]
 
-  - job_name: "test-service"
+  - job_name: "auth-service"
     static_configs:
-      - targets: ["test-service:8001"]
+      - targets: ["auth-service:8001"]
 
   - job_name: 'postgres-exporter-grafana'
     static_configs:

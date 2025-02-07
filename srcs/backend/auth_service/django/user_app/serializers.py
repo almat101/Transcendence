@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import UserProfile, Friends
-
+from django.contrib.auth.password_validation import validate_password
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -14,6 +14,10 @@ class UserSerializer(serializers.ModelSerializer):
             'email': {'required': True},
             'username': {'required': True}
         }
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
 
     def validate(self, data):
         # Check for unique email and username
@@ -32,3 +36,4 @@ class FriendsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friends
         fields = ['friend', 'status', 'friends_since']
+

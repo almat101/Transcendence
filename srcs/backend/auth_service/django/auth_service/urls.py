@@ -15,9 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('auth_app.urls'))
+    path('auth/', include('auth_app.urls')),
+    path('user/', include('user_app.urls')),
+    path('oauth/', include('oauth_app.urls')),
+    path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
+	re_path(r'^watchman/', include('watchman.urls')) #health status
 ]

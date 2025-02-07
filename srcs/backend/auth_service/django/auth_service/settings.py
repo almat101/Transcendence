@@ -14,18 +14,40 @@ from datetime import timedelta
 from pathlib import Path
 import os
 import json
+import hvac
+from dotenv import read_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/app/media'
 
-with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
-    config = json.load(config_file)
+
+#with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
+#    config = json.load(config_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+# using HASHICORP VAULT
+
+#VAULT_ADDR = os.getenv("VAULT_ADDR", "http://vault:8200")
+#VAULT_ROLE_ID = os.getenv("VAULT_ROLE_ID")
+#VAULT_SECRET_ID = os.getenv("VAULT_SECRET_ID")
+
+#client = hvac.Client(url=VAULT_ADDR)
+#client.auth_approle(VAULT_ROLE_ID, VAULT_SECRET_ID)
+
+#try:
+    # Read secret from Vault
+#    secret = client.secrets.kv.read_secret_version(path='secret_key')
+#    SECRET_KEY = secret['data']['data']['SECRET_KEY']
+#except Exception as e:
+#    raise Exception(f"Failed to fetch SECRET_KEY from Vault: {str(e)}")
+
 # SECURITY WARNING: keep the secret key used in production secret!
+'''
 SECRET_KEY = os.getenv('SECRET_KEY')
 JWT_ALGORITHM = os.getenv('JWT_ALGO')
 JWT_EXPIRATION_DELTA = timedelta(hours=1)
@@ -34,18 +56,44 @@ DB_USER = os.getenv('POSTGRES_USER')
 DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
 DB_HOST = os.getenv('POSTGRES_HOST')
 DB_PORT = os.getenv('POSTGRES_PORT')
+'''
+
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+JWT_ALGORITHM = os.getenv('JWT_ALGO')
+JWT_EXPIRATION_DELTA = timedelta(hours=1)
+DB_NAME = os.getenv('POSTGRES_AUTH_DB')
+DB_USER = os.getenv('POSTGRES_USER')
+DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+DB_HOST = os.getenv('POSTGRES_AUTH_HOST')
+DB_PORT = os.getenv('POSTGRES_PORT')
+CLIENT42_ID = os.getenv('42_CLIENT_ID')
+CLIENT42_SECRET = os.getenv('42_CLIENT_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG') == 'True'
+DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: update this when you have the production host
 
-AUTH_USER_MODEL = 'auth_app.UserProfile'
+#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+#USE_X_FORWARDED_HOST = True
+#SECURE_SSL_REDIRECT = True
+
+# If using nginx/proxy
+ALLOWED_HOSTS = ['localhost', 'auth-service', '127.0.0.1']
+
+AUTH_USER_MODEL = 'user_app.UserProfile'
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # Short-lived access token
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),     # Long-lived refresh token
-    "ALGORITHM": JWT_ALGORITHM,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': JWT_ALGORITHM,
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.AccessToken',
+    ),
 }
 
 # Application definition
@@ -57,13 +105,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    'auth_app'
+    'corsheaders',
 
+    'auth_app',
+    'user_app',
+    'oauth_app',
+
+    'django_prometheus', #prometheus
+	'watchman', #health check
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware', # prometheus
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -71,6 +128,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
+]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
+
+CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
+
+CORS_ALLOWED_ORIGINS = [
+    #"https://transcendece.com",
+    #"http://localhost:3000",  # For local development
 ]
 
 ROOT_URLCONF = 'auth_service.urls'
@@ -98,8 +165,8 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'users': {
-        'ENGINE': 'django.db.backends.postgresql',  # This uses psycopg2
+    'default': {
+        'ENGINE': 'django_prometheus.db.backends.postgresql',  # This uses psycopg2
         'NAME': DB_NAME,
         'USER': DB_USER,
         'PASSWORD': DB_PASSWORD,
@@ -108,7 +175,17 @@ DATABASES = {
     }
 }
 
-
+OAUTH2_PROVIDERS = {
+    '42': {
+        'CLIENT_ID': CLIENT42_ID,
+        'CLIENT_SECRET': CLIENT42_SECRET,
+        'REDIRECT_URI': 'http://localhost:8000/oauth/42/callback/',
+        'AUTHORIZATION_URL': 'https://api.intra.42.fr/oauth/authorize',
+        'TOKEN_URL': 'https://api.intra.42.fr/oauth/token',
+        'USER_INFO_URL': 'https://api.intra.42.fr/v2/me',
+        'SCOPE': 'public'
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -119,6 +196,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -128,15 +208,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'auth_app.backends.EmailOrUsernameModelBackend',  # Custom backend
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        #'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Change this for testing
     ),
 }
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -154,6 +240,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+LOGIN_URL = 'auth_service:8000/login'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

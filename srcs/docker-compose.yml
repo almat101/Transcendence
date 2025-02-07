@@ -40,8 +40,7 @@ services:
     ports:
     - "8000:8000"
     depends_on:
-      - test-service
-      # - auth_service
+       - auth-service
       # - game_service
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
@@ -68,72 +67,11 @@ services:
     networks:
       - internal
 
-  # Backend services
-  # auth_service:
-  #   container_name: auth_service
-  #   build: ./backend/auth/auth
-  #   #deploy:
-  #   #  replicas: 3
-  #   #  update_config:
-  #   #   parallelism: 1
-  #   #   delay: 10s
-  #   command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-  #   env_file:
-  #     - .env
-  #   #ports:
-  #   #  - "8001:8000"
-  #   networks:
-  #     - internal
-  #   depends_on:
-  #     auth_db:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
-  #     interval: 10s
-  #     retries: 5
-
-  # Postgres database
-  # auth_db:
-  #   container_name: container_postgres
-  #   image: postgres
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #     - POSTGRES_DB=${POSTGRES_AUTH_DB}
-  #   restart: unless-stopped
-  #   ports:
-  #     - "5432:5432"
-  #  # networks:
-  #   #  - internal
-  #   healthcheck:
-  #     test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}" , "-d", "${POSTGRES_AUTH_DB}"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-
-
-  # Hashicorp Vault
-  # vault:
-  #   image: hashicorp/vault
-  #   container_name: vault
-  #   ports:
-  #     - "8200:8200"
-  #   environment:
-  #     VAULT_DEV_ROOT_TOKEN_ID: "root" # Development mode token
-  #     VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200" # Listen on all addresses
-  #   cap_add:
-  #     - IPC_LOCK # Prevent sensitive data from being swapped
-  #   volumes:
-  #     - ./vault/data:/vault/data
-
-  test-service:
-    image: test-service
-    container_name: test-service
+  auth-service:
+    image: auth-service
+    container_name: auth-service
     build:
-      context: ./backend/test-service
+      context: ./backend/auth_service
       dockerfile: Dockerfile
     command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
     env_file:
@@ -142,10 +80,10 @@ services:
     ports:
      - "8001:8001"
     depends_on:
-      test_db:
+      auth_db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8001/watchman/ || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8001/watchman/?skip=watchman.checks.storage || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -153,22 +91,22 @@ services:
     networks:
       - internal
 
-  test_db:
+  auth_db:
     image: postgres:15
-    container_name: test_db
+    container_name: auth_db
     env_file: ".env"
     environment:
      - POSTGRES_USER=${POSTGRES_USER}
      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-     - POSTGRES_DB=${POSTGRES_TEST_DB}
-     - POSTGRES_HOST=${POSTGRES_TEST_HOST}
+     - POSTGRES_DB=${POSTGRES_AUTH_DB}
+     - POSTGRES_HOST=${POSTGRES_AUTH_HOST}
     restart: always
-    ports:
-      - "5434:5432" #port changed to 5434
+    #ports:
+    # - "5434:5432" #port changed to 5434
     volumes:
       - postgres_test:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_TEST_DB || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -219,7 +157,7 @@ services:
     volumes:
       - postgres_grafana:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_G_DB || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -245,7 +183,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
     depends_on:
-      test-service:
+      auth-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
@@ -311,14 +249,14 @@ services:
     image: prometheuscommunity/postgres-exporter:v0.16.0
     container_name: postgres-exporter-test
     environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@test_db:5432/test_db?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth_db:5432/auth_db?sslmode=disable"
     restart: unless-stopped
     ports:
       - "9187:9187"
     depends_on:
       prometheus:
         condition: service_healthy
-      test_db:
+      auth_db:
         condition: service_healthy
     networks:
       - internal
