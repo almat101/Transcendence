@@ -75,3 +75,95 @@ canvas {
   font-size: 16px;
   /* color: #000; */
 }
+
+h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+}
+
+/* ...existing code... */
+
+/* Login form specific button styles */
+#login-form button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#login-form button:hover {
+  background-color: #000;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#login-form button:hover img {
+  filter: invert(1);
+  transition: filter 0.3s ease;
+}
+
+#login-form .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#login-form input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#login-form input::selection{
+  outline: none;
+  border-color: #000;
+}
+
+#login-form .form-control:focus {
+  border-color: #00000000;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.295);
+  outline: none;
+}
+
+#login-form .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#login-form label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+}
+
+#login-card p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+#login-card a {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+section.text-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container.py-4 {
+  width: 100%;
+  padding: 2rem;
+}
+

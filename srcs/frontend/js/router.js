@@ -1,4 +1,4 @@
-import {renderPageNotFound} from "../js/pages/404.js"
+import {renderPageNotFound} from "./pages/404.js"
 const routes = {};
 
 /**

@@ -27,11 +27,16 @@ export function renderLoginPage() {
         <div class="col-lg-6 mb-5 mb-lg-0">
           <div class="card cascading-right bg-body-tertiary text-center" style="backdrop-filter: blur(30px);"  id="login-card">
             <div class="card-body p-5 shadow-10 text-center">
-              <h2 class="fw-bold mb-5">Welcome Back</h2>
+              <h2 class="fw-bold mb-5">Sign up now</h2>
               <form id="login-form">
                 <div class="form-outline mb-4">
-                  <label class="form-label" for="username">Username or Email</label>
+                  <label class="form-label" for="username">Username</label>
                   <input type="text" id="username" class="form-control" required />
+                </div>
+
+                <div class="form-outline mb-4">
+                  <label class="form-label" for="email">Email address</label>
+                  <input type="email" id="email" class="form-control" required />
                 </div>
 
                 <div class="form-outline mb-4">
@@ -40,18 +45,18 @@ export function renderLoginPage() {
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block mb-4">
-                  Log in
+                  Sign up
                 </button>
 
                 <div class="text-center">
-                  <p>or log in with:</p>
+                  <p>or sign up with:</p>
                   <button type="button" class="btn btn-link btn-floating mx-1">
                     <img src="/assets/42_Logo.svg.png" alt="42 Logo" style="width: 20px; height: 20px;">
                   </button>
                 </div>
               </form>
             </div>
-            <p class="mb-5">Don't have an account yet? <a href="/signup" class="fw-bold">Signup</a></p>
+            <p class="mb-5">Already have an account? <a href="/login" class="fw-bold">Login</a></p>
           </div>
         </div>
         <div class="col-lg-6 mb-5 mb-lg-0">
