@@ -2,11 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('signup', views.signup_view, name='signup'), # done
+    path('signup/', views.signup_view, name='signup'), # done
     path('password-reset/', views.reset_password, name='reset_password'), # done
-    path('getuserinfo', views.user_info, name='user_info'),
-    path('update_avatar', views.update_avatar, name='update-avatar'),
-    path('updateuser', views.update_user, name='update_user'),
+    path('getuserinfo/', views.user_info, name='user_info'),
+    path('update_avatar/', views.update_avatar, name='update-avatar'),
+    path('updateuser/', views.update_user, name='update_user'),
 
   #  path('deleteuser', views.delete_user, name='delete_user'),
    # path('getallusers', views.get_all_users, name='get_all_users'),

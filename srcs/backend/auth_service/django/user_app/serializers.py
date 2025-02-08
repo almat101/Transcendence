@@ -1,7 +1,7 @@
+import re
 from rest_framework import serializers
 from .models import UserProfile, Friends
 from django.contrib.auth.password_validation import validate_password
-
 
 class UserSerializer(serializers.ModelSerializer):
     # Ensure password is write-only and not returned in responses
@@ -14,6 +14,22 @@ class UserSerializer(serializers.ModelSerializer):
             'email': {'required': True},
             'username': {'required': True}
         }
+
+    def validate_username(self, value):
+        # Username validation: letters, numbers, underscores, 3-20 chars
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', value):
+            raise serializers.ValidationError(
+                "Username must be 3-20 characters long and contain only letters, numbers, and underscores"
+            )
+        return value
+
+    def validate_email(self, value):
+        # Email format validation
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', value):
+            raise serializers.ValidationError(
+                "Please enter a valid email address"
+            )
+        return value
 
     def validate_password(self, value):
         validate_password(value)

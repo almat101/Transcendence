@@ -38,7 +38,6 @@ export function Navbar() {
     { name: "Pong", route: "/pong" },
     { name: "Chat", route: "/chat" },
     { name: "Users", route: "/users" },
-    { name: "Post", route: "/post" }
   ];
 
   links.forEach((link) => {

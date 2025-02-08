@@ -1,3 +1,5 @@
+import { tokenService } from "../router.js";
+
 export function renderLoginPage() {
   const root = document.getElementById("root");
   root.innerHTML = ""; // Clear previous content
@@ -23,7 +25,7 @@ export function renderLoginPage() {
   // Create container structure
   const container = `
     <div class="container py-4 align-items-center">
-      <div class="row g-0 align-items-center">
+      <div class="row g-0 align-items-center justify-content-center">
         <div class="col-lg-6 mb-5 mb-lg-0">
           <div class="card cascading-right bg-body-tertiary text-center" style="backdrop-filter: blur(30px);"  id="login-card">
             <div class="card-body p-5 shadow-10 text-center">
@@ -54,7 +56,7 @@ export function renderLoginPage() {
             <p class="mb-5">Don't have an account yet? <a href="/signup" class="fw-bold">Signup</a></p>
           </div>
         </div>
-        <div class="col-lg-6 mb-5 mb-lg-0">
+        <div class="col-lg-6 mb-5 mb-lg-0 d-none d-lg-block">
           <img src="/assets/846-02793586en_Masterfile.jpg" class="w-100 rounded-4 shadow-4" alt="Login background" />
         </div>
       </div>
@@ -68,6 +70,35 @@ export function renderLoginPage() {
   const form = document.getElementById('login-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // Add your form handling logic here
+
+    const username_or_email = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('http://localhost:8000/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          username_or_email,
+          password
+        }),
+        credentials: 'include'
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      tokenService.setAccessToken(data.access);
+      window.location.href = '/';
+    } else {
+        alert(data.error || 'Login failed. Please try again.');
+    }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Something went wrong. Please try again later.');
+    }
   });
 }

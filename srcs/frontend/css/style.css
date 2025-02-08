@@ -167,3 +167,25 @@ section.text-center {
   padding: 2rem;
 }
 
+.password-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-start;
+}
+
+.show-password-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+
+}
+
+.show-password-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  color: #000;
+  cursor: pointer;
+  user-select: none;
+}

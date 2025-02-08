@@ -152,3 +152,7 @@ def refresh_access_token(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def validate_token(request):
+    return Response({'valid': True}, status=status.HTTP_200_OK)

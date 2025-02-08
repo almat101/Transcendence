@@ -7,7 +7,7 @@ import { renderPongPage } from "./pages/pong.js";
 import { renderUsersPage } from "./pages/users.js";
 import { renderPostPage } from "./pages/post.js";
 import { renderPageNotFound } from "./pages/404.js";
-import { navigateTo } from "./router.js";
+//import { navigateTo } from "./router.js";
 
 // Register routes
 registerRoute("/", renderHomePage);
@@ -19,9 +19,4 @@ registerRoute("/users", renderUsersPage);
 registerRoute("/post", renderPostPage);
 registerRoute("/404", renderPageNotFound);
 
-// Initial page load
-if (window.location.pathname === "/") {
-	navigateTo("/login");
-} else {
-	loadPage(window.location.pathname);
-}
+loadPage(window.location.pathname);
