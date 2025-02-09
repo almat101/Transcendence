@@ -1,4 +1,5 @@
-import { tokenService } from "../router.js";
+import { authService , tokenService } from "../services/authService.js";
+import { navigateTo } from '../router.js';
 
 export function renderLoginPage() {
   const root = document.getElementById("root");
@@ -33,12 +34,20 @@ export function renderLoginPage() {
               <form id="login-form">
                 <div class="form-outline mb-4">
                   <label class="form-label" for="username">Username or Email</label>
-                  <input type="text" id="username" class="form-control" required />
+                  <input type="text"
+                         id="username"
+                         class="form-control"
+                         required
+                         autocomplete="username email" />
                 </div>
 
                 <div class="form-outline mb-4">
                   <label class="form-label" for="password">Password</label>
-                  <input type="password" id="password" class="form-control" required />
+                  <input type="password"
+                         id="password"
+                         class="form-control"
+                         required
+                         autocomplete="current-password" />
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block mb-4">
@@ -47,7 +56,7 @@ export function renderLoginPage() {
 
                 <div class="text-center">
                   <p>or log in with:</p>
-                  <button type="button" class="btn btn-link btn-floating mx-1">
+                  <button type="button" class="btn btn-link btn-floating mx-1" id="oauth-42">
                     <img src="/assets/42_Logo.svg.png" alt="42 Logo" style="width: 20px; height: 20px;">
                   </button>
                 </div>
@@ -66,6 +75,32 @@ export function renderLoginPage() {
   section.innerHTML = container;
   root.appendChild(section);
 
+  const oauthButton = document.getElementById('oauth-42');
+  oauthButton.addEventListener('click', async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/oauth/42/login/`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.authorization_url) {
+          window.location.href = data.authorization_url;
+      } else {
+          throw new Error('No authorization URL received');
+      }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to connect to authentication service');
+    }
+  });
+
   // Add form submission handler
   const form = document.getElementById('login-form');
   form.addEventListener('submit', async (e) => {
@@ -74,31 +109,12 @@ export function renderLoginPage() {
     const username_or_email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    try {
-      const response = await fetch('http://localhost:8000/auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          username_or_email,
-          password
-        }),
-        credentials: 'include'
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      tokenService.setAccessToken(data.access);
-      window.location.href = '/';
-    } else {
-        alert(data.error || 'Login failed. Please try again.');
+    const success = await authService.login(username_or_email, password);
+    if (success) {
+      navigateTo("/");
     }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Something went wrong. Please try again later.');
+    else {
+      console.error(success);
     }
   });
 }

@@ -10,7 +10,7 @@ export function renderHomePage() {
 
   // all code of the home page is injected with an inner html
   root.innerHTML += `
-  <div id="home-container">
+  <div id="pong-container">
     <h1>Welcome to the Home Page!</h1>
     <p>This is the Home Page!</p>
   </div>

@@ -1,4 +1,5 @@
 import {renderPageNotFound} from "./pages/404.js"
+import {tokenService} from "./services/authService.js";
 const routes = {};
 const publicRoutes = ['/login', '/signup'];
 
@@ -26,6 +27,15 @@ export async function loadPage(route) {
           return;
       }
   }
+  else if (publicRoutes.includes(route))
+  {
+    const isAuthenticated = await tokenService.validateToken();
+    if (isAuthenticated) {
+        navigateTo('/');
+        return;
+    }
+  }
+
 
   if (renderFunction) {
       renderFunction();
@@ -54,55 +64,3 @@ function handleNavigation() {
 window.addEventListener("load", handleNavigation);
 // back/forward buttons
 window.addEventListener("popstate", handleNavigation);
-
-
-//osema refresh token
-
-export const tokenService = {
-  setAccessToken(token) {
-      localStorage.setItem('access_token', token);
-  },
-
-  getAccessToken() {
-      return localStorage.getItem('access_token');
-  },
-
-  removeTokens() {
-      localStorage.removeItem('access_token');
-  },
-
-  async validateToken() {
-    const token = this.getAccessToken();
-    if (!token) return false;
-
-    try {
-        const response = await fetch('http://localhost:8000/auth/validate/', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (response.ok) return true;
-
-        const refreshResponse = await fetch('http://localhost:8000/auth/refresh/', {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        if (refreshResponse.ok) {
-            const data = await refreshResponse.json();
-            this.setAccessToken(data.access);
-            return true;
-        }
-
-        this.removeTokens();
-        return false;
-    } catch (error) {
-        console.error('Auth validation error:', error);
-        this.removeTokens();
-        return false;
-    }
-  }
-};

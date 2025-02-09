@@ -89,10 +89,9 @@ def login_view(request):
         value=refresh_token,
         httponly=True,
         secure=True,  # Ensures the cookie is only sent over HTTPS
-        samesite='Lax',  # Adjust to 'None' if working in cross-origin setups
+        samesite='None',  # Prevents CSRF attacks
         max_age=7 * 24 * 60 * 60,  # Match the refresh token lifetime (7 days in your settings)
     )
-
     return response
 
 @api_view(['POST'])
@@ -105,13 +104,19 @@ def logout_view(request):
             token.blacklist()
 
         response = Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
-        response.delete_cookie('refresh_token')
+        response.delete_cookie(
+            key='refresh_token',
+            httponly=True,
+            secure=True,
+            samesite='None'
+        )
         return response
 
     except TokenError as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def refresh_access_token(request):
     refresh_token = request.COOKIES.get('refresh_token')
 

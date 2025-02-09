@@ -69,7 +69,7 @@ export function renderSignupPage() {
   section.innerHTML = container;
   root.appendChild(section);
 
-  const oauthButton = document.querySelector('.btn-floating');
+  const oauthButton = document.getElementById('oauth-42');
   oauthButton.addEventListener('click', async () => {
     try {
       const response = await fetch(`http://localhost:8000/oauth/42/login/`, {

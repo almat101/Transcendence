@@ -137,7 +137,7 @@ CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication he
 
 CORS_ALLOWED_ORIGINS = [
     #"https://transcendece.com",
-    #"http://localhost:3000",  # For local development
+    #"https://localhost",
 ]
 
 ROOT_URLCONF = 'auth_service.urls'
@@ -218,8 +218,8 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        #'rest_framework.permissions.IsAuthenticated',
-        'rest_framework.permissions.AllowAny',  # Change this for testing
+        'rest_framework.permissions.IsAuthenticated',
+        #'rest_framework.permissions.AllowAny',  # Change this for testing
     ),
 }
 

@@ -10,7 +10,7 @@ export function renderChatPage() {
 
   // Add main content
   const chatContainer = document.createElement("div");
-  chatContainer.id = "chat-container";
+  chatContainer.id = "pong-container";
 
   const heading = document.createElement("h1");
   heading.textContent = "Welcome to the chat Page!";
