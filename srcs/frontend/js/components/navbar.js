@@ -65,14 +65,15 @@ export function Navbar() {
   avatarDropdown.className = "dropdown";
 
   const avatarButton = document.createElement("button");
-  avatarButton.className = "btn btn-link dropdown-toggle p-0";
+  avatarButton.className = "btn btn-link p-0";
+  avatarButton.style.border = "none";
   avatarButton.type = "button";
   avatarButton.setAttribute("data-bs-toggle", "dropdown");
   avatarButton.setAttribute("aria-expanded", "false");
 
   const avatar = document.createElement("div");
-  avatar.style.width = "40px";
-  avatar.style.height = "40px";
+  avatar.style.width = "50px";
+  avatar.style.height = "50px";
   avatar.style.borderRadius = "50%";
   avatar.style.backgroundColor = "#0d6efd";
   avatar.style.cursor = "pointer";

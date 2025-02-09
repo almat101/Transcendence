@@ -1,25 +1,25 @@
 export const authService = {
-    async logout() {
-        try {
-            const token = tokenService.getAccessToken();
-            const response = await fetch('http://localhost:8000/auth/logout/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-                credentials: 'include'
-            });
+	async logout() {
+		try {
+			const token = tokenService.getAccessToken();
+			const response = await fetch('http://localhost:8000/auth/logout/', {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+				},
+				credentials: 'include'
+			});
 
-            if (response.ok) {
-                tokenService.removeTokens();
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Logout failed:', error);
-            return false;
-        }
-    },
+			if (response.ok) {
+				tokenService.removeTokens();
+				return true;
+			}
+			return false;
+		} catch (error) {
+			console.error('Logout failed:', error);
+			return false;
+		}
+	},
 
 	async login(username_or_email, password) {
 		try {
@@ -40,16 +40,36 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.setAccessToken(data.access);
-				return true;
+				return { success: true };
 			}
 
-			alert(data.error || 'Login failed. Please try again.');
-			return false;
+			return { success: false, error: data.error };
 
 		} catch (error) {
-			console.error('Error:', error);
-			alert('Something went wrong. Please try again later.');
-			return error;
+			return { success: false, error: error.message };
+		}
+	},
+
+	async oauth42Login() {
+		try {
+			const response = await fetch(`http://localhost:8000/oauth/42/login/`, {
+				method: 'GET',
+				headers: {
+					'Accept': 'application/json'
+				}
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			if (data.authorization_url) {
+				return { success: true, url: data.authorization_url };
+			}
+			throw new Error('No authorization URL received');
+		} catch (error) {
+			return { success: false, error: error.message };
 		}
 	}
 };

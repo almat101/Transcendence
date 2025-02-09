@@ -71,26 +71,11 @@ export function renderSignupPage() {
 
   const oauthButton = document.getElementById('oauth-42');
   oauthButton.addEventListener('click', async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/oauth/42/login/`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.authorization_url) {
-          window.location.href = data.authorization_url;
-      } else {
-          throw new Error('No authorization URL received');
-      }
-    } catch (error) {
-        console.error('Error:', error);
+    const result = await authService.oauth42Login();
+    if (result.success) {
+        window.location.href = result.url;
+    } else {
+        console.error('Error:', result.error);
         alert('Failed to connect to authentication service');
     }
   });

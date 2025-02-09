@@ -131,13 +131,37 @@ MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
 ]
 
+
 CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
 
 CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
 
 CORS_ALLOWED_ORIGINS = [
-    #"https://transcendece.com",
     #"https://localhost",
+]
+
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Allow specific methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
 ROOT_URLCONF = 'auth_service.urls'
@@ -241,7 +265,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-LOGIN_URL = 'auth_service:8000/login'
+LOGIN_URL = 'auth-service/auth/login/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

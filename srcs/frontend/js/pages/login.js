@@ -1,4 +1,4 @@
-import { authService , tokenService } from "../services/authService.js";
+import { authService } from "../services/authService.js";
 import { navigateTo } from '../router.js';
 
 export function renderLoginPage() {
@@ -77,26 +77,11 @@ export function renderLoginPage() {
 
   const oauthButton = document.getElementById('oauth-42');
   oauthButton.addEventListener('click', async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/oauth/42/login/`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.authorization_url) {
-          window.location.href = data.authorization_url;
-      } else {
-          throw new Error('No authorization URL received');
-      }
-    } catch (error) {
-        console.error('Error:', error);
+    const result = await authService.oauth42Login();
+    if (result.success) {
+        window.location.href = result.url;
+    } else {
+        console.error('Error:', result.error);
         alert('Failed to connect to authentication service');
     }
   });
@@ -109,12 +94,13 @@ export function renderLoginPage() {
     const username_or_email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    const success = await authService.login(username_or_email, password);
-    if (success) {
+    const result = await authService.login(username_or_email, password);
+    if (result.success) {
       navigateTo("/");
     }
     else {
-      console.error(success);
+      console.error('Login failed:', result.error);
+      alert('Login failed. Please try again.');
     }
   });
 }

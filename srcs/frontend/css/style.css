@@ -199,11 +199,6 @@ h2 {
   font-size: 12px;
 }
 
-#login-form input::selection{
-  outline: none;
-  border-color: #000;
-}
-
 #login-form .form-control:focus {
   border-color: #00000000;
   box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.295);
@@ -236,6 +231,13 @@ section.text-center {
   justify-content: center;
 }
 
+section.text-lg-start {
+  min-height: calc(100vh - 76px); /* Account for navbar height */
+    background-color: ghostwhite;
+    margin: 0;
+    padding: 0;
+}
+
 .container.py-4 {
   width: 100%;
   padding: 2rem;
@@ -262,4 +264,87 @@ section.text-center {
   color: #000;
   cursor: pointer;
   user-select: none;
+}
+
+#profileSection {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  min-height: calc(100vh - 76px);
+
+}
+
+#profileSection .profile-card {
+  flex: 1;
+  height: 100%;
+}
+
+#profileSection .password-card {
+  width: 400px;
+  margin-top: 20px;
+}
+
+
+#profileSection button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#profileSection button:hover {
+  background-color: #000;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#profileSection button:hover img {
+  filter: invert(1);
+  transition: filter 0.3s ease;
+}
+
+#profileSection .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 10px #000;
+}
+
+#profileSection h3 {
+  font-family: 'Poppins', cursive;
+  font-size: 28px;
+}
+
+#profileSection label {
+  font-family: 'Poppins', cursive;
+  font-size: 16px;
+}
+
+#profileSection .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#profileSection input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#profileSection .form-control:focus {
+  border-color: #00000000;
+  box-shadow: inset 0 0 10px #000;
+  outline: none;
 }
