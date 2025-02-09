@@ -1,5 +1,7 @@
-import {renderPageNotFound} from "../js/pages/404.js"
+import {renderPageNotFound} from "./pages/404.js"
+import {tokenService} from "./services/authService.js";
 const routes = {};
+const publicRoutes = ['/login', '/signup'];
 
 /**
  * Register a route with its associated render function.
@@ -14,12 +16,31 @@ export function registerRoute(path, renderFunction) {
  * Load a page based on the current route.
  * @param {string} route - The path of the route to load.
  */
-export function loadPage(route) {
+
+export async function loadPage(route) {
   const renderFunction = routes[route];
+
+  if (!publicRoutes.includes(route)) {
+      const isAuthenticated = await tokenService.validateToken();
+      if (!isAuthenticated) {
+          navigateTo('/login');
+          return;
+      }
+  }
+  else if (publicRoutes.includes(route))
+  {
+    const isAuthenticated = await tokenService.validateToken();
+    if (isAuthenticated) {
+        navigateTo('/');
+        return;
+    }
+  }
+
+
   if (renderFunction) {
-    renderFunction();
+      renderFunction();
   } else {
-    renderPageNotFound();
+      renderPageNotFound();
   }
 }
 

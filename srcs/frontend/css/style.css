@@ -9,8 +9,33 @@ body {
 
 } */
 
+#not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+#not-found h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 48px;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+#not-found p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+  animation: bounce 2s infinite ease-in-out 0.5s; /* 0.5s delay for staggered effect */
+}
+
 #pong-container{
-   text-align: center;
+  text-align: center;
   background-color: ghostwhite;
   display: flex;
   justify-content: center;
@@ -70,8 +95,256 @@ canvas {
 }
 
 /* Apply the pixel art font to the navbar */
-.navbar, .navbar a, .navbar-brand, .nav-link {
+.navbar {
+  padding: 0.5rem 2rem;
+}
+
+.navbar-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  position: relative;
+  margin: 0 1.5rem;
   font-family: 'Press Start 2P', cursive;
   font-size: 16px;
-  /* color: #000; */
+  transition: color 0.3s ease;
+}
+
+.nav-link:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #000;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover:after {
+  width: 100%;
+  transform: translateY(-2px);
+}
+
+.nav-link:hover {
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.dropdown-menu {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  min-width: 150px;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 12px;
+}
+
+.dropdown-item i {
+  font-size: 14px;
+}
+
+h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+}
+
+/* ...existing code... */
+
+/* Login form specific button styles */
+#login-form button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#login-form button:hover {
+  background-color: #000;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#login-form button:hover img {
+  filter: invert(1);
+  transition: filter 0.3s ease;
+}
+
+#login-form .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#login-form input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#login-form .form-control:focus {
+  border-color: #00000000;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.295);
+  outline: none;
+}
+
+#login-form .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#login-form label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+}
+
+#login-card p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+#login-card a {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+section.text-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+section.text-lg-start {
+  min-height: calc(100vh - 76px); /* Account for navbar height */
+    background-color: ghostwhite;
+    margin: 0;
+    padding: 0;
+}
+
+.container.py-4 {
+  width: 100%;
+  padding: 2rem;
+}
+
+.password-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-start;
+}
+
+.show-password-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+
+}
+
+.show-password-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  color: #000;
+  cursor: pointer;
+  user-select: none;
+}
+
+#profileSection {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  min-height: calc(100vh - 76px);
+
+}
+
+#profileSection .profile-card {
+  flex: 1;
+  height: 100%;
+}
+
+#profileSection .password-card {
+  width: 400px;
+  margin-top: 20px;
+}
+
+
+#profileSection button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#profileSection button:hover {
+  background-color: #000;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#profileSection button:hover img {
+  filter: invert(1);
+  transition: filter 0.3s ease;
+}
+
+#profileSection .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 10px #000;
+}
+
+#profileSection h3 {
+  font-family: 'Poppins', cursive;
+  font-size: 28px;
+}
+
+#profileSection label {
+  font-family: 'Poppins', cursive;
+  font-size: 16px;
+}
+
+#profileSection .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#profileSection input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#profileSection .form-control:focus {
+  border-color: #00000000;
+  box-shadow: inset 0 0 10px #000;
+  outline: none;
 }
