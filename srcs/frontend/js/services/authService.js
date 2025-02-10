@@ -30,8 +30,8 @@ export const authService = {
 				'Accept': 'application/json'
 				},
 				body: JSON.stringify({
-				username_or_email,
-				password
+					username_or_email,
+					password
 				}),
 				credentials: 'include'
 			});

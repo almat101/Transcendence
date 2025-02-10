@@ -122,19 +122,21 @@ def update_avatar(request):
 @permission_classes([IsAuthenticated])
 def update_user(request):
     data = request.data
-    user_id = data.get('user_id')
     username = data.get('username')
     email = data.get('email')
 
-    if not user_id or not username or not email:
+    if not username or not email:
         return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = UserProfile.objects.get(id=user_id)
-        user.username = username
-        user.email = email
-        user.full_clean()  # Validate the model fields
-        user.save()
+        user = UserProfile.objects.get(id=request.user.id)
+        if (user.username != username or user.email != email):
+            user.username = username
+            user.email = email
+            user.full_clean()
+            user.save()
+        else:
+            return Response({'message': 'No changes detected'})
         return Response({'message': 'User updated successfully'})
     except UserProfile.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

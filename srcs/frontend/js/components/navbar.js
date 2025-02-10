@@ -1,29 +1,57 @@
 import { navigateTo } from "../router.js";
-import { authService } from "../services/authService.js";
 
 export function Navbar() {
   const navbar = document.createElement("nav");
-  navbar.className = "navbar navbar-expand-md bg-body-tertiary";
+  navbar.className = "navbar navbar-expand-lg bg-body-tertiary";
 
   const container = document.createElement("div");
   container.className = "container-fluid";
 
+  //toggler
   const toggler = document.createElement("button");
-  toggler.className = "navbar-toggler";
+  toggler.className = "navbar-toggler d-lg-none";
   toggler.type = "button";
-  toggler.setAttribute("data-bs-toggle", "collapse");
-  toggler.setAttribute("data-bs-target", "#navbarTogglerPong");
-  toggler.setAttribute("aria-controls", "navbarTogglerPong");
-  toggler.setAttribute("aria-expanded", "false");
+  toggler.setAttribute("data-bs-toggle", "offcanvas");
+  toggler.setAttribute("data-bs-target", "#offcanvasNavbar");
+  toggler.setAttribute("aria-controls", "offcanvasNavbar");
   toggler.setAttribute("aria-label", "Toggle navigation");
 
   const togglerIcon = document.createElement("span");
   togglerIcon.className = "navbar-toggler-icon";
   toggler.appendChild(togglerIcon);
 
+  container.appendChild(toggler);
+
   const collapse = document.createElement("div");
-  collapse.className = "collapse navbar-collapse";
-  collapse.id = "navbarTogglerPong";
+  collapse.className = "offcanvas offcanvas-end d-lg-none";
+  collapse.id = "offcanvasNavbar";
+  collapse.tabIndex = -1;
+  collapse.setAttribute("aria-labelledby", "offcanvasNavbarLabel");
+
+  const toggleHeader = document.createElement("div");
+  toggleHeader.className = "offcanvas-header";
+
+  const toggleTitle = document.createElement("h5");
+  toggleTitle.className = "offcanvas-title";
+  toggleTitle.id = "offcanvasNavbarLabel";
+  toggleTitle.textContent = "Menu";
+
+  const toggleClose = document.createElement("button");
+  toggleClose.className = "btn-close text-reset";
+  toggleClose.type = "button";
+  toggleClose.setAttribute("data-bs-dismiss", "offcanvas");
+  toggleClose.setAttribute("aria-label", "Close");
+
+  toggleHeader.appendChild(toggleTitle);
+  toggleHeader.appendChild(toggleClose);
+
+  collapse.appendChild(toggleHeader);
+
+  const togglerBody = document.createElement("div");
+  togglerBody.className = "offcanvas-body d-flex flex-column";
+
+  const togglerList = document.createElement("ul");
+  togglerList.className = "navbar-nav justify-content-center flex-grow-0 w-100";
 
   const links = [
     { name: "Home", route: "/" },
@@ -31,17 +59,73 @@ export function Navbar() {
     { name: "Chat", route: "/chat" },
   ];
 
+  const menuItems = [
+    { name: "Settings", route: "/settings", icon: "gear" },
+    { name: "Logout", className: "text-danger", route: "/logout", icon: "box-arrow-in-right" },
+  ];
+
+
+  links.forEach((link) => {
+    const listItem = document.createElement("li");
+    listItem.className = "nav-item toggler-nav-item";
+
+    const anchor = document.createElement("a");
+    anchor.id = "togglerList";
+    anchor.className = "nav-link";
+    anchor.textContent = link.name;
+    anchor.href = link.route;
+
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigateTo(link.route);
+    });
+
+    listItem.appendChild(anchor);
+    togglerList.appendChild(listItem);
+  });
+
+  togglerBody.appendChild(togglerList);
+
+  const collapseFooter = document.createElement("div");
+  collapseFooter.className = "offcanvas-footer mt-auto";
+
+  const collapseFooterList = document.createElement("ul");
+  collapseFooterList.className = "navbar-nav";
+
+  menuItems.forEach((link) => {
+    const listItem = document.createElement("li");
+    listItem.className = "nav-item footer-nav-item";
+
+    const anchor = document.createElement("a");
+    anchor.className = `nav-link footer-nav-link ${link.className || ""}`;
+    anchor.textContent = link.name;
+    anchor.href = link.route;
+
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
+        navigateTo(link.route);
+    });
+
+    listItem.appendChild(anchor);
+    collapseFooterList.appendChild(listItem);
+  });
+
+  collapseFooter.appendChild(collapseFooterList);
+  togglerBody.appendChild(collapseFooter);
+
+  collapse.appendChild(togglerBody);
+  container.appendChild(collapse);
+
+  //nav bar
+
   const nav = document.createElement("ul");
-  nav.className = "navbar-nav d-flex align-items-center w-100";
+  nav.className = "navbar-nav d-none d-lg-flex align-items-center w-100";
 
   const leftNav = document.createElement("div");
-  leftNav.className = "me-auto d-flex align-items-center";
+  leftNav.className = "nav-left";
 
   const centerNav = document.createElement("div");
-  centerNav.className = "mx-auto d-flex";
-
-  const rightNav = document.createElement("div");
-  rightNav.className = "ms-auto";
+  centerNav.className = "nav-center";
 
   links.forEach((link) => {
     const listItem = document.createElement("li");
@@ -62,7 +146,7 @@ export function Navbar() {
   });
 
   const avatarDropdown = document.createElement("div");
-  avatarDropdown.className = "dropdown";
+  avatarDropdown.className = "dropdown d-none d-lg-block";
 
   const avatarButton = document.createElement("button");
   avatarButton.className = "btn btn-link p-0";
@@ -71,195 +155,89 @@ export function Navbar() {
   avatarButton.setAttribute("data-bs-toggle", "dropdown");
   avatarButton.setAttribute("aria-expanded", "false");
 
+  const avatarContainer = document.createElement("div");
+  avatarContainer.className = "avatar-container";
+
   const avatar = document.createElement("div");
-  avatar.style.width = "50px";
-  avatar.style.height = "50px";
+  avatar.className = "avatar-circle";
+  avatar.style.width = "40px";
+  avatar.style.height = "40px";
   avatar.style.borderRadius = "50%";
-  avatar.style.backgroundColor = "#0d6efd";
+  avatar.style.backgroundColor = "ghostwhite";
   avatar.style.cursor = "pointer";
+
+  const avatarTextContainer = document.createElement("div");
+  avatarTextContainer.className = "avatar-text";
+  avatarTextContainer.textContent = "Me";
+
+  const arrowIcon = document.createElement("i");
+  arrowIcon.className = "bi bi-chevron-down";
+  avatarTextContainer.appendChild(arrowIcon);
+
+  avatarContainer.appendChild(avatar);
+  avatarContainer.appendChild(avatarTextContainer);
 
   const dropdownMenu = document.createElement("ul");
   dropdownMenu.className = "dropdown-menu dropdown-menu-start";
 
-  const menuItems = [
-    { name: "Settings", icon: "gear", route: "/settings" },
-    { name: "Logout", icon: "box-arrow-in-right", className: "text-danger" }
-  ];
-
   menuItems.forEach(item => {
     const menuItem = document.createElement("li");
+
     const menuLink = document.createElement("a");
     menuLink.className = `dropdown-item ${item.className || ""}`;
-    if (item.route) {
-      menuLink.href = item.route;
-    }
+    menuLink.href = item.route;
+    menuLink.textContent = item.name;
 
     const icon = document.createElement("i");
     icon.className = `bi bi-${item.icon}`;
 
     menuLink.appendChild(icon);
-    menuLink.appendChild(document.createTextNode(item.name));
 
-    menuLink.addEventListener("click", async (e) => {
+    menuLink.addEventListener("click", (e) => {
       e.preventDefault();
-      if (item.name === "Logout") {
-        const success = await authService.logout();
-        if (success) {
-          navigateTo("/login");
-        }
-        else {
-          console.error("Logout failed");
-        }
-      } else {
         navigateTo(item.route);
-      }
     });
 
     menuItem.appendChild(menuLink);
     dropdownMenu.appendChild(menuItem);
   });
 
-  avatarButton.appendChild(avatar);
+  const themeTogglerli = document.createElement("li");
+  const themeToggler = document.createElement("button");
+  themeToggler.className = "dropdown-item";
+  themeToggler.innerHTML = `<i class="bi bi-sun-fill theme-icon-active" data-theme-icon-active></i>`;
+  themeToggler.addEventListener("click", () => {
+      const theme = document.documentElement.getAttribute('data-bs-theme');
+      const newTheme = theme === 'light' ? 'dark' : 'light';
+      window.setTheme(newTheme);
+      updateThemeIcon(newTheme);
+  });
+
+  function updateThemeIcon(theme) {
+      const icon = themeToggler.querySelector('i');
+      icon.className = theme === 'light' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+  }
+
+  updateThemeIcon(document.documentElement.getAttribute('data-bs-theme'));
+
+  themeTogglerli.appendChild(themeToggler);
+  dropdownMenu.appendChild(themeTogglerli);
+
+
+  avatarButton.appendChild(avatarContainer);
   avatarDropdown.appendChild(avatarButton);
   avatarDropdown.appendChild(dropdownMenu);
   leftNav.appendChild(avatarDropdown);
+
+  const rightNav = document.createElement("div");
+  rightNav.className = "d-flex align-items-center";
 
   nav.appendChild(leftNav);
   nav.appendChild(centerNav);
   nav.appendChild(rightNav);
 
-  collapse.appendChild(nav);
-  container.appendChild(toggler);
-  container.appendChild(collapse);
+  container.appendChild(nav);
   navbar.appendChild(container);
 
   return navbar;
 }
-
-// export function Navbar() {
-//   // Create the navbar container
-//   const navbar = document.createElement("nav");
-//   navbar.className = "navbar";
-
-//   // Add links
-//   const links = [
-//     { name: "Home", route: "/" },
-//     { name: "Login", route: "/login" },
-//     { name: "Pong", route: "/pong" },
-//     { name: "Chat", route: "/chat"},
-//     { name: "Users", route: "/users"},
-//     { name: "Post", route: "/post"}
-//   ];
-
-//   links.forEach((link) => {
-//     const anchor = document.createElement("a");
-//     anchor.textContent = link.name;
-//     anchor.href = link.route;
-
-//     // Prevent full page reload and use SPA navigation
-//     anchor.addEventListener("click", (event) => {
-//       event.preventDefault();
-//       navigateTo(link.route);
-//     });
-
-//     navbar.appendChild(anchor);
-//   });
-
-//   return navbar;
-// }
-
-// export function Navbar() {
-//   // Create the navbar container
-//   const navbar = document.createElement("nav");
-//   navbar.className = "navbar bg-body-tertiary fixed-top";
-
-//   const container = document.createElement("div");
-//   container.className = "container-fluid";
-
-//   const brand = document.createElement("a");
-//   brand.className = "navbar-brand";
-//   brand.href = "#";
-//   brand.textContent = "Offcanvas navbar";
-
-//   const toggler = document.createElement("button");
-//   toggler.className = "navbar-toggler";
-//   toggler.type = "button";
-//   toggler.setAttribute("data-bs-toggle", "offcanvas");
-//   toggler.setAttribute("data-bs-target", "#offcanvasNavbar");
-//   toggler.setAttribute("aria-controls", "offcanvasNavbar");
-//   toggler.setAttribute("aria-label", "Toggle navigation");
-
-//   const togglerIcon = document.createElement("span");
-//   togglerIcon.className = "navbar-toggler-icon";
-//   toggler.appendChild(togglerIcon);
-
-//   const offcanvas = document.createElement("div");
-//   offcanvas.className = "offcanvas offcanvas-end";
-//   offcanvas.tabIndex = -1;
-//   offcanvas.id = "offcanvasNavbar";
-//   offcanvas.setAttribute("aria-labelledby", "offcanvasNavbarLabel");
-
-//   const offcanvasHeader = document.createElement("div");
-//   offcanvasHeader.className = "offcanvas-header";
-
-//   const offcanvasTitle = document.createElement("h5");
-//   offcanvasTitle.className = "offcanvas-title";
-//   offcanvasTitle.id = "offcanvasNavbarLabel";
-//   offcanvasTitle.textContent = "Offcanvas";
-
-//   const closeButton = document.createElement("button");
-//   closeButton.type = "button";
-//   closeButton.className = "btn-close";
-//   closeButton.setAttribute("data-bs-dismiss", "offcanvas");
-//   closeButton.setAttribute("aria-label", "Close");
-
-//   offcanvasHeader.appendChild(offcanvasTitle);
-//   offcanvasHeader.appendChild(closeButton);
-
-//   const offcanvasBody = document.createElement("div");
-//   offcanvasBody.className = "offcanvas-body";
-
-//   const navList = document.createElement("ul");
-//   navList.className = "navbar-nav justify-content-end flex-grow-1 pe-3";
-
-//   const links = [
-//     { name: "Home", route: "/" },
-//     { name: "Login", route: "/login" },
-//     { name: "Pong", route: "/pong" },
-//     { name: "Chat", route: "/chat" },
-//     { name: "Users", route: "/users" },
-//     { name: "Post", route: "/post" }
-//   ];
-
-//   links.forEach((link) => {
-//     const listItem = document.createElement("li");
-//     listItem.className = "nav-item";
-
-//     const anchor = document.createElement("a");
-//     anchor.className = "nav-link";
-//     anchor.textContent = link.name;
-//     anchor.href = link.route;
-
-//     // Prevent full page reload and use SPA navigation
-//     anchor.addEventListener("click", (event) => {
-//       event.preventDefault();
-//       navigateTo(link.route);
-//     });
-
-//     listItem.appendChild(anchor);
-//     navList.appendChild(listItem);
-//   });
-
-//   offcanvasBody.appendChild(navList);
-
-//   offcanvas.appendChild(offcanvasHeader);
-//   offcanvas.appendChild(offcanvasBody);
-
-//   container.appendChild(brand);
-//   container.appendChild(toggler);
-//   container.appendChild(offcanvas);
-
-//   navbar.appendChild(container);
-
-//   return navbar;
-// }

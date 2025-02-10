@@ -8,13 +8,18 @@ export function renderHomePage() {
   const navbar = Navbar();
   root.appendChild(navbar);
 
-  // all code of the home page is injected with an inner html
-  root.innerHTML += `
-  <div id="pong-container">
-    <h1>Welcome to the Home Page!</h1>
-    <p>This is the Home Page!</p>
-  </div>
-`;
+  const chatContainer = document.createElement("div");
+  chatContainer.id = "pong-container";
+
+  const heading = document.createElement("h1");
+  heading.textContent = "Welcome to the Home Page!!";
+  chatContainer.appendChild(heading);
+
+  const description = document.createElement("p");
+  description.textContent = "This is the Home Page!";
+  chatContainer.appendChild(description);
+
+  root.appendChild(chatContainer);
 }
 
 //// all code is created manually(document.createElement) and added at the end(.appendchild)
