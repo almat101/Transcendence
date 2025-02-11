@@ -101,7 +101,7 @@ export function renderLoginPage() {
     }
     else {
       console.error('Login failed:', result.error);
-      showAlert(data.error || 'Login failed. Please try again.');
+      showAlert('Login failed. Please try again.');
     }
   });
 }

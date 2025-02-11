@@ -47,6 +47,11 @@ export function renderSignupPage() {
                   <input type="password" id="password" class="form-control" required />
                 </div>
 
+                <div class="form-outline mb-4">
+                  <label class="form-label" for="confirm-password">Confirm Password</label>
+                  <input type="password" id="confirm-password" class="form-control" required />
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-block mb-4">
                   Sign up
                 </button>
@@ -91,6 +96,7 @@ export function renderSignupPage() {
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const confirm_password = document.getElementById('confirm-password').value;
 
     // Frontend validation
     if (!username.match(/^[a-zA-Z0-9_]{3,20}$/)) {
@@ -100,6 +106,16 @@ export function renderSignupPage() {
 
     if (!email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
       showAlert("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 8) {
+      showAlert("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (password !== confirm_password) {
+      showAlert("Passwords do not match");
       return;
     }
 
@@ -113,7 +129,8 @@ export function renderSignupPage() {
         body: JSON.stringify({
           username,
           email,
-          password
+          password,
+          confirm_password
         })
      });
 
@@ -130,7 +147,10 @@ export function renderSignupPage() {
           showAlert(data.email);
         } else if (data.password) {
           showAlert(data.password);
-        } else {
+        } else if (data.confirm_password) {
+          showAlert(data.confirm_password);
+        }
+        else {
           showAlert(data.error || 'Signup failed. Please try again.');
         }
       }

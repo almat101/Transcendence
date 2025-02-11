@@ -28,8 +28,10 @@ export async function renderSettingsPage() {
                 <div class="profile-card">
                     <div class="card h-100">
                         <div class="card-body d-flex flex-column">
-                            <h3 class="card-title mb-4">Profile Settings</h3>
-
+                            <div class="d-flex justify-content-between">
+                                <h3 class="card-title mb-4">Profile Settings</h3>
+                                <a">Member since: ${new Date(userData.created_at).toLocaleDateString()}</a>
+                            </div>
                             <div class="text-center mb-4">
                                 <div id="avatarPreview" style="width: 100px; height: 100px; border-radius: 50%; background-color: ${userData.avatar_color || '#0d6efd'}; margin: 0 auto;"></div>
                             </div>
@@ -43,6 +45,11 @@ export async function renderSettingsPage() {
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" value="${userData.email || ''}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Bio</label>
+                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''}" required>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 mt-4 mb-4">Update Profile</button>
@@ -68,7 +75,7 @@ export async function renderSettingsPage() {
 
                                 <div class="mb-3">
                                     <label class="form-label">Re-type New Password</label>
-                                    <input type="password" class="form-control" id="renewPassword" required>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100  mt-4 mb-4">Update Password</button>
@@ -97,11 +104,12 @@ export async function renderSettingsPage() {
                     body: JSON.stringify({
                         username: document.getElementById('username').value,
                         email: document.getElementById('email').value,
+                        bio: document.getElementById('bio').value
                     })
                 });
 
                 if (response.ok) {
-                    alert('Profile updated successfully!');
+                    showAlert('Profile updated successfully', 'success');
                 } else {
                     const error = await response.json();
                     showAlert(error.error || 'Failed to update profile', 'danger');
@@ -116,7 +124,7 @@ export async function renderSettingsPage() {
             e.preventDefault();
 
             try {
-                if (document.getElementById('renewPassword').value !== document.getElementById('newPassword').value) {
+                if (document.getElementById('confirmPassword').value !== document.getElementById('newPassword').value) {
                     showAlert('Passwords do not match');
                     return;
                 }
@@ -128,7 +136,8 @@ export async function renderSettingsPage() {
                     },
                     body: JSON.stringify({
                         old_password: document.getElementById('currentPassword').value,
-                        new_password: document.getElementById('newPassword').value
+                        new_password: document.getElementById('newPassword').value,
+                        confirm_password: document.getElementById('confirmPassword').value
                     })
                 });
 
