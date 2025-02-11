@@ -9,6 +9,7 @@ import { renderPostPage } from "./pages/post.js";
 import { renderSettingsPage } from "./pages/settings.js";
 import { renderLogoutPage } from "./pages/logout.js";
 import { renderPageNotFound } from "./pages/404.js";
+import { renderOAuthCallbackPage } from "./pages/oauthCallback.js";
 //import { navigateTo } from "./router.js";
 
 // Register routes
@@ -22,5 +23,6 @@ registerRoute("/post", renderPostPage);
 registerRoute("/404", renderPageNotFound);
 registerRoute("/settings", renderSettingsPage);
 registerRoute("/logout", renderLogoutPage);
+registerRoute("/oauth/callback", renderOAuthCallbackPage);
 
 loadPage(window.location.pathname);

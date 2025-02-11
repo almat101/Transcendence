@@ -1,5 +1,6 @@
 import { tokenService } from "../services/authService.js";
 import { Navbar } from "../components/navbar.js";
+import { showAlert } from '../components/alert.js';
 
 export async function renderSettingsPage() {
     const root = document.getElementById("root");
@@ -103,11 +104,11 @@ export async function renderSettingsPage() {
                     alert('Profile updated successfully!');
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Failed to update profile');
+                    showAlert(error.error || 'Failed to update profile', 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to update profile');
+                showAlert(error.error || 'Failed to update profile', 'danger');
             }
         });
 
@@ -116,7 +117,7 @@ export async function renderSettingsPage() {
 
             try {
                 if (document.getElementById('renewPassword').value !== document.getElementById('newPassword').value) {
-                    alert('Passwords do not match');
+                    showAlert('Passwords do not match');
                     return;
                 }
                 const response = await fetch('http://localhost:8000/user/password-reset/', {
@@ -132,20 +133,20 @@ export async function renderSettingsPage() {
                 });
 
                 if (response.ok) {
-                    alert('Password updated successfully!');
+                    showAlert('Password updated successfully', 'success');
                     document.getElementById('passwordForm').reset();
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Failed to update password');
+                    showAlert(error.error || 'Failed to update password', 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to update password');
+                showAlert(error.error || 'Failed to update password', 'danger');
             }
         });
 
     } catch (error) {
         console.error('Error fetching user data:', error);
-        container.innerHTML = '<div class="alert alert-danger">Failed to load user data</div>';
+        showAlert('Failed to fetch user data', 'danger');
     }
 }

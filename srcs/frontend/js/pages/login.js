@@ -1,5 +1,6 @@
 import { authService } from "../services/authService.js";
 import { navigateTo } from '../router.js';
+import { showAlert } from '../components/alert.js';
 
 export function renderLoginPage() {
   const root = document.getElementById("root");
@@ -82,7 +83,7 @@ export function renderLoginPage() {
         window.location.href = result.url;
     } else {
         console.error('Error:', result.error);
-        alert('Failed to connect to authentication service');
+        showAlert('Servers are busy, try again!');
     }
   });
 
@@ -100,7 +101,7 @@ export function renderLoginPage() {
     }
     else {
       console.error('Login failed:', result.error);
-      alert('Login failed. Please try again.');
+      showAlert(data.error || 'Login failed. Please try again.');
     }
   });
 }

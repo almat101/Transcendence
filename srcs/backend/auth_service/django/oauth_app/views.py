@@ -2,7 +2,8 @@ import requests
 from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .models import OAuth2Profile
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def oauth2_login(request):
     """Initiate 42 OAuth2 login flow"""
     config = settings.OAUTH2_PROVIDERS['42']
@@ -25,9 +27,11 @@ def oauth2_login(request):
         f"scope={config['SCOPE']}&"
         f"state=a_very_long_random_string_witchmust_be_unguessable"
     )
-    return redirect(auth_url)
+
+    return Response({'authorization_url': auth_url})
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def oauth2_callback(request):
     """Handle 42 OAuth2 callback"""
     code = request.GET.get('code')

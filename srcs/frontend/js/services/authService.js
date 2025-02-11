@@ -60,14 +60,37 @@ export const authService = {
 			});
 
 			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
+				return { success: false, error: 'Failed to connect to 42' };
 			}
 
 			const data = await response.json();
 			if (data.authorization_url) {
 				return { success: true, url: data.authorization_url };
 			}
-			throw new Error('No authorization URL received');
+			return { success: false, error: data.error };
+		} catch (error) {
+			return { success: false, error: error.message };
+		}
+	},
+
+	async handleOAuthCallback(code) {
+		try {
+			const response = await fetch(`http://localhost:8000/oauth/42/callback`, {
+				method: 'GET',
+				credentials: 'include',
+				body: JSON.stringify({
+					code: code
+				}),
+			});
+
+			const data = await response.json();
+
+			if (response.ok) {
+				tokenService.setAccessToken(data.access);
+				return { success: true };
+			}
+
+			return { success: false, error: data.error };
 		} catch (error) {
 			return { success: false, error: error.message };
 		}

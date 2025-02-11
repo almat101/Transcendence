@@ -1,3 +1,6 @@
+import { showAlert } from '../components/alert.js';
+import { authService } from '../services/authService.js';
+
 export function renderSignupPage() {
   const root = document.getElementById("root");
   root.innerHTML = ""; // Clear previous content
@@ -76,8 +79,8 @@ export function renderSignupPage() {
         window.location.href = result.url;
     } else {
         console.error('Error:', result.error);
-        alert('Failed to connect to authentication service');
-    }
+        showAlert('Servers are busy, try again!', 'danger');
+      }
   });
 
   // Add form submission handler
@@ -91,12 +94,12 @@ export function renderSignupPage() {
 
     // Frontend validation
     if (!username.match(/^[a-zA-Z0-9_]{3,20}$/)) {
-      alert("Username must be 3-20 characters long and contain only letters, numbers, and underscores");
+      showAlert("Username must be 3-20 characters long and contain only letters, numbers, and underscores");
       return;
     }
 
     if (!email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
-      alert("Please enter a valid email address");
+      showAlert("Please enter a valid email address");
       return;
     }
 
@@ -117,23 +120,23 @@ export function renderSignupPage() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Account created successfully!');
+        showAlert('Signup successful! Redirecting to login page...', 'success');
         window.location.href = '/login';
       } else {
         // Handle different error cases
         if (data.username) {
-          alert(data.username);
+          showAlert(data.username);
         } else if (data.email) {
-          alert(data.email);
+          showAlert(data.email);
         } else if (data.password) {
-          alert(data.password);
+          showAlert(data.password);
         } else {
-          alert(data.error || 'Signup failed. Please try again.');
+          showAlert(data.error || 'Signup failed. Please try again.');
         }
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Something went wrong. Please try again later.');
+      showAlert('Something went wrong. Please try again later.', 'danger');
     }
   });
 }

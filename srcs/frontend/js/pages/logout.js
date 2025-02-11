@@ -1,6 +1,6 @@
-import { Navbar } from "../components/navbar.js";
 import { authService } from "../services/authService.js";
 import { navigateTo } from "../router.js";
+import { showAlert } from "../components/alert.js";
 
 export async function renderLogoutPage() {
     const root = document.getElementById("root");
@@ -46,8 +46,10 @@ export async function renderLogoutPage() {
         }
 		else {
 			console.error('Logout failed. Refreshing page...');
+            showAlert('Failed to logout. Please try again.');
 		}
     } catch (error) {
+        showAlert('Failed to logout. Please try again.');
         console.error('Logout error:', error);
         root.innerHTML = `
             <div id="pong-container">
