@@ -3,6 +3,21 @@ import { Navbar } from "../components/navbar.js";
 import { showAlert } from '../components/alert.js';
 
 export async function renderSettingsPage() {
+    let userData;
+
+    try {
+        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
+            headers: {
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            }
+        });
+        userData = await response.json();
+
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        showAlert('Failed to fetch user data', 'danger');
+    }
+
     const root = document.getElementById("root");
     root.innerHTML = "";
 
@@ -12,17 +27,7 @@ export async function renderSettingsPage() {
     const section = document.createElement('section');
     section.className = 'text-lg-start';
 
-    // Fetch current user data
-    try {
-        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
-            headers: {
-                'Authorization': `Bearer ${tokenService.getAccessToken()}`
-            }
-        });
-        const userData = await response.json();
-
-        // Create profile section
-        const profileSection = `
+    const profileSection = `
         <div class="container align-items-center">
             <div id="profileSection">
                 <div class="profile-card">
@@ -49,7 +54,7 @@ export async function renderSettingsPage() {
 
                                 <div class="mb-3">
                                     <label class="form-label">Bio</label>
-                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''}" required>
+                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''}">
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 mt-4 mb-4">Update Profile</button>
@@ -83,79 +88,146 @@ export async function renderSettingsPage() {
                         </div>
                     </div>
                 </div>
+
+                <div class="delete-account-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title mb-4">Delete Account</h3>
+                            <p>Once you delete your account, there is no going back. Please be certain.</p>
+                            <button type="button" class="btn w-100 mt-4 mb-4" id="deleteAccount" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                                <i class="bi bi-x-lg" data-bs-dismiss="modal" aria-label="Close"></i>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                                ${!userData.has_oauth ? `
+                                    <div class="form-group">
+                                        <label for="deleteConfirmPassword">Enter your password to confirm:</label>
+                                        <input type="password" class="form-control" id="deleteConfirmPassword" required>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" id="confirmDelete">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         `;
 
-        section.innerHTML += profileSection;
-        root.appendChild(section)
+    section.innerHTML += profileSection;
+    root.appendChild(section);
 
-        // Add event listeners
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    // Add event listeners
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
-            try {
-                const response = await fetch('http://localhost:8000/user/updateuser/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenService.getAccessToken()}`
-                    },
-                    body: JSON.stringify({
-                        username: document.getElementById('username').value,
-                        email: document.getElementById('email').value,
-                        bio: document.getElementById('bio').value
-                    })
-                });
+        try {
+            const response = await fetch('http://localhost:8000/user/updateuser/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenService.getAccessToken()}`
+                },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    bio: document.getElementById('bio').value
+                })
+            });
 
-                if (response.ok) {
-                    showAlert('Profile updated successfully', 'success');
-                } else {
-                    const error = await response.json();
-                    showAlert(error.error || 'Failed to update profile', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
+            if (response.ok) {
+                showAlert('Profile updated successfully', 'success');
+            } else {
+                const error = await response.json();
                 showAlert(error.error || 'Failed to update profile', 'danger');
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert(error.error || 'Failed to update profile', 'danger');
+        }
+    });
 
-        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            try {
-                if (document.getElementById('confirmPassword').value !== document.getElementById('newPassword').value) {
-                    showAlert('Passwords do not match');
-                    return;
-                }
-                const response = await fetch('http://localhost:8000/user/password-reset/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenService.getAccessToken()}`
-                    },
-                    body: JSON.stringify({
-                        old_password: document.getElementById('currentPassword').value,
-                        new_password: document.getElementById('newPassword').value,
-                        confirm_password: document.getElementById('confirmPassword').value
-                    })
-                });
+        try {
+            if (document.getElementById('confirmPassword').value !== document.getElementById('newPassword').value) {
+                showAlert('Passwords do not match');
+                return;
+            }
+            const response = await fetch('http://localhost:8000/user/password-reset/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenService.getAccessToken()}`
+                },
+                body: JSON.stringify({
+                    old_password: document.getElementById('currentPassword').value,
+                    new_password: document.getElementById('newPassword').value,
+                    confirm_password: document.getElementById('confirmPassword').value
+                })
+            });
 
-                if (response.ok) {
-                    showAlert('Password updated successfully', 'success');
-                    document.getElementById('passwordForm').reset();
-                } else {
-                    const error = await response.json();
-                    showAlert(error.error || 'Failed to update password', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
+            if (response.ok) {
+                showAlert('Password updated successfully', 'success');
+                document.getElementById('passwordForm').reset();
+            } else {
+                const error = await response.json();
                 showAlert(error.error || 'Failed to update password', 'danger');
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert(error.error || 'Failed to update password', 'danger');
+        }
+    });
 
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        showAlert('Failed to fetch user data', 'danger');
-    }
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+        try {
+            const headers = {
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            };
+
+            // If not OAuth user, include password
+            if (!userData.has_oauth) {
+                const password = document.getElementById('deleteConfirmPassword').value;
+                if (!password) {
+                    showAlert('Password is required', 'danger');
+                    return;
+                }
+                headers['Content-Type'] = 'application/json';
+            }
+
+            const response = await fetch('http://localhost:8000/user/deleteuser/', {
+                method: 'POST',
+                headers: headers,
+                body: !userData.has_oauth ? JSON.stringify({
+                    password: document.getElementById('deleteConfirmPassword').value
+                }) : undefined,
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                tokenService.removeTokens();
+                window.location.replace('/login');
+            } else {
+                const error = await response.json();
+                showAlert(error.error || 'Failed to delete account', 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert(error.error || 'Failed to delete account', 'danger');
+        }
+    });
 }

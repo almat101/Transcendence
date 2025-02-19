@@ -99,9 +99,5 @@ export function renderLoginPage() {
     if (result.success) {
       navigateTo("/");
     }
-    else {
-      console.error('Login failed:', result.error);
-      showAlert('Login failed. Please try again.');
-    }
   });
 }

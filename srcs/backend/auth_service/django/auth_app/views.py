@@ -134,12 +134,20 @@ def refresh_access_token(request):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+        #check if user is valid
+        user = authenticate(request, username=refresh['username'], password=refresh['password'])
+        if user is None:
+            return Response(
+                {'error': 'Invalid user'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         # Generate new access token
         access_token = str(refresh.access_token)
 
         response = Response({
             'access': access_token,
-        })
+        }, status=status.HTTP_200_OK)
 
         return response
 
@@ -158,3 +166,4 @@ def refresh_access_token(request):
 @permission_classes([IsAuthenticated])
 def validate_token(request):
     return Response({'valid': True}, status=status.HTTP_200_OK)
+

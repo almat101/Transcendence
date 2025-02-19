@@ -18,11 +18,14 @@ class UserProfile(AbstractUser):
     #is_superuser = models.BooleanField(default=False)
 
     email = models.EmailField(unique=True)
+    email_is_verified = models.BooleanField(default=False)
+
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, default='avatars/default_avatar.jpg')
     bio = models.TextField(blank=True, max_length=500)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    has_2fa = models.BooleanField(default=False)
     has_oauth = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'

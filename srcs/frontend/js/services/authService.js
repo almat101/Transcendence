@@ -1,3 +1,5 @@
+import { showAlert } from '../components/alert.js';
+
 export const authService = {
 	async logout() {
 		try {
@@ -40,12 +42,15 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.setAccessToken(data.access);
+				showAlert('Login successful', 'success');
 				return { success: true };
 			}
 
+			showAlert(data.error);
 			return { success: false, error: data.error };
 
 		} catch (error) {
+			showAlert('Failed to login. Please try again.', 'danger');
 			return { success: false, error: error.message };
 		}
 	},
