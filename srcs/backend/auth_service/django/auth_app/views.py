@@ -106,9 +106,6 @@ def logout_view(request):
         response = Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
         response.delete_cookie(
             key='refresh_token',
-            httponly=True,
-            secure=True,
-            samesite='None'
         )
         return response
 

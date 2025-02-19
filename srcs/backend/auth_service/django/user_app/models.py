@@ -17,14 +17,13 @@ class UserProfile(AbstractUser):
     #is_staff = models.BooleanField(default=False)
     #is_superuser = models.BooleanField(default=False)
 
-    #friends = models.ManyToManyField('self', through='Friends', symmetrical=False)
-
     email = models.EmailField(unique=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, default='avatars/default_avatar.jpg')
     bio = models.TextField(blank=True, max_length=500)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+    has_oauth = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
@@ -42,12 +41,12 @@ class Friends(models.Model):
 
     user = models.ForeignKey(
         UserProfile,
-        related_name='friend_initiated',
+        related_name='friend_requests_sent',
         on_delete=models.CASCADE
     )
     friend = models.ForeignKey(
         UserProfile,
-        related_name='friend_received',
+        related_name='friend_requests_received',
         on_delete=models.CASCADE
     )
     status = models.CharField(
@@ -59,6 +58,9 @@ class Friends(models.Model):
 
     class Meta:
         unique_together = ('user', 'friend')
-
-    def __str__(self):
-        return f"{self.user.username} - {self.friend.username} ({self.status})"
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('friend')),
+                name='no_self_friendship'
+            )
+        ]

@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
@@ -203,7 +204,7 @@ OAUTH2_PROVIDERS = {
     '42': {
         'CLIENT_ID': CLIENT42_ID,
         'CLIENT_SECRET': CLIENT42_SECRET,
-        'REDIRECT_URI': 'http://localhost:8000/oauth/42/callback/',
+        'REDIRECT_URI': 'http://localhost:8000/oauth/callback',
         'AUTHORIZATION_URL': 'https://api.intra.42.fr/oauth/authorize',
         'TOKEN_URL': 'https://api.intra.42.fr/oauth/token',
         'USER_INFO_URL': 'https://api.intra.42.fr/v2/me',

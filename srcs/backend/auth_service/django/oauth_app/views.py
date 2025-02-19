@@ -2,7 +2,8 @@ import requests
 from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .models import OAuth2Profile
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def oauth2_login(request):
     """Initiate 42 OAuth2 login flow"""
     config = settings.OAUTH2_PROVIDERS['42']
@@ -25,9 +27,11 @@ def oauth2_login(request):
         f"scope={config['SCOPE']}&"
         f"state=a_very_long_random_string_witchmust_be_unguessable"
     )
-    return redirect(auth_url)
+
+    return Response({'authorization_url': auth_url})
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def oauth2_callback(request):
     """Handle 42 OAuth2 callback"""
     code = request.GET.get('code')
@@ -64,7 +68,7 @@ def oauth2_callback(request):
             config['USER_INFO_URL'],
             headers={'Authorization': f"Bearer {tokens['access_token']}"}
         )
-        logger.debug(f"User info response: {user_response.text}")
+        #logger.debug(f"User info response: {user_response.text}")
 
         if user_response.status_code != 200:
             return Response({
@@ -81,24 +85,41 @@ def oauth2_callback(request):
                 provider_user_id=str(user_info['id'])
             )
             user = oauth_profile.user
+            # Update tokens
+            oauth_profile.access_token = tokens['access_token']
+            oauth_profile.refresh_token = tokens.get('refresh_token')
+            oauth_profile.save()
         except OAuth2Profile.DoesNotExist:
-            # Create new user
-            user = User.objects.create_user(
-                username=user_info['login'],
-                email=user_info['email'],
-                first_name=user_info.get('first_name', ''),
-                last_name=user_info.get('last_name', '')
-            )
+            try:
+                user = User.objects.get(email=user_info['email'])
+                # Existing user, create OAuth profile
+                OAuth2Profile.objects.create(
+                    user=user,
+                    provider='42',
+                    provider_user_id=str(user_info['id']),
+                    access_token=tokens['access_token'],
+                    refresh_token=tokens.get('refresh_token')
+                )
+                user.has_oauth = True
+                user.save()
+            except User.DoesNotExist:
+                # Create new user
+                user = User.objects.create_user(
+                    username=user_info['login'],
+                    email=user_info['email'],
+                    avatar=user_info['image'],
+                )
+                user.has_oauth = True
+                user.save()
 
-            # Create OAuth profile
-            OAuth2Profile.objects.create(
-                user=user,
-                provider='42',
-                provider_user_id=str(user_info['id']),
-                access_token=tokens['access_token'],
-                refresh_token=tokens.get('refresh_token')
-            )
-
+                # Create OAuth profile
+                OAuth2Profile.objects.create(
+                    user=user,
+                    provider='42',
+                    provider_user_id=str(user_info['id']),
+                    access_token=tokens['access_token'],
+                    refresh_token=tokens.get('refresh_token')
+                )
     except Exception as e:
         logger.error(f"OAuth callback error: {str(e)}")
         return Response({

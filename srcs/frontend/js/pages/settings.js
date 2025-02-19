@@ -1,5 +1,6 @@
 import { tokenService } from "../services/authService.js";
 import { Navbar } from "../components/navbar.js";
+import { showAlert } from '../components/alert.js';
 
 export async function renderSettingsPage() {
     const root = document.getElementById("root");
@@ -27,8 +28,10 @@ export async function renderSettingsPage() {
                 <div class="profile-card">
                     <div class="card h-100">
                         <div class="card-body d-flex flex-column">
-                            <h3 class="card-title mb-4">Profile Settings</h3>
-
+                            <div class="d-flex justify-content-between">
+                                <h3 class="card-title mb-4">Profile Settings</h3>
+                                <a">Member since: ${new Date(userData.created_at).toLocaleDateString()}</a>
+                            </div>
                             <div class="text-center mb-4">
                                 <div id="avatarPreview" style="width: 100px; height: 100px; border-radius: 50%; background-color: ${userData.avatar_color || '#0d6efd'}; margin: 0 auto;"></div>
                             </div>
@@ -42,6 +45,11 @@ export async function renderSettingsPage() {
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" value="${userData.email || ''}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Bio</label>
+                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''}" required>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 mt-4 mb-4">Update Profile</button>
@@ -67,7 +75,7 @@ export async function renderSettingsPage() {
 
                                 <div class="mb-3">
                                     <label class="form-label">Re-type New Password</label>
-                                    <input type="password" class="form-control" id="renewPassword" required>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100  mt-4 mb-4">Update Password</button>
@@ -96,18 +104,19 @@ export async function renderSettingsPage() {
                     body: JSON.stringify({
                         username: document.getElementById('username').value,
                         email: document.getElementById('email').value,
+                        bio: document.getElementById('bio').value
                     })
                 });
 
                 if (response.ok) {
-                    alert('Profile updated successfully!');
+                    showAlert('Profile updated successfully', 'success');
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Failed to update profile');
+                    showAlert(error.error || 'Failed to update profile', 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to update profile');
+                showAlert(error.error || 'Failed to update profile', 'danger');
             }
         });
 
@@ -115,8 +124,8 @@ export async function renderSettingsPage() {
             e.preventDefault();
 
             try {
-                if (document.getElementById('renewPassword').value !== document.getElementById('newPassword').value) {
-                    alert('Passwords do not match');
+                if (document.getElementById('confirmPassword').value !== document.getElementById('newPassword').value) {
+                    showAlert('Passwords do not match');
                     return;
                 }
                 const response = await fetch('http://localhost:8000/user/password-reset/', {
@@ -127,25 +136,26 @@ export async function renderSettingsPage() {
                     },
                     body: JSON.stringify({
                         old_password: document.getElementById('currentPassword').value,
-                        new_password: document.getElementById('newPassword').value
+                        new_password: document.getElementById('newPassword').value,
+                        confirm_password: document.getElementById('confirmPassword').value
                     })
                 });
 
                 if (response.ok) {
-                    alert('Password updated successfully!');
+                    showAlert('Password updated successfully', 'success');
                     document.getElementById('passwordForm').reset();
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Failed to update password');
+                    showAlert(error.error || 'Failed to update password', 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to update password');
+                showAlert(error.error || 'Failed to update password', 'danger');
             }
         });
 
     } catch (error) {
         console.error('Error fetching user data:', error);
-        container.innerHTML = '<div class="alert alert-danger">Failed to load user data</div>';
+        showAlert('Failed to fetch user data', 'danger');
     }
 }

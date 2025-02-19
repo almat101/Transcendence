@@ -1,3 +1,6 @@
+import { showAlert } from '../components/alert.js';
+import { authService } from '../services/authService.js';
+
 export function renderSignupPage() {
   const root = document.getElementById("root");
   root.innerHTML = ""; // Clear previous content
@@ -44,6 +47,11 @@ export function renderSignupPage() {
                   <input type="password" id="password" class="form-control" required />
                 </div>
 
+                <div class="form-outline mb-4">
+                  <label class="form-label" for="confirm-password">Confirm Password</label>
+                  <input type="password" id="confirm-password" class="form-control" required />
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-block mb-4">
                   Sign up
                 </button>
@@ -76,8 +84,8 @@ export function renderSignupPage() {
         window.location.href = result.url;
     } else {
         console.error('Error:', result.error);
-        alert('Failed to connect to authentication service');
-    }
+        showAlert('Servers are busy, try again!', 'danger');
+      }
   });
 
   // Add form submission handler
@@ -88,15 +96,26 @@ export function renderSignupPage() {
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const confirm_password = document.getElementById('confirm-password').value;
 
     // Frontend validation
     if (!username.match(/^[a-zA-Z0-9_]{3,20}$/)) {
-      alert("Username must be 3-20 characters long and contain only letters, numbers, and underscores");
+      showAlert("Username must be 3-20 characters long and contain only letters, numbers, and underscores");
       return;
     }
 
     if (!email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
-      alert("Please enter a valid email address");
+      showAlert("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 8) {
+      showAlert("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (password !== confirm_password) {
+      showAlert("Passwords do not match");
       return;
     }
 
@@ -110,30 +129,34 @@ export function renderSignupPage() {
         body: JSON.stringify({
           username,
           email,
-          password
+          password,
+          confirm_password
         })
      });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert('Account created successfully!');
+        showAlert('Signup successful! Redirecting to login page...', 'success');
         window.location.href = '/login';
       } else {
         // Handle different error cases
         if (data.username) {
-          alert(data.username);
+          showAlert(data.username);
         } else if (data.email) {
-          alert(data.email);
+          showAlert(data.email);
         } else if (data.password) {
-          alert(data.password);
-        } else {
-          alert(data.error || 'Signup failed. Please try again.');
+          showAlert(data.password);
+        } else if (data.confirm_password) {
+          showAlert(data.confirm_password);
+        }
+        else {
+          showAlert(data.error || 'Signup failed. Please try again.');
         }
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Something went wrong. Please try again later.');
+      showAlert('Something went wrong. Please try again later.', 'danger');
     }
   });
 }

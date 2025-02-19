@@ -6,7 +6,14 @@ from django.core.exceptions import ValidationError # type: ignore
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import get_object_or_404
 from django.conf import settings
-from .serializers import UserSerializer, FriendsSerializer
+from .serializers import (
+    UserCreateSerializer,
+    UserUpdateSerializer,
+    BaseUserSerializer,
+    PasswordUpdateSerializer,
+    AvatarUpdateSerializer,
+    FriendSerializer
+)
 from .models import UserProfile, Friends
 import logging
 
@@ -17,149 +24,142 @@ logger = logging.getLogger(__name__)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup_view(request):
-    serializer = UserSerializer(data=request.data)
+    serializer = UserCreateSerializer(data=request.data)
 
     if serializer.is_valid():
-        # Create the user with a hashed password
-        user = serializer.save(
-            password=make_password(serializer.validated_data['password'])
-        )
-
-        # Return minimal user info for frontend redirect
+        user = serializer.save()  # No need to hash password, serializer handles it
         return Response({
             'message': 'User created successfully',
         }, status=status.HTTP_201_CREATED)
 
-    # If validation fails, return error details
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reset_password(request):
-    """Change password with old password verification"""
-    try:
-        data = request.data
-        old_password = data.get('old_password')
-        new_password = data.get('new_password')
+    """Update user password (not allowed for OAuth users)"""
+    if request.user.has_oauth:
+        return Response({
+            'error': 'OAuth users cannot update their password'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-        if not old_password or not new_password:
-            return Response({
-                'error': 'Both old and new passwords are required'
-            }, status=status.HTTP_400_BAD_REQUEST)
+    serializer = PasswordUpdateSerializer(
+        data=request.data,
+        context={'request': request}
+    )
 
+    if serializer.is_valid():
         user = request.user
-
-        # Verify old password
-        if not check_password(old_password, user.password):
+        if not user.check_password(serializer.validated_data['old_password']):
             return Response({
-                'error': 'Current password is incorrect'
+                'old_password': ['Wrong password.']
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Set new password
-        user.set_password(new_password)
+        user.set_password(serializer.validated_data['new_password'])
         user.save()
+        return Response({'message': 'Password updated successfully'})
 
-        return Response({
-            'message': 'Password updated successfully'
-        }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        logger.error(f"Password change failed: {str(e)}")
-        return Response({
-            'error': 'Unable to change password'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info(request):
-    """Get user profile information. If no user_id provided, returns current user's info."""
     user_id = request.query_params.get('user_id')
-
     try:
         if user_id:
             user = get_object_or_404(UserProfile, id=user_id)
         else:
             user = request.user
 
-         # Construct avatar URL
-        avatar_url = (
-            request.build_absolute_uri(user.avatar.url)
-            if user.avatar and user.avatar.name
-            else request.build_absolute_uri(f"{settings.MEDIA_URL}avatars/default_avatar.jpg")
-        )
+        serializer = BaseUserSerializer(user, context={'request': request})
+        data = serializer.data
+        data['is_self'] = user.id == request.user.id
 
-        return Response({
-            'user_id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'avatar': avatar_url,
-            'bio': user.bio,
-            'is_self': user.id == request.user.id
-        })
+        return Response(data)
     except Exception as e:
         return Response({
             'error': f'Failed to fetch user info: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_avatar(request):
-    user = request.user
-    avatar = request.data.get('avatar')
+    if request.user.has_oauth:
+        return Response({
+            'error': 'OAuth users cannot update their avatar'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    if not avatar:
-        return Response({'error': 'Avatar image is required'}, status=status.HTTP_400_BAD_REQUEST)
+    serializer = AvatarUpdateSerializer(
+        request.user,
+        data=request.data,
+        partial=True
+    )
 
-    user.avatar = avatar
-    user.save()
-
-    return Response({'message': 'Avatar updated successfully'})
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            'message': 'Avatar updated successfully',
+            'avatar': serializer.data['avatar']
+        })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user(request):
-    data = request.data
-    user_id = data.get('user_id')
-    username = data.get('username')
-    email = data.get('email')
+    serializer = UserUpdateSerializer(
+        request.user,
+        data=request.data,
+        partial=True,
+        context={'request': request}
+    )
 
-    if not user_id or not username or not email:
-        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+    if serializer.is_valid():
+        user = serializer.save()
+        message = 'Bio updated successfully' if user.has_oauth else 'Profile updated successfully'
 
-    try:
-        user = UserProfile.objects.get(id=user_id)
-        user.username = username
-        user.email = email
-        user.full_clean()  # Validate the model fields
-        user.save()
-        return Response({'message': 'User updated successfully'})
-    except UserProfile.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    except ValidationError as e:
-        return Response({'error': e.message_dict}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'message': message,
+            'user': UserUpdateSerializer(user).data
+        })
 
-'''
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-@csrf_exempt
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_user(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_id = data.get('user_id')
+    """Delete user account with password confirmation"""
+    user = request.user
 
-        try:
-            user = UserProfile.objects.get(id=user_id)
-            user.delete()
-            return Response({'message': 'User deleted successfully'})
-        except UserProfile.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        return Response({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    if not user.has_oauth:
+        password = request.data.get('password')
+        if not password:
+            return Response({
+                'error': 'Password is required for account deletion'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
+        if not user.check_password(password):
+            return Response({
+                'error': 'Invalid password'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        username = user.username
+        user.delete()
+        logger.info(f"User account deleted: {username}")
+        return Response({
+            'message': 'Account deleted successfully'
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Error deleting user account: {str(e)}")
+        return Response({
+            'error': 'Failed to delete account'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+'''
 def get_all_users(request):
     users = UserProfile.objects.all()
     user_list = []
@@ -177,40 +177,59 @@ def get_all_users(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_friend_request(request):
-    """Send a friend request to another user"""
-    friend_username = request.data.get('username')
-    friend = get_object_or_404(UserProfile, username=friend_username)
+    friend = get_object_or_404(UserProfile, username=request.data.get('username'))
 
-    # Prevent self-friending and duplicate requests
-    if friend == request.user:
+    # Check if friend has blocked user
+    if friend.has_blocked(request.user):
         return Response(
-            {'error': 'You cannot send a friend request to yourself'},
+            {'error': 'Cannot send friend request'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Check if friends already exists
-    existing_friends = Friends.objects.filter(
-        user=request.user,
-        friend=friend
+    serializer = FriendSerializer(
+        data={'status': 'pending'},
+        context={'request': request, 'friend': friend}
+    )
+
+    if serializer.is_valid():
+        friend_request = Friends.objects.create(
+            user=request.user,
+            friend=friend,
+            status='pending'
+        )
+        return Response(
+            FriendSerializer(friend_request).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friend_status(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response(
+            {'error': 'Username is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friend = get_object_or_404(UserProfile, username=username)
+
+    relationship = Friends.objects.filter(
+        models.Q(user=request.user, friend=friend) |
+        models.Q(user=friend, friend=request.user)
     ).first()
 
-    if existing_friends:
-        return Response(
-            {'error': 'Friend request already sent or friends exists'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if not relationship:
+        return Response({'status': 'none'})
 
-    # Create friends request
-    Friends.objects.create(
-        user=request.user,
-        friend=friend,
-        status='pending'
-    )
+    return Response({
+        'status': relationship.status,
+        'initiator': relationship.user.username
+    })
 
-    return Response(
-        {'message': 'Friend request sent'},
-        status=status.HTTP_201_CREATED
-    )
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -293,17 +312,23 @@ def block_user(request):
         status=status.HTTP_200_OK
     )
 
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
-    """List all accepted friends"""
     friends = Friends.objects.filter(
         user=request.user,
         status='accepted'
     )
 
-    serializer = FriendsSerializer(friends, many=True)
+    serializer = FriendSerializer(
+        friends,
+        many=True,
+        context={'request': request}
+    )
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
