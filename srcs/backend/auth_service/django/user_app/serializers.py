@@ -10,7 +10,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at']
+        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth']
         read_only_fields = ['created_at']
 
     def validate_username(self, value):
@@ -105,12 +105,43 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'bio']
 
     def validate_username(self, value):
-        # ... existing username validation ...
+        """
+        Validate username format:
+        - 3-20 characters
+        - Only letters, numbers, underscores
+        - Case insensitive uniqueness
+        """
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', value):
+            raise serializers.ValidationError(
+                "Username must be 3-20 characters and contain only letters, numbers, and underscores"
+            )
+
+        # Case insensitive username check
+        if UserProfile.objects.filter(username__iexact=value).exclude(id=getattr(self.instance, 'id', None)).exists():
+            raise serializers.ValidationError("This username is already taken")
+        return value
+
+    def validate_bio(self, value):
+        """
+        Validate bio:
+        - Max length of 300 characters
+        """
+        if len(value) > 300:
+            raise serializers.ValidationError("Bio cannot exceed 300 characters")
         return value
 
     def validate_email(self, value):
-        # ... existing email validation ...
-        return value
+        """
+        Validate email:
+        - Format validation using Django's EmailValidator
+        - Case insensitive uniqueness check
+        """
+        validator = EmailValidator()
+        validator(value)
+
+        if UserProfile.objects.filter(email__iexact=value).exclude(id=getattr(self.instance, 'id', None)).exists():
+            raise serializers.ValidationError("A user with this email already exists")
+        return value.lower()
 
     def validate(self, data):
         user = self.context.get('request').user

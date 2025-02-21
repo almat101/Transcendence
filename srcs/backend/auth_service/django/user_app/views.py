@@ -1,7 +1,8 @@
 from rest_framework import status # type: ignore
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError # type: ignore
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,8 @@ from .serializers import (
 )
 from .models import UserProfile, Friends
 import logging
+from django.core.mail import EmailMessage
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +31,15 @@ def signup_view(request):
 
     if serializer.is_valid():
         user = serializer.save()  # No need to hash password, serializer handles it
+
+        '''
+        create otp code and send email
+
+        token = RefreshToken.for_user(user)
+        email = EmailMessage('Verify your email', 'Your OTP code is: ' + token, to=[user.email])
+        email.send()
+        '''
+
         return Response({
             'message': 'User created successfully',
         }, status=status.HTTP_201_CREATED)
@@ -58,7 +70,7 @@ def reset_password(request):
 
         user.set_password(serializer.validated_data['new_password'])
         user.save()
-        return Response({'message': 'Password updated successfully'})
+        return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -77,7 +89,7 @@ def user_info(request):
         data = serializer.data
         data['is_self'] = user.id == request.user.id
 
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({
             'error': f'Failed to fetch user info: {str(e)}'
@@ -103,7 +115,7 @@ def update_avatar(request):
         return Response({
             'message': 'Avatar updated successfully',
             'avatar': serializer.data['avatar']
-        })
+        }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
@@ -123,7 +135,7 @@ def update_user(request):
         return Response({
             'message': message,
             'user': UserUpdateSerializer(user).data
-        })
+        }, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -146,32 +158,44 @@ def delete_user(request):
             }, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        username = user.username
+        #username = user.username
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
         user.delete()
-        logger.info(f"User account deleted: {username}")
-        return Response({
-            'message': 'Account deleted successfully'
-        }, status=status.HTTP_200_OK)
+
+        #logger.info(f"User account deleted: {username}")
+        response = Response({'message': 'Account deleted successfully'}, status=status.HTTP_200_OK)
+        response.delete_cookie(
+            key='refresh_token',
+        )
+        return response
 
     except Exception as e:
-        logger.error(f"Error deleting user account: {str(e)}")
+        #logger.error(f"Error deleting user account: {str(e)}")
         return Response({
             'error': 'Failed to delete account'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-'''
-def get_all_users(request):
-    users = UserProfile.objects.all()
-    user_list = []
-    for user in users:
-        user_list.append({
-            'user_id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'avatar': user.avatar.url
-        })
-    return Response({'users': user_list})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    """Search users by username or email"""
+    query = request.query_params.get('q', '').strip()
 
+    if len(query) < 2:
+        return Response({
+            'error': 'Search query must be at least 2 characters long'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    users = UserProfile.search_users(query)
+    serializer = BaseUserSerializer(users, many=True)
+
+    return Response(serializer.data)
+
+'''
 #FRIENDS VIEWS
 
 @api_view(['POST'])
