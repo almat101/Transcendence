@@ -8,8 +8,7 @@ urlpatterns = [
     path('updateavatar/', views.update_avatar, name='update-avatar'),
     path('updateuser/', views.update_user, name='update_user'),
     path('deleteuser/', views.delete_user, name='delete_user'),
-
-   # path('getallusers', views.get_all_users, name='get_all_users'),
+    path('search/', views.search_users, name='search'),
 
   #  path('friends/send', views.send_friend_request, name='send_friend_request'),
   #  path('friends/respond', views.respond_to_friend_request, name='respond_to_friend_request'),

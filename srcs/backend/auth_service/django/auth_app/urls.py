@@ -6,5 +6,4 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'), # done
     path('refresh/', views.refresh_access_token, name='refresh_access_token'),
     path('validate/', views.validate_token, name='validate_token'),
-    path('email-verify/', views.email_verification, name='email_verification'),
 ]

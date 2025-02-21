@@ -31,6 +31,13 @@ class UserProfile(AbstractUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
+    @classmethod
+    def search_users(cls, query):
+        """Search users by username (case-insensitive partial match)"""
+        return cls.objects.filter(
+            models.Q(username__icontains=query)
+        )[:20]  # Limit to 20 results
+
     def __str__(self):
         return self.username
 

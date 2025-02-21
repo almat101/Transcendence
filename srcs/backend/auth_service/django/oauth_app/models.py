@@ -10,7 +10,6 @@ class OAuth2Profile(models.Model):
     access_token = models.TextField()
     refresh_token = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('provider', 'provider_user_id')

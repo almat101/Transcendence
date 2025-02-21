@@ -179,19 +179,23 @@ def delete_user(request):
             'error': 'Failed to delete account'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-'''
-def get_all_users(request):
-    users = UserProfile.objects.all()
-    user_list = []
-    for user in users:
-        user_list.append({
-            'user_id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'avatar': user.avatar.url
-        })
-    return Response({'users': user_list})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    """Search users by username or email"""
+    query = request.query_params.get('q', '').strip()
 
+    if len(query) < 2:
+        return Response({
+            'error': 'Search query must be at least 2 characters long'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    users = UserProfile.search_users(query)
+    serializer = BaseUserSerializer(users, many=True)
+
+    return Response(serializer.data)
+
+'''
 #FRIENDS VIEWS
 
 @api_view(['POST'])
