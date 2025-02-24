@@ -101,8 +101,6 @@ services:
      - POSTGRES_DB=${POSTGRES_AUTH_DB}
      - POSTGRES_HOST=${POSTGRES_AUTH_HOST}
     restart: always
-    #ports:
-    # - "5434:5432" #port changed to 5434
     volumes:
       - postgres_test:/var/lib/postgresql/data
     healthcheck:
@@ -258,6 +256,15 @@ services:
         condition: service_healthy
       auth_db:
         condition: service_healthy
+    networks:
+      - internal
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
     networks:
       - internal
 

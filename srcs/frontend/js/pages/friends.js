@@ -71,7 +71,7 @@ export async function renderFriendsPage() {
 
 async function loadFriendsList() {
     try {
-        const response = await fetch('http://localhost:8000/user/friends/', {
+        const response = await fetch('http://localhost:8000/user/friends/list-friends/', {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }
@@ -137,16 +137,97 @@ function displaySearchResults(users) {
         return;
     }
 
-    resultsDiv.innerHTML = users.map(user => `
-        <div class="search-result-item">
-            <div class="user-info" onclick="event.stopPropagation(); window.location.href='/profile/${user.username}'">
-                <img src="${user.avatar || '/images/default-avatar.jpg'}" alt="${user.username}'s avatar">
-                <span>${user.username}</span>
+    resultsDiv.innerHTML = users.map(user => {
+        const buttonConfig = getFriendButtonConfig(user.friendship_status);
+
+        return `
+            <div class="search-result-item">
+                <div class="user-info" onclick="event.stopPropagation(); window.location.href='/profile/${user.username}'">
+                    <img src="${user.avatar || '/images/default-avatar.jpg'}"
+                         alt="${user.username}'s avatar"
+                    >
+                    <div class="user-details">
+                        <span class="username">${user.username}</span>
+                        ${user.bio ? `<small class="bio">${user.bio}</small>` : ''}
+                    </div>
+                </div>
+                <button class="btn btn-sm ${buttonConfig.class}"
+                        data-user-id="${user.id}"
+                        ${buttonConfig.action ? `onclick="event.stopPropagation(); ${buttonConfig.action}('${user.id}')"` : ''}
+                        ${!buttonConfig.action ? 'disabled' : ''}
+                >
+                    ${buttonConfig.text}
+                </button>
             </div>
-            <button class="btn btn-sm btn-outline-primary add-friend-btn"
-                    onclick="event.stopPropagation(); sendFriendRequest('${user.username}')">
-                Add Friend
-            </button>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+function getFriendButtonConfig(status) {
+    switch(status) {
+        case 'accepted':
+            return {
+                text: 'Friends',
+                class: 'btn-success disabled',
+                action: null
+            };
+        case 'pending':
+            return {
+                text: 'Pending',
+                class: 'btn-secondary disabled',
+                action: null
+            };
+        default:
+            return {
+                text: 'Add Friend',
+                class: 'btn-outline-primary',
+                action: 'sendFriendRequest'
+            };
+    }
+}
+
+window.sendFriendRequest = async function(userId) {
+    const button = document.querySelector(`button[data-user-id="${userId}"]`);
+    if (!button) return;
+
+    try {
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        const response = await fetch('http://localhost:8000/user/friends/send/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            },
+            body: JSON.stringify({ id: userId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to send friend request');
+        }
+
+        showAlert('Friend request sent successfully', 'success');
+        updateButtonStatus(button, 'pending');
+
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert(error.message || 'Failed to send friend request', 'danger');
+        updateButtonStatus(button, 'none');
+    }
+}
+
+function updateButtonStatus(button, status) {
+    const config = getFriendButtonConfig(status);
+    button.innerHTML = config.text;
+    button.className = `btn btn-sm ${config.class}`;
+    button.disabled = !config.action;
+
+    if (config.action) {
+        button.setAttribute('onclick', `event.stopPropagation(); ${config.action}('${button.dataset.userId}')`);
+    } else {
+        button.removeAttribute('onclick');
+    }
 }

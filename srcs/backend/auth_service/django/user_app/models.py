@@ -6,16 +6,9 @@ from django.utils import timezone
 # Create your models here.
 
 class UserProfile(AbstractUser):
-    # AbstractUser existent fields
-    #first_name = models.CharField(max_length=30)
-    #last_name = models.CharField(max_length=150)
-    #username = models.CharField(max_length=150, unique=True)
     # Online status tracking
-    #is_online = models.BooleanField(default=False)
-    #last_activity = models.DateTimeField(null=True, blank=True)
-
-    #is_staff = models.BooleanField(default=False)
-    #is_superuser = models.BooleanField(default=False)
+    is_online = models.BooleanField(default=False)
+    last_activity = models.DateTimeField(null=True, blank=True)
 
     email = models.EmailField(unique=True)
     email_is_verified = models.BooleanField(default=False)
@@ -32,11 +25,36 @@ class UserProfile(AbstractUser):
     REQUIRED_FIELDS = ['email']
 
     @classmethod
-    def search_users(cls, query):
-        """Search users by username (case-insensitive partial match)"""
-        return cls.objects.filter(
-            models.Q(username__icontains=query)
-        )[:20]  # Limit to 20 results
+    def search_users(cls, query, current_user):
+        """Search users by username with friendship status"""
+        base_query = cls.objects.filter(
+            models.Q(username__icontains=query),
+        ).exclude(id=current_user.id)
+
+        # Annotate friendship status
+        users = base_query.annotate(
+            friendship_status=models.Case(
+                models.When(
+                    models.Q(friend_requests_received__user=current_user, friend_requests_received__status='blocked') |
+                    models.Q(friend_requests_sent__friend=current_user, friend_requests_sent__status='blocked'),
+                    then=models.Value('blocked')
+                ),
+                models.When(
+                    models.Q(friend_requests_received__user=current_user, friend_requests_received__status='accepted') |
+                    models.Q(friend_requests_sent__friend=current_user, friend_requests_sent__status='accepted'),
+                    then=models.Value('accepted')
+                ),
+                models.When(
+                    models.Q(friend_requests_received__user=current_user, friend_requests_received__status='pending') |
+                    models.Q(friend_requests_sent__friend=current_user, friend_requests_sent__status='pending'),
+                    then=models.Value('pending')
+                ),
+                default=models.Value('none'),
+                output_field=models.CharField(),
+            )
+        ).exclude(friendship_status='blocked')[:20]
+        
+        return users
 
     def __str__(self):
         return self.username
