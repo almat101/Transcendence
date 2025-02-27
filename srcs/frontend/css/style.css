@@ -1,0 +1,744 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'); /* Pixel art font */
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+@media (min-width: 992px) {
+  .navbar {
+      padding: 0.5rem 2rem;
+  }
+
+  .navbar-nav {
+      gap: 2rem;
+  }
+}
+
+@media (max-width: 991px) {
+  #profileSection {
+    padding: 10px;
+    flex-direction: column;
+  }
+
+  .container.align-items-center {
+    padding: 0;
+  }
+}
+
+:root {
+  --bg-color: var(--bg-color);
+  --border-color: var(--bs-border-color);
+}
+
+.theme-icon-active {
+    color: var(--bs-body-color);
+    transition: color 0.3s ease;
+}
+
+[data-bs-theme="dark"] {
+  --hover-color: ghostwhite;
+  --text-color: ghostwhite;
+  --logo-filter: invert(1);
+  --bg-color: var(--bs-dark);
+}
+
+[data-bs-theme="light"] {
+  --hover-color: black;
+  --text-color: var(--bs-dark);
+  --logo-filter: invert(0);
+  --bg-color: ghostwhite;
+}
+
+[data-bs-theme="dark"] .navbar {
+    --bs-navbar-color: var(--bs-white);
+}
+
+#alertContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1050;
+  width: min(400px, 90vw);
+}
+
+.alert {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  font-size: 14px;
+  padding: 0.75rem 1rem;
+  transform: translateY(100%);
+  animation: none;
+}
+
+.alert.show {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out;
+}
+
+.alert-dismissible {
+  padding-right: 2.5rem;
+}
+
+.alert-dismissible .btn-close {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Remove conflicting animation */
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.btn-link.nav-link {
+    color: var(--bs-body-color);
+}
+
+.btn-link.nav-link:hover {
+    color: var(--bs-primary);
+}
+
+.btn-link {
+  text-decoration: none !important;
+}
+
+.btn-link:hover {
+  text-decoration: none !important;
+}
+
+#not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+#not-found h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 48px;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+#not-found p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+  animation: bounce 2s infinite ease-in-out 0.5s; /* 0.5s delay for staggered effect */
+}
+
+/* mentioned in the pong file */
+#pong-container{
+  text-align: center;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+  position: fixed;
+  width: 100%;
+}
+
+.card {
+  background-color: var(--bg-color);
+  border-color: var(--border-color);
+}
+
+.card-body {
+  color: var(--text-color);
+}
+
+
+
+/* Apply the pixel art font to the navbar */
+.navbar {
+  padding: 0.5rem 2rem;
+  position: relative;
+}
+
+.navbar-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-left {
+  margin-right: auto;
+}
+
+
+.nav-link {
+  position: relative;
+  margin: 0 1.5rem;
+  font-family: 'Press Start 2P', cursive;
+  transition: color 0.3s ease;
+  color: var(--text-color);
+}
+
+.toggler-nav-item {
+  font-size: 18px;
+}
+
+.footer-nav-item {
+  font-size: 10px;
+}
+
+.nav-link:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--hover-color);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover:after {
+  width: 100%;
+  transform: translateY(-2px);
+}
+
+.nav-link:hover {
+  color: var(--hover-color);
+  transform: translateY(-2px);
+}
+
+.offcanvas-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.offcanvas-footer {
+  margin-top: auto;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.offcanvas .navbar-nav {
+  text-align: center;
+}
+
+.offcanvas-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 20px;
+}
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.avatar-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-color);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.avatar-text:after {
+  display: none;
+}
+
+.avatar-text i {
+  color: var(--text-color);
+  transition: color 0.3s ease;
+}
+
+.avatar-container:hover .avatar-text,
+.avatar-container:hover .avatar-text i {
+    color: var(--hover-color);
+    text-decoration: none !important;
+    transform: none;
+}
+
+.avatar-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-color);
+  margin: 0 auto;
+}
+
+.dropdown-menu {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  min-width: 150px;
+  padding: 0.5rem 0;
+  background-color: var(--bg-color);
+  border-color: var(--border-color);
+  margin-top: 10px !important;
+}
+
+.dropdown-menu-start {
+  left: 0 !important;
+  right: auto !important;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.dropdown-item:hover {
+  background-color: var(--hover-color);
+  color: var(--bg-color);
+}
+
+.dropdown-item i {
+  margin-left: 10px;
+}
+
+h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+}
+
+/* ...existing code... */
+
+/* Login form specific button styles */
+#login-form button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#login-form button:hover {
+  background-color: var(--hover-color);
+  color: var(--bg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#oauth-42 img {
+  filter: var(--logo-filter);
+  transition: filter 0.3s ease;
+}
+
+#oauth-42:hover img {
+  filter: var(--logo-filter) brightness(0.8);
+  filter: var(--logo-filter) invert(1);
+}
+
+#login-form .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#login-form input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#login-form .form-control:focus {
+  border-color: var(--hover-color);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+#login-form .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+#login-form label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+}
+
+#login-card p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+#login-card a {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+}
+
+section.text-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+section.text-lg-start {
+  min-height: calc(100vh - 76px); /* Account for navbar height */
+  background-color: var(--bg-color);
+  margin: 0;
+  padding: 0;
+}
+
+.container.py-4 {
+  width: 100%;
+  padding: 2rem;
+}
+
+.password-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-start;
+}
+
+.show-password-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+
+}
+
+.show-password-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  color: #000;
+  cursor: pointer;
+  user-select: none;
+}
+
+#profileSection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+}
+
+#profileSection .profile-card,
+#profileSection .password-card,
+#profileSection .delete-account-card {
+  width: 100%;
+  margin-top: 20px;
+}
+
+
+#profileSection button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  padding: 10px 20px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#profileSection button:hover {
+  background-color: var(--hover-color);
+  color: var(--bg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#profileSection button:hover img {
+  filter: invert(1);
+  transition: filter 0.3s ease;
+}
+
+#profileSection .btn-floating {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 10px #000;
+}
+
+#profileSection h3 {
+  font-family: 'Poppins', cursive;
+  font-size: 28px;
+}
+
+#profileSection label {
+  font-family: 'Poppins', cursive;
+  font-size: 16px;
+}
+
+#profileSection .form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+#profileSection .form-control:focus {
+  border-color: var(--hover-color);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+#profileSection input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#profileSection .form-control:focus {
+  border-color: none;
+  outline: none;
+}
+
+#deleteAccountModal .btn-danger {
+  background-color: var(--bs-danger);
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  padding: 10px 20px;
+}
+
+#deleteAccountModal .btn-danger:hover {
+  background-color: #dc3545;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-header i {
+  cursor: pointer;
+}
+
+
+/* Add these styles to your existing CSS */
+
+.friends-container {
+  display: flex;
+  height: calc(100vh - 76px);
+  background-color: var(--bg-color);
+}
+
+.friends-sidebar {
+  width: 300px;
+  border-right: 1px solid var(--border-color);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+}
+
+.chat-area {
+  flex: 1;
+  background-color: var(--bg-color);
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.friends-list {
+  margin-top: 1rem;
+  overflow-y: auto;
+}
+
+.friends-list-header {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.friend-item:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.friend-name {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  color: var(--text-color);
+}
+
+.add-friend-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+
+/*! Lnicoter style */
+
+
+#menu {
+  margin-bottom: 20px;
+}
+
+#scores {
+  margin-bottom: 20px;
+}
+
+#scores span {
+  font-size: 24px;
+  margin: 0 20px;
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+}
+
+canvas {
+  border: 2px solid black; /* Add this line to draw a border around the canvas */
+  background-color: black; /* Set the canvas background to black */
+}
+
+#winningScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#title {
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+#pong-container button {
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+  font-size: 24px;
+  padding: 15px 30px;
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/*
+The theory says that in order to make it work properly
+for the button created for the pong section+
+you don't need to specify the id of the button
+*BUT how it behaves in the div of the container that is in it
+!remember this if you need to integrate most of your frontend here
+*/
+#pong-container button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Styles for Tournament Setup */
+#matchAnnouncement,
+#matchWinner,
+#matchAnnouncement p,
+#matchWinner p,
+#matchAnnouncement h2,
+#matchWinner h2 {
+  font-family: 'Press Start 2P', cursive !important;
+}
+
