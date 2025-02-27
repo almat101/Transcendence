@@ -45,3 +45,4 @@ export class Ball {
 		this.speedY = (Math.random() > 0.5 ? 1 : -1) * Math.abs(this.speedY); // Randomize vertical direction
 	}
 }
+

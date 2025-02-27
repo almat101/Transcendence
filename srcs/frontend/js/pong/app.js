@@ -1,4 +1,4 @@
- //I import the code from the other
+//I import the code from the other
  //files that are needed to make the game work
 import { showWinningScreen } from './winningScreen.js';
 import { gameLoop } from './gameLoop.js';

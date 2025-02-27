@@ -11,3 +11,4 @@ export function showWinningScreen(winner, restartGameCallback) {
 		restartGameCallback();
 	});
 }
+

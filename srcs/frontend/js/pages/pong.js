@@ -2,6 +2,7 @@ import { Navbar } from "../components/navbar.js";
 import { initializeGame } from "../pong/app.js"
 
 
+
 //! i have a theory for the menu problem
 //* maybe i just didn't put the buttons in the right
 // div tag here i need to test it out after i add the tournament
@@ -47,6 +48,7 @@ export function renderPongPage() {
   cpuButton.id = "cpuButton";
   cpuButton.textContent = "Play vs cpu";
   menu.appendChild(cpuButton);
+
   pongContainer.appendChild(menu);
 
   // Scores
@@ -63,6 +65,7 @@ export function renderPongPage() {
   player2Score.id = "player2Score";
   player2Score.textContent = "Player 2: 0";
   scores.appendChild(player2Score);
+
   pongContainer.appendChild(scores);
 
   //-- tournament setup section --
@@ -130,6 +133,7 @@ export function renderPongPage() {
   startMatchButton.id = "startMatchButton";
   startMatchButton.textContent = "Start match";
   matchAnnouncement.appendChild(startMatchButton);
+
 
   // Game Canvas
   const gameCanvas = document.createElement("canvas");
