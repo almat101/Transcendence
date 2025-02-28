@@ -143,6 +143,9 @@
   animation: bounce 2s infinite ease-in-out 0.5s; /* 0.5s delay for staggered effect */
 }
 
+
+/* mentioned in the pong file */
+
 #pong-container{
   text-align: center;
   background-color: var(--bg-color);
@@ -164,54 +167,6 @@
   color: var(--text-color);
 }
 
-
-#menu {
-  margin-bottom: 20px;
-}
-
-#scores {
-  margin-bottom: 20px;
-}
-
-#scores span {
-  font-size: 24px;
-  margin: 0 20px;
-  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
-}
-
-canvas {
-  border: 2px solid black; /* Add this line to draw a border around the canvas */
-  background-color: black; /* Set the canvas background to black */
-}
-
-#winningScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#title {
-  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
-  font-size: 48px;
-  margin-bottom: 20px;
-}
-
-#startButton, #restartButton {
-  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
-  font-size: 24px;
-  padding: 15px 30px;
-  background-color: #000;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-#startButton:hover, #restartButton:hover {
-  background-color: #fff;
-  color: #000;
-}
 
 /* Apply the pixel art font to the navbar */
 .navbar {
@@ -718,3 +673,75 @@ section.text-lg-start {
   font-size: 0.6rem;
   padding: 0.25rem 0.5rem;
 }
+
+
+
+/*! Lnicoter style */
+
+
+#menu {
+  margin-bottom: 20px;
+}
+
+#scores {
+  margin-bottom: 20px;
+}
+
+#scores span {
+  font-size: 24px;
+  margin: 0 20px;
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+}
+
+canvas {
+  border: 2px solid black; /* Add this line to draw a border around the canvas */
+  background-color: black; /* Set the canvas background to black */
+}
+
+#winningScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#title {
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+#pong-container button {
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+  font-size: 24px;
+  padding: 15px 30px;
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/*
+The theory says that in order to make it work properly
+for the button created for the pong section+
+you don't need to specify the id of the button
+*BUT how it behaves in the div of the container that is in it
+!remember this if you need to integrate most of your frontend here
+*/
+#pong-container button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Styles for Tournament Setup */
+#matchAnnouncement,
+#matchWinner,
+#matchAnnouncement p,
+#matchWinner p,
+#matchAnnouncement h2,
+#matchWinner h2 {
+  font-family: 'Press Start 2P', cursive !important;
+}
+
+

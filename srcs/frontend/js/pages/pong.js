@@ -1,9 +1,19 @@
 import { Navbar } from "../components/navbar.js";
 import { initializeGame } from "../pong/app.js"
 
+
+
+//! i have a theory for the menu problem
+//* maybe i just didn't put the buttons in the right
+// div tag here i need to test it out after i add the tournament
+// setup buttons
+
 export function renderPongPage() {
+  console.log("we doing this????");
   const root = document.getElementById("root");
-  root.innerHTML = ""; // Clear previous content
+  // Clear previous content that means that the page in question
+  //will be ready to be filled with something else
+  root.innerHTML = "";
 
   // Add the navbar
   const navbar = Navbar();
@@ -23,10 +33,22 @@ export function renderPongPage() {
   const menu = document.createElement("div");
   menu.id = "menu";
 
+  //*buttons in the menu
   const startButton = document.createElement("button");
-  startButton.id = "startButton";
+  startButton.id = "startGameButton";
   startButton.textContent = "Start Game";
   menu.appendChild(startButton);
+
+  const tournamentButton = document.createElement("button");
+  tournamentButton.id = "tournamentButton";
+  tournamentButton.textContent = "Play tournament";
+  menu.appendChild(tournamentButton);
+
+  const cpuButton = document.createElement("button");
+  cpuButton.id = "cpuButton";
+  cpuButton.textContent = "Play vs cpu";
+  menu.appendChild(cpuButton);
+
   pongContainer.appendChild(menu);
 
   // Scores
@@ -45,6 +67,73 @@ export function renderPongPage() {
   scores.appendChild(player2Score);
 
   pongContainer.appendChild(scores);
+
+  //-- tournament setup section --
+  const tournamentSetup = document.createElement("div");
+  tournamentSetup.id = "tournamentSetup";
+  tournamentSetup.style.display = "none";
+
+  //pieaces for the tournament mode
+  const headingForTournament = document.createElement("h2");
+  headingForTournament.textContent = "setup tournament";
+  tournamentSetup.appendChild(headingForTournament);
+
+  const tournamentForm = document.createElement("form");
+  tournamentForm.id = "playerNamesForm";
+
+  const formHeading = document.createElement("h3");
+  formHeading.textContent = "Enter player names";
+  tournamentForm.appendChild(formHeading);
+
+  //-- container for input(s)
+  const playerNamesInputs = document.createElement("div");
+  playerNamesInputs.id = "playerNamesInputs";
+
+  //the ACTUAL input
+  const playerNamesInput = document.createElement("input");
+  playerNamesInput.type = "text";
+  playerNamesInput.id = "playerNames";
+  playerNamesInput.placeholder = "Enter player names separated by commas";
+  playerNamesInputs.appendChild(playerNamesInput);
+
+  tournamentForm.appendChild(playerNamesInputs);
+
+  // Submit button for the tournament form
+  const submitTournamentButton = document.createElement("button");
+  submitTournamentButton.type = "submit";
+  submitTournamentButton.textContent = "Start Tournament";
+  tournamentForm.appendChild(submitTournamentButton);
+
+  // Append the form to the tournament setup section
+  tournamentSetup.appendChild(tournamentForm);
+
+  // Back button for the tournament setup
+  const cancelTournamentSetupButton = document.createElement("button");
+  cancelTournamentSetupButton.id = "cancelTournamentSetup";
+  cancelTournamentSetupButton.textContent = "Back";
+  tournamentSetup.appendChild(cancelTournamentSetupButton);
+
+  // Append the tournament setup section to the pong container (or root)
+  pongContainer.appendChild(tournamentSetup);
+
+  // match announcement section
+  const matchAnnouncement = document.createElement("div");
+  matchAnnouncement.id = "matchAnnouncement";
+  matchAnnouncement.style.display = "none";
+
+  const matchHeader = document.createElement("div");
+  matchHeader.textContent = "Upcoming match";
+  matchAnnouncement.appendChild(matchHeader);
+
+  const matchP = document.createElement("p");
+  matchP.id = "matchAnnouncementeText";
+  matchAnnouncement.appendChild(matchP);
+  //! needs to be finished
+  const startMatchButton = document.createElement("button");
+  startMatchButton.id = "startMatchButton";
+  startMatchButton.textContent = "Start match";
+  matchAnnouncement.appendChild(startMatchButton);
+
 
   // Game Canvas
   const gameCanvas = document.createElement("canvas");
@@ -74,7 +163,7 @@ export function renderPongPage() {
   root.appendChild(pongContainer);
 
   // Initialize the game logic
-  initializeGame();
+  initializeGame(navbar);
 }
 
 // import { Navbar } from "../components/navbar.js";
