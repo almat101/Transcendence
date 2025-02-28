@@ -1,0 +1,93 @@
+name: Docker Services Test
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Create env file
+      run: |
+        echo "POSTGRES_USER=postgres" >> .env
+        echo "POSTGRES_PASSWORD=postgres" >> .env
+        echo "POSTGRES_AUTH_DB=auth_db" >> .env
+        echo "POSTGRES_AUTH_HOST=auth_db" >> .env
+        echo "POSTGRES_G_DB=grafana_db" >> .env
+        echo "POSTGRES_G_HOST=grafana_db" >> .env
+        # Add other required env variables
+
+    - name: Build and start services
+      run: make up
+
+    - name: Wait for services to be healthy
+      run: |
+        timeout=300  # 5 minutes timeout
+        elapsed=0
+        interval=10
+
+        while [ $elapsed -lt $timeout ]; do
+          if docker compose -f srcs/docker-compose.yml ps | grep -q "(unhealthy)\|exited"; then
+            echo "Some services are unhealthy or exited"
+            docker compose -f srcs/docker-compose.yml ps
+            docker compose -f srcs/docker-compose.yml logs
+            exit 1
+          fi
+
+          # Check if all services are healthy
+          unhealthy_count=$(docker compose -f srcs/docker-compose.yml ps | grep -c "(health: \|starting)")
+          if [ $unhealthy_count -eq 0 ]; then
+            echo "All services are healthy!"
+            exit 0
+          fi
+
+          sleep $interval
+          elapsed=$((elapsed + interval))
+          echo "Waiting for services to be healthy... ($elapsed/$timeout seconds)"
+        done
+
+        echo "Timeout waiting for services to be healthy"
+        docker compose -f srcs/docker-compose.yml ps
+        docker compose -f srcs/docker-compose.yml logs
+        exit 1
+
+    - name: Check service logs on failure
+      if: failure()
+      run: |
+        echo "=== Service Status ==="
+        docker compose -f srcs/docker-compose.yml ps
+        echo "=== Service Logs ==="
+        docker compose -f srcs/docker-compose.yml logs
+
+    - name: Cleanup
+      if: always()
+      run: make fclean
+
+  merge-to-main:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Create PR to main
+      uses: repo-sync/pull-request@v2
+      with:
+        destination_branch: "main"
+        source_branch: "develop"
+        pr_title: "Automated PR: Merge develop to main"
+        pr_body: |
+          All services tested successfully.
+          - All containers built successfully
+          - All healthchecks passed
+          - No service failures detected
+        github_token: ${{ secrets.GITHUB_TOKEN }}
