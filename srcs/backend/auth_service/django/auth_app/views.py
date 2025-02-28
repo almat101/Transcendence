@@ -134,14 +134,6 @@ def refresh_access_token(request):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        #check if user is valid
-        user = authenticate(request, username=refresh['username'], password=refresh['password'])
-        if user is None:
-            return Response(
-                {'error': 'Invalid user'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
         # Generate new access token
         access_token = str(refresh.access_token)
 
