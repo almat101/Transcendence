@@ -12,6 +12,8 @@ import { renderPageNotFound } from "./pages/404.js";
 import { renderOAuthCallbackPage } from "./pages/oauthCallback.js";
 //import { navigateTo } from "./router.js";
 
+console.log("register triggered")
+
 // Register routes
 registerRoute("/", renderHomePage);
 registerRoute("/login", renderLoginPage);

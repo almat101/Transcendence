@@ -1,5 +1,8 @@
 services:
   # proxy service
+  # that means that if you would like to open up and check the site
+  # for the nginx config file you must use the https protocol
+  # in this case we have https://127.0.0.1:443
   proxy:
     image: proxy
     build:
