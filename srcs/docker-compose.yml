@@ -59,8 +59,6 @@ services:
     image: nginx/nginx-prometheus-exporter:1.4
     container_name: nginx-prometheus-exporter
     restart: unless-stopped
-    ports:
-      - "9113:9113"
     depends_on:
       - proxy
       - api-gateway
@@ -120,9 +118,6 @@ services:
     container_name: grafana
     env_file: ".env"
     restart: unless-stopped
-    environment:
-      - GF_SERVER_ROOT_URL=https://localhost/grafana/  # Tells Grafana it's hosted under /grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
     volumes:
       - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -155,8 +150,6 @@ services:
      - POSTGRES_DB=${POSTGRES_G_DB}
      - POSTGRES_HOST=${POSTGRES_G_HOST}
     restart: always
-    ports:
-      - "5433:5432"
     volumes:
       - postgres_grafana:/var/lib/postgresql/data
     healthcheck:
@@ -171,8 +164,6 @@ services:
     image: prom/prometheus:v3.1.0
     container_name: prometheus
     restart: unless-stopped
-    ports:
-      - "9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
@@ -202,8 +193,6 @@ services:
     image: prom/node-exporter:v1.8.2
     container_name: node-exporter
     restart: unless-stopped
-    ports:
-      - "9100:9100"
     depends_on:
      - prometheus
     command:
@@ -217,8 +206,6 @@ services:
     container_name: alertmanager
     env_file: ".env"
     restart: unless-stopped
-    ports:
-      - "9093:9093"
     depends_on:
      - prometheus
     volumes:
@@ -235,9 +222,7 @@ services:
     container_name: postgres-exporter-grafana
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@grafana_db:5432/grafana_db?sslmode=disable"
-    restart: unless-stopped
-    ports:
-      - "9188:9188"  # External port 9188, internal container port 9187
+    restart: unless-stopped # External port 9188, internal container port 9187
     command:
       - '--web.listen-address=:9188'
     depends_on:
@@ -254,8 +239,6 @@ services:
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth_db:5432/auth_db?sslmode=disable"
     restart: unless-stopped
-    ports:
-      - "9187:9187"
     depends_on:
       prometheus:
         condition: service_healthy
@@ -297,8 +280,6 @@ services:
     #   start_period: 10s
     networks:
       - internal
-
-
 
   tournament_db:
     image: postgres:15
