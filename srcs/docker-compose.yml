@@ -119,8 +119,9 @@ services:
     container_name: grafana
     env_file: ".env"
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    environment:
+      - GF_SERVER_ROOT_URL=https://localhost/grafana/  # Tells Grafana it's hosted under /grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
     volumes:
       - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
