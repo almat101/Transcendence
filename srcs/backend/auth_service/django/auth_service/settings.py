@@ -80,8 +80,7 @@ DEBUG = os.getenv('DEBUG')
 #SECURE_SSL_REDIRECT = True
 
 # If using nginx/proxy
-
-ALLOWED_HOSTS = ['localhost', 'auth-service', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', 'auth-service', '127.0.0.1', '0.0.0.0     ']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 

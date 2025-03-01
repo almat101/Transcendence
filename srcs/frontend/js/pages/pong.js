@@ -2,7 +2,6 @@ import { Navbar } from "../components/navbar.js";
 import { initializeGame } from "../pong/app.js"
 
 
-
 //! i have a theory for the menu problem
 //* maybe i just didn't put the buttons in the right
 // div tag here i need to test it out after i add the tournament
@@ -48,7 +47,6 @@ export function renderPongPage() {
   cpuButton.id = "cpuButton";
   cpuButton.textContent = "Play vs cpu";
   menu.appendChild(cpuButton);
-
   pongContainer.appendChild(menu);
 
   // Scores
@@ -65,7 +63,6 @@ export function renderPongPage() {
   player2Score.id = "player2Score";
   player2Score.textContent = "Player 2: 0";
   scores.appendChild(player2Score);
-
   pongContainer.appendChild(scores);
 
   //-- tournament setup section --
@@ -73,7 +70,7 @@ export function renderPongPage() {
   tournamentSetup.id = "tournamentSetup";
   tournamentSetup.style.display = "none";
 
-  //pieaces for the tournament mode
+  //pieces for the tournament mode
   const headingForTournament = document.createElement("h2");
   headingForTournament.textContent = "setup tournament";
   tournamentSetup.appendChild(headingForTournament);
@@ -126,15 +123,17 @@ export function renderPongPage() {
   matchAnnouncement.appendChild(matchHeader);
 
   const matchP = document.createElement("p");
-  matchP.id = "matchAnnouncementeText";
+  matchP.id = "matchAnnouncementText";
+  matchP.textContent = "testing";
   matchAnnouncement.appendChild(matchP);
-  //! needs to be finished
+  // needs to be finished
   const startMatchButton = document.createElement("button");
   startMatchButton.id = "startMatchButton";
   startMatchButton.textContent = "Start match";
+
   matchAnnouncement.appendChild(startMatchButton);
-
-
+  //adding it to the pongContainer
+  pongContainer.appendChild(matchAnnouncement);
   // Game Canvas
   const gameCanvas = document.createElement("canvas");
   gameCanvas.id = "gameCanvas";
