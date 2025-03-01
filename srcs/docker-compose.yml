@@ -44,6 +44,7 @@ services:
     - "8000:8000"
     depends_on:
        - auth-service
+       - tournament-service
       # - game_service
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
@@ -273,6 +274,55 @@ services:
       - internal
 
 
+  tournament-service:
+    image: tournament-service
+    container_name: tournament-service
+    build:
+      context: ./backend/tournament-service
+      dockerfile: Dockerfile
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+     - "8003:8003"
+    depends_on:
+      tournament_db:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -sf http://localhost:8001/watchman/?skip=watchman.checks.storage || exit 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 10s
+    networks:
+      - internal
+
+
+
+  tournament_db:
+    image: postgres:15
+    container_name: tournament_db
+    env_file: ".env"
+    environment:
+     - POSTGRES_USER=${POSTGRES_USER}
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+     - POSTGRES_DB=${POSTGRES_TOURNAMENT_DB}
+     - POSTGRES_HOST=${POSTGRES_TOURNAMENT_HOST}
+    restart: always
+    #ports:
+    # - "5434:5432" #port changed to 5434
+    volumes:
+      - postgres_tournament:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+
 networks:
   internal:
     driver: bridge
@@ -291,3 +341,4 @@ volumes:
     #   o: bind
   prometheus_data:
   alertmanager_data:
+  postgres_tournament:
