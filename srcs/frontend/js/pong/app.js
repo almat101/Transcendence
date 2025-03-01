@@ -1,4 +1,4 @@
-//I import the code from the other
+ //I import the code from the other
  //files that are needed to make the game work
 import { showWinningScreen } from './winningScreen.js';
 import { gameLoop } from './gameLoop.js';
@@ -100,7 +100,7 @@ export function initializeGame(navbar) {
     scores.style.display = 'block';
     canvas.style.display = 'block';
 
-    buttonsHandler(startButton, cpuButton, tournamentButton, false);
+    // buttonsHandler(startButton, cpuButton, tournamentButton, false);
     // Pass an extra flag (true) to enable CPU logic in gameLoop
     gameLoop(canvas, endGame, player1Name, player2Name, true);
   }
@@ -114,7 +114,7 @@ export function initializeGame(navbar) {
     const canvas = document.getElementById('gameCanvas');
     const scores = document.getElementById('scores');
     tournamentMatches = await fetchMatches();
-    buttonsHandler(startButton, cpuButton, tournamentButton, false);
+    // buttonsHandler(startButton, cpuButton, tournamentButton, false);
     if (!tournamentMatches.length) {
       alert('No matches available for the tournament.');
       showMenu(start1v1Game, startTournament, startCpuGame);
@@ -124,26 +124,25 @@ export function initializeGame(navbar) {
   }
 
   function playTournamentMatch(match) {
-	console.log("starting tournament");
-	const { player1, player2 } = match;
-	const matchAnnouncement = document.getElementById('matchAnnouncement');
-	const matchAnnouncementText = document.getElementById('matchAnnouncementText');
-	const startMatchButton = document.getElementById('startMatchButton');
-	const gameCanvas = document.getElementById('gameCanvas');
-	const scores = document.getElementById('scores');
+    console.log("starting tournament with this matchup");
+    const { player1, player2 } = match;
+    const matchAnnouncement = document.getElementById('matchAnnouncement');
+    const matchAnnouncementText = document.getElementById('matchAnnouncementText');
+    const startMatchButton = document.getElementById('startMatchButton');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const scores = document.getElementById('scores');
+    matchAnnouncementText.textContent = `${player1} vs ${player2}`;
+    matchAnnouncement.style.display = 'block';
+    gameCanvas.style.display = 'none';
+    scores.style.display = 'none';
 
-	matchAnnouncementText.textContent = `${player1} vs ${player2}`;
-	matchAnnouncement.style.display = 'block';
-	gameCanvas.style.display = 'none';
-	scores.style.display = 'none';
-
-	startMatchButton.onclick = () => {
-	matchAnnouncement.style.display = 'none';
-	gameCanvas.style.display = 'block';
-	scores.style.display = 'block';
-	// Start the game loop with the tournament endGame callback
-	gameLoop(gameCanvas, (winner) => endTournamentMatch(winner, player1, player2), player1, player2);
-	};
+    startMatchButton.onclick = () => {
+    matchAnnouncement.style.display = 'none';
+    gameCanvas.style.display = 'block';
+    scores.style.display = 'block';
+    // Start the game loop with the tournament endGame callback
+    gameLoop(gameCanvas, (winner) => endTournamentMatch(winner, player1, player2), player1, player2);
+    };
 }
 
 async function endTournamentMatch(winner, player1, player2) {
@@ -163,20 +162,22 @@ async function endTournamentMatch(winner, player1, player2) {
 	if (!tournamentMatches.length) {
 		// Fetch remaining matches
 		const remainingMatches = await fetchMatches();
-
+    console.log("remaining matches: ", remainingMatches);
+    const remainingUsers = await fetchAllUsers();
+    console.log("remaining users ", remainingUsers);
 		if (remainingMatches.length > 0) {
-		// More matches to play, start the next match
-		tournamentMatches = remainingMatches;
-		playTournamentMatch(tournamentMatches.shift());
-		return;
+      // More matches to play, start the next match
+      tournamentMatches = remainingMatches;
+      playTournamentMatch(tournamentMatches.shift());
+      return;
 		}
 
 		// No matches remain, check if only one user remains
-		const remainingUsers = await fetchAllUsers();
+		// const remainingUsers = await fetchAllUsers();
 
 		if (remainingUsers.length === 1) {
-		// Declare the remaining user as the champion
-		showWinningScreen(remainingUsers[0].name, restartGame);
+      // Declare the remaining user as the champion
+      showWinningScreen(remainingUsers[0].name, restartGame);
 		return;
 		} else if (remainingUsers.length > 1) {
 		// If multiple users remain without matches, start a new round
@@ -218,12 +219,28 @@ async function endTournamentMatch(winner, player1, player2) {
     }
   }
 
-  // function restartGame() {
-  //   console.log('Restarting Game');
-  //   const player1ScoreElement = document.getElementById('player1Score');
-  //   const player2ScoreElement = document.getElementById('player2Score');
-  //   player1ScoreElement.textContent = 'Player 1: 0';
-  //   player2ScoreElement.textContent = 'Player 2: 0';
-  // }
+  function restartGame() {
+    console.log('Restarting Game');
+    const player1ScoreElement = document.getElementById('player1Score');
+    const player2ScoreElement = document.getElementById('player2Score');
+    player1ScoreElement.textContent = 'Player 1: 0';
+    player2ScoreElement.textContent = 'Player 2: 0';
+    //!strange but true this works? BUT i need to analyze properly the
+    //!the part where i should show case the winner of the tournament or am i dumb?
+    //! tomorrow's task tough
+    showMenu(start1v1Game, startTournament, startCpuGame);
+  }
 
 }
+
+
+/*
+*Task di oggi di revisione e per aggiustare le cose a livello
+*organizzativo:
+  TODO: sistemare il github di django, avendo la modalità
+    TODO: torneo non funzionante
+
+  TODO: Revisionare algoritmo della CPU ora come ora non va bene com'è fatto
+
+
+*/

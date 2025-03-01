@@ -143,9 +143,7 @@
   animation: bounce 2s infinite ease-in-out 0.5s; /* 0.5s delay for staggered effect */
 }
 
-
 /* mentioned in the pong file */
-
 #pong-container{
   text-align: center;
   background-color: var(--bg-color);
@@ -166,6 +164,7 @@
 .card-body {
   color: var(--text-color);
 }
+
 
 
 /* Apply the pixel art font to the navbar */
@@ -675,7 +674,6 @@ section.text-lg-start {
 }
 
 
-
 /*! Lnicoter style */
 
 
@@ -743,5 +741,4 @@ you don't need to specify the id of the button
 #matchWinner h2 {
   font-family: 'Press Start 2P', cursive !important;
 }
-
 

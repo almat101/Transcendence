@@ -1,9 +1,9 @@
-const API_URL = 'http://localhost:8001/api';  // Ensure this matches your backend URL
+const API_URL = 'http://127.0.0.1:8000';  // Ensure this matches your backend URL
 
 // Fetch all matches from the backend
 export async function fetchMatches() {
 	try {
-		const response = await fetch(`${API_URL}/users/`);
+		const response = await fetch(`${API_URL}/api/users/`);
 		console.log("Fetch Response:", response);
 		if (!response.ok) {
 			const errorData = await response.json();
@@ -23,7 +23,7 @@ export async function fetchMatches() {
 export async function saveUsers(names, afterSaveCallback) {
 	try {
 		console.log("Saving Users:", names);
-		const response = await fetch(`${API_URL}/users/save/`, {
+		const response = await fetch(`${API_URL}/api/users/save/`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export async function saveUsers(names, afterSaveCallback) {
 // Delete a user (loser) from the backend
 export async function deleteUser(loserName) {
 	try {
-		const response = await fetch(`${API_URL}/users/delete/`, {
+		const response = await fetch(`${API_URL}/api/users/delete/`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export async function deleteUser(loserName) {
 
 export async function deleteAllUsers() {
 	try {
-		const response = await fetch(`${API_URL}/users/delete_all/`, {
+		const response = await fetch(`${API_URL}/api/users/delete_all/`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export async function deleteAllUsers() {
 
 export async function fetchAllUsers() {
 	try {
-		const response = await fetch(`${API_URL}/users/list/`);
+		const response = await fetch(`${API_URL}/api/users/list/`);
 		if (!response.ok) {
 			const errorData = await response.json();
 			throw new Error(errorData.error || 'Failed to fetch all users.');
