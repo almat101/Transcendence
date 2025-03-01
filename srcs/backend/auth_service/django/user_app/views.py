@@ -1,3 +1,4 @@
+import os
 from rest_framework import status # type: ignore
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
@@ -100,23 +101,43 @@ def user_info(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_avatar(request):
-    if request.user.has_oauth:
-        return Response({
-            'error': 'OAuth users cannot update their avatar'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
     serializer = AvatarUpdateSerializer(
         request.user,
         data=request.data,
-        partial=True
+        context={'request': request}
     )
 
     if serializer.is_valid():
-        serializer.save()
-        return Response({
-            'message': 'Avatar updated successfully',
-            'avatar': serializer.data['avatar']
-        }, status=status.HTTP_200_OK)
+        try:
+            avatar_file = request.FILES['avatar']
+
+            # Get file extension
+            file_ext = os.path.splitext(avatar_file.name)[1]
+
+            # Create new filename with username to avoid conflicts
+            avatar_file.name = f"avatar_{request.user.username}{file_ext}"
+
+            # Delete old avatar if it exists and isn't the default
+            if request.user.avatar and 'default_avatar' not in request.user.avatar.name:
+                if os.path.isfile(request.user.avatar.path):
+                    os.remove(request.user.avatar.path)
+
+            # Save using the serializer
+            serializer.save()
+
+            # Return the complete URL
+            avatar_url = request.build_absolute_uri(request.user.avatar.url)
+
+            return Response({
+                'message': 'Avatar updated successfully',
+                'avatar': avatar_url
+            })
+
+        except Exception as e:
+            return Response({
+                'error': f'Failed to update avatar: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])

@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 import logging
 from .serializers import CustomTokenObtainPairSerializer
+from django.contrib.auth import get_user_model
 
 
 # Setup logging
@@ -129,19 +130,21 @@ def refresh_access_token(request):
 
         # Check if token is blacklisted
         if refresh.check_blacklist():
-            response = Response(
+            return Response(
                 {'error': 'Refresh token is blacklisted'},
                 status=status.HTTP_401_UNAUTHORIZED
+            ).delete_cookie(
+                key='refresh_token'
             )
-            response.delete_cookie(key='refresh_token')
-            return response
 
-        if refresh.payload['user_id'] != request.user.id:
+        User = get_user_model()
+
+        if not User.objects.filter(id=refresh.payload['user_id']).exists():
             response = Response(
-                {'error': 'Invalid refresh token'},
-                status=status.HTTP_401_UNAUTHORIZED
+            {'error': 'User does not exist'},
+            status=status.HTTP_401_UNAUTHORIZED
             )
-            response.delete_cookie(key='refresh_token')
+            response.delete_cookie('refresh_token')
             return response
 
         # Generate new access token

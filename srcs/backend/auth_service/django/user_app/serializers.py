@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
@@ -30,6 +31,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
         if UserProfile.objects.filter(username__iexact=value).exclude(id=getattr(self.instance, 'id', None)).exists():
             raise serializers.ValidationError("This username is already taken")
         return value
+
+    def get_avatar(self, obj):
+        if obj.avatar:
+            return f"/media/avatars/{os.path.basename(obj.avatar.name)}"
+        return None
 
 
 class UserCreateSerializer(BaseUserSerializer):
@@ -97,6 +103,11 @@ class AvatarUpdateSerializer(serializers.ModelSerializer):
 
         if value.size > 5 * 1024 * 1024:  # 5MB limit
             raise serializers.ValidationError("Image size cannot exceed 5MB")
+
+        # Add image type validation
+        if not value.content_type.startswith('image/'):
+            raise serializers.ValidationError("File must be an image")
+
         return value
 
 class UserUpdateSerializer(serializers.ModelSerializer):

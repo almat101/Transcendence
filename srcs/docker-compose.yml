@@ -42,6 +42,8 @@ services:
     restart: unless-stopped
     ports:
     - "8000:8000"
+    volumes:
+      - ./media:/app/media:rw  # Shared volume with read/write access
     depends_on:
        - auth-service
        - tournament-service
@@ -80,7 +82,9 @@ services:
       - .env
     restart: unless-stopped
     ports:
-     - "8001:8001"
+      - "8001:8001"
+    volumes:
+      - ./media:/app/media:rw  # Shared volume with read/write access
     depends_on:
       auth_db:
         condition: service_healthy
@@ -118,6 +122,9 @@ services:
     container_name: grafana
     env_file: ".env"
     restart: unless-stopped
+    environment:
+     - GF_SERVER_ROOT_URL=https://localhost/grafana/  # Tells Grafana it's hosted under /grafana/
+     - GF_SERVER_SERVE_FROM_SUB_PATH='true'
     volumes:
       - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
