@@ -16,6 +16,7 @@ from .serializers import (
     FriendSerializer
 )
 from .models import UserProfile, Friends
+from django.db import models
 import logging
 from django.core.mail import EmailMessage
 
@@ -190,29 +191,47 @@ def search_users(request):
             'error': 'Search query must be at least 2 characters long'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    users = UserProfile.search_users(query)
-    serializer = BaseUserSerializer(users, many=True)
+    try:
+        users = UserProfile.search_users(query, request.user)
+        serializer = BaseUserSerializer(users, many=True)
 
-    return Response(serializer.data)
+        # Add friendship status to response
+        data = serializer.data
+        for user_data in data:
+            matching_user = next(
+                (u for u in users if u.id == user_data['id']),
+                None
+            )
+            if matching_user:
+                user_data['friendship_status'] = matching_user.friendship_status
 
-'''
+        return Response(data)
+
+    except Exception as e:
+        return Response({
+            'error': f'Search failed: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 #FRIENDS VIEWS
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_friend_request(request):
-    friend = get_object_or_404(UserProfile, username=request.data.get('username'))
+    friend_id = request.data.get('id')
+    if not friend_id:
+        return Response({
+            'error': 'User ID is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check if friend has blocked user
-    if friend.has_blocked(request.user):
-        return Response(
-            {'error': 'Cannot send friend request'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    friend = get_object_or_404(UserProfile, id=friend_id)
 
     serializer = FriendSerializer(
-        data={'status': 'pending'},
-        context={'request': request, 'friend': friend}
+        data={},
+        context={
+            'user': request.user,
+            'friend': friend
+        }
     )
 
     if serializer.is_valid():
@@ -221,13 +240,18 @@ def send_friend_request(request):
             friend=friend,
             status='pending'
         )
-        return Response(
-            FriendSerializer(friend_request).data,
-            status=status.HTTP_201_CREATED
-        )
+
+        # Send notification (implement this later)
+        # notify_user(friend, f"{request.user.username} sent you a friend request")
+
+        return Response({
+            'message': 'Friend request sent successfully',
+            'request': FriendSerializer(friend_request).data
+        }, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+'''
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_friend_status(request):
@@ -336,24 +360,22 @@ def block_user(request):
         status=status.HTTP_200_OK
     )
 
-
+'''
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
-    friends = Friends.objects.filter(
-        user=request.user,
-        status='accepted'
-    )
-
     serializer = FriendSerializer(
-        friends,
+        Friends.objects.filter(
+            (models.Q(user=request.user) | models.Q(friend=request.user)) &
+            models.Q(status='accepted')
+        ),
         many=True,
         context={'request': request}
     )
     return Response(serializer.data)
 
-
+'''
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friend_requests(request):

@@ -113,6 +113,8 @@ export const tokenService = {
 
 	removeTokens() {
 		localStorage.removeItem('access_token');
+		//remove cookie
+		
 	},
 
 	async validateToken() {

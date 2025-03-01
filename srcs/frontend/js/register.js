@@ -2,7 +2,6 @@ import { registerRoute, loadPage } from "./router.js";
 import { renderLoginPage } from "./pages/login.js";
 import { renderSignupPage } from "./pages/signup.js";
 import { renderHomePage } from "./pages/home.js";
-import { renderChatPage } from "./pages/chat.js";
 import { renderFriendsPage } from "./pages/friends.js";
 import { renderPongPage } from "./pages/pong.js";
 import { renderUsersPage } from "./pages/users.js";
@@ -19,7 +18,6 @@ console.log("register triggered")
 registerRoute("/", renderHomePage);
 registerRoute("/login", renderLoginPage);
 registerRoute("/signup", renderSignupPage);
-registerRoute("/chat", renderChatPage);
 registerRoute("/friends", renderFriendsPage);
 registerRoute("/pong", renderPongPage);
 registerRoute("/users", renderUsersPage);

@@ -55,8 +55,7 @@ export function Navbar() {
 
   const links = [
     { name: "Home", route: "/" },
-    { name: "Pong", route: "/pong" },
-    { name: "Chat", route: "/chat" },
+    { name: "Games", route: "/pong" },
     { name: "Friends", route: "/friends" },
   ];
 

@@ -129,18 +129,20 @@ def refresh_access_token(request):
 
         # Check if token is blacklisted
         if refresh.check_blacklist():
-            return Response(
+            response = Response(
                 {'error': 'Refresh token is blacklisted'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+            response.delete_cookie(key='refresh_token')
+            return response
 
-        #check if user is valid
-        user = authenticate(request, username=refresh['username'], password=refresh['password'])
-        if user is None:
-            return Response(
-                {'error': 'Invalid user'},
+        if refresh.payload['user_id'] != request.user.id:
+            response = Response(
+                {'error': 'Invalid refresh token'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+            response.delete_cookie(key='refresh_token')
+            return response
 
         # Generate new access token
         access_token = str(refresh.access_token)

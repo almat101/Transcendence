@@ -5,6 +5,8 @@ import { gameLoop } from './gameLoop.js';
 import { showMenu } from './menu.js';
 import { buttonsHandler } from './buttonsHandler.js'
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
+import { showAlert } from '../components/alert.js';
+import { tokenService } from '../services/authService.js';
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
@@ -71,13 +73,27 @@ export function initializeGame(navbar) {
   // }
 
 
-  function start1v1Game() {
+  async function start1v1Game() {
+    let userData;
+    try {
+        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
+            headers: {
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            }
+        });
+        userData = await response.json();
+
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        showAlert('Failed to fetch user data', 'danger');
+    }
+
     console.log('Starting 1v1 Game');
     if (navbar)
       navbar.style.display = 'none';
 
     gameMode = '1v1';
-    const player1Name = 'Player 1';
+    const player1Name = userData.username;
     const player2Name = 'Player 2';
     const canvas = document.getElementById('gameCanvas');
     const scores = document.getElementById('scores');

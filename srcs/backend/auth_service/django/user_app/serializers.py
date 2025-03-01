@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 from django.core.validators import EmailValidator
+from django.db import models
 from .models import UserProfile, Friends
 import re
 
@@ -202,7 +203,7 @@ class FriendSerializer(serializers.ModelSerializer):
         read_only_fields = ['friends_since']
 
     def validate(self, data):
-        user = self.context['request'].user
+        user = self.context.get('user')
         friend = self.context.get('friend')
 
         if user == friend:
