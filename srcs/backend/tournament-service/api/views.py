@@ -29,7 +29,7 @@ import os
 #matchmaking database
 #i repeat the steps until there's a winner
 @api_view(['GET'])
-def get_users(request):
+def get_users_tournament(request):
 	print('\033[32mready to get the users \033[0m')
 	users = list(User.objects.all())
 	# serializer = UserSerializer(users, many=True)

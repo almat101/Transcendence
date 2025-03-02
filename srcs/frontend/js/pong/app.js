@@ -12,6 +12,9 @@ let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
 let userData;
 
+//? amatta values he requested
+let usersInTournament = 0;
+let loggedUserTPosition = 0;
 export async function initializeGame(navbar) {
 	console.log("initizalizing game");
 
@@ -40,7 +43,12 @@ export async function initializeGame(navbar) {
 				.value.split(',')
 				.map(name => name.trim())
 				.filter(name => name);
+				//* we add the logged user in the tournament as well
+				names.push(userData.username);
 			saveUsers(names, startTournament);
+			//* this way i can give amatta the amount of players
+			//* that participated in the tournament
+			usersInTournament = names.length;
 		});
 	}
 
@@ -176,9 +184,16 @@ export async function initializeGame(navbar) {
 		const loser = (winner === player1) ? player2 : player1;
 		alert(`${winner} is victorious! Eliminating ${loser} from the tournament.`);
 
+		//? this for now is the simpler version of the tournament positining
+		if (loser === userData.username) {
+			loggedUserTPosition = usersInTournament;
+			console.log("%cdamn you lost already? final position: ", "color: red", loggedUserTPosition);
+		}
 		// Delete the loser
 		await deleteUser(loser);
-
+		//update the number of users in the tournament for the final
+		//position of the logged user
+		usersInTournament -= 1;
 		// Check if all matches in the current round are played
 		if (!tournamentMatches.length) {
 			// Fetch remaining matches
@@ -197,8 +212,15 @@ export async function initializeGame(navbar) {
 			// const remainingUsers = await fetchAllUsers();
 
 			if (remainingUsers.length === 1) {
+				// Check if the remaining user is the logged user
+				if (remainingUsers[0].name === userData.username) {
+					loggedUserTPosition = 1;
+				}
 				// Declare the remaining user as the champion
 				showWinningScreen(remainingUsers[0].name, restartGame);
+				//*added for next pull
+				console.log("a winner is decided");
+				deleteAllUsers();
 				return;
 			} else if (remainingUsers.length > 1) {
 			// If multiple users remain without matches, start a new round
@@ -224,7 +246,6 @@ export async function initializeGame(navbar) {
 		console.log('End Game:', winner);
 		if (gameMode === '1v1' || gameMode === 'cpu') {
 			const canvas = document.getElementById('gameCanvas');
-			//TODO: trovare un modo per prendere e convertire gli score
 			const scores = document.getElementById('scores');
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
@@ -276,5 +297,5 @@ export async function initializeGame(navbar) {
 
 	* fare schermata di vittoria per locale amatta c'è già
 	TODO: salvare scores per 1vs1 di amatta, fare la conversione a modo [X]
-	TODO: per il torneo posizione e numero utenti
+	TODO: per il torneo posizione [] e numero utenti [X]
 */

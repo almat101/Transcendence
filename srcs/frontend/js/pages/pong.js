@@ -79,7 +79,7 @@ export function renderPongPage() {
   tournamentForm.id = "playerNamesForm";
 
   const formHeading = document.createElement("h3");
-  formHeading.textContent = "Enter player names";
+  formHeading.textContent = "Enter player names, the logged in user is already added";
   tournamentForm.appendChild(formHeading);
 
   //-- container for input(s)
