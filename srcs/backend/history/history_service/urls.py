@@ -1,5 +1,5 @@
 """
-URL configuration for tournament project.
+URL configuration for history_service project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -15,16 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path , re_path
-from . import views
-
-#! remember to always link up the project with
-#! the apps that are created
-#* that's only possible with the include function
-#* though remember that too
+from django.urls import path,include,re_path
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-	path("api/", include("api.urls")),
+    path('admin/', admin.site.urls),
+	path('', include('history_app.urls')),
 	re_path(r'^watchman/', include('watchman.urls')) #health status
 ]
