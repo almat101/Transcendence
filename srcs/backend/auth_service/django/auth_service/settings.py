@@ -21,7 +21,7 @@ from dotenv import read_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 #with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
