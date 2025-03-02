@@ -90,7 +90,7 @@ def login_view(request):
         value=refresh_token,
         httponly=True,
         secure=True,  # Ensures the cookie is only sent over HTTPS
-        samesite='None',  # Prevents CSRF attacks
+        samesite='Lax',  # Prevents CSRF attacks
         max_age=7 * 24 * 60 * 60,  # Match the refresh token lifetime (7 days in your settings)
     )
     return response
