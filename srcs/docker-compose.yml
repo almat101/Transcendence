@@ -1,8 +1,4 @@
 services:
-  # proxy service
-  # that means that if you would like to open up and check the site
-  # for the nginx config file you must use the https protocol
-  # in this case we have https://127.0.0.1:443
   proxy:
     image: proxy
     build:
@@ -47,7 +43,7 @@ services:
     depends_on:
        - auth-service
        - tournament-service
-      # - game_service
+       - history-service
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
       interval: 30s
@@ -123,8 +119,8 @@ services:
     env_file: ".env"
     restart: unless-stopped
     environment:
-     - GF_SERVER_ROOT_URL=https://localhost/grafana/  # Tells Grafana it's hosted under /grafana/
-     - GF_SERVER_SERVE_FROM_SUB_PATH='true'
+      - GF_SERVER_ROOT_URL=https://localhost/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
     volumes:
       - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -229,7 +225,7 @@ services:
     container_name: postgres-exporter-grafana
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@grafana_db:5432/grafana_db?sslmode=disable"
-    restart: unless-stopped # External port 9188, internal container port 9187
+    restart: unless-stopped
     command:
       - '--web.listen-address=:9188'
     depends_on:
@@ -274,17 +270,15 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    ports:
-     - "8003:8003"
     depends_on:
       tournament_db:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -sf http://localhost:8001/watchman/?skip=watchman.checks.storage || exit 1"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8003/watchman/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - internal
 
@@ -298,8 +292,6 @@ services:
      - POSTGRES_DB=${POSTGRES_TOURNAMENT_DB}
      - POSTGRES_HOST=${POSTGRES_TOURNAMENT_HOST}
     restart: always
-    #ports:
-    # - "5434:5432" #port changed to 5434
     volumes:
       - postgres_tournament:/var/lib/postgresql/data
     healthcheck:
@@ -310,6 +302,47 @@ services:
     networks:
       - internal
 
+  history-service:
+    image: history-service
+    container_name: history-service
+    build:
+      context: ./backend/history
+      dockerfile: Dockerfile
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      history_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8002/watchman/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - internal
+
+  history_db:
+    image: postgres:15
+    container_name: history_db
+    env_file: ".env"
+    environment:
+     - POSTGRES_USER=${POSTGRES_USER}
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+     - POSTGRES_DB=${POSTGRES_HISTORY_DB}
+     - POSTGRES_HOST=${POSTGRES_HISTORY_HOST}
+    restart: always
+    volumes:
+      - postgres_history:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
 networks:
   internal:
@@ -317,16 +350,8 @@ networks:
 
 volumes:
   postgres_test:
-    # driver : local
-    # driver_opts:
-    #   type: none
-    #   device: /home/${USER}/data/postgres_test/
-    #   o: bind
   postgres_grafana:
-    # driver_opts:
-    #   type: none
-    #   device: /home/${USER}/data/postgres_grafana/
-    #   o: bind
   prometheus_data:
   alertmanager_data:
   postgres_tournament:
+  postgres_history:
