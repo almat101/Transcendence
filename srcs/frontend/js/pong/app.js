@@ -289,13 +289,13 @@ export async function initializeGame(navbar) {
 /*
 *Task di oggi di revisione e per aggiustare le cose a livello
 *organizzativo:
-	TODO: vincitore del 1vs1 [X]
+	// vincitore del 1vs1 [X]
 	TODO: sistemare il github di django, avendo la modalità (no priorità)
 		TODO: torneo non funzionante
 
 	TODO: Revisionare algoritmo della CPU ora come ora non va bene com'è fatto
 
 	* fare schermata di vittoria per locale amatta c'è già
-	TODO: salvare scores per 1vs1 di amatta, fare la conversione a modo [X]
-	TODO: per il torneo posizione [] e numero utenti [X]
+	// salvare scores per 1vs1 di amatta, fare la conversione a modo [X]
+	// per il torneo posizione [X] e numero utenti [X]
 */
