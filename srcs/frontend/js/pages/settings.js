@@ -6,7 +6,7 @@ export async function renderSettingsPage() {
     let userData;
 
     try {
-        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
+        const response = await fetch('/api/user/getuserinfo/', {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }
@@ -142,7 +142,7 @@ export async function renderSettingsPage() {
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
         try {
-            const response = await fetch('http://localhost:8000/user/updateuser/', {
+            const response = await fetch('/api/user/updateuser/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ export async function renderSettingsPage() {
                 showAlert('Passwords do not match');
                 return;
             }
-            const response = await fetch('http://localhost:8000/user/password-reset/', {
+            const response = await fetch('/api/user/password-reset/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ export async function renderSettingsPage() {
                 headers['Content-Type'] = 'application/json';
             }
 
-            const response = await fetch('http://localhost:8000/user/deleteuser/', {
+            const response = await fetch('/api/user/deleteuser/', {
                 method: 'POST',
                 headers: headers,
                 body: !userData.has_oauth ? JSON.stringify({
@@ -285,7 +285,7 @@ export async function renderSettingsPage() {
             const formData = new FormData();
             formData.append('avatar', file);
 
-            const response = await fetch('http://localhost:8000/user/updateavatar/', {
+            const response = await fetch('/api/user/updateavatar/', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${tokenService.getAccessToken()}`

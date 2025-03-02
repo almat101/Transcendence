@@ -76,7 +76,7 @@ export function initializeGame(navbar) {
   async function start1v1Game() {
     let userData;
     try {
-        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
+        const response = await fetch('/api/user/getuserinfo/', {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }

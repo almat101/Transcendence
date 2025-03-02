@@ -71,7 +71,7 @@ export async function renderFriendsPage() {
 
 async function loadFriendsList() {
     try {
-        const response = await fetch('http://localhost:8000/user/friends/list-friends/', {
+        const response = await fetch('/api/user/friends/list-friends/', {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }
@@ -112,7 +112,7 @@ async function performSearch(query) {
     }
 
     try {
-        const response = await fetch(`http://localhost:8000/user/search/?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`/api/user/search/?q=${encodeURIComponent(query)}`, {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }
@@ -194,7 +194,7 @@ window.sendFriendRequest = async function(userId) {
         button.disabled = true;
         button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-        const response = await fetch('http://localhost:8000/user/friends/send/', {
+        const response = await fetch('/api/user/friends/send/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

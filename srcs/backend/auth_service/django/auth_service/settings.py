@@ -140,12 +140,12 @@ MIDDLEWARE = [
 ]
 
 
-CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
+CORS_ALLOW_ALL_ORIGINS = False  # Not recommended in production, change after development
 
 CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
 
 CORS_ALLOWED_ORIGINS = [
-    #"https://localhost",
+    "https://localhost",
 ]
 
 
@@ -170,6 +170,14 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
+]
+
+
+#CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
 ]
 
 ROOT_URLCONF = 'auth_service.urls'
@@ -211,11 +219,11 @@ OAUTH2_PROVIDERS = {
     '42': {
         'CLIENT_ID': CLIENT42_ID,
         'CLIENT_SECRET': CLIENT42_SECRET,
-        'REDIRECT_URI': 'http://localhost:8000/oauth/callback',
+        'REDIRECT_URI': 'https://localhost/api/oauth/callback',
         'AUTHORIZATION_URL': 'https://api.intra.42.fr/oauth/authorize',
         'TOKEN_URL': 'https://api.intra.42.fr/oauth/token',
         'USER_INFO_URL': 'https://api.intra.42.fr/v2/me',
-        'SCOPE': 'public'
+        'SCOPE': 'public',
     }
 }
 

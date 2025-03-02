@@ -8,15 +8,15 @@ services:
     restart: unless-stopped
     ports:
       - "443:443"
-      # - "80:80"
+      - "80:80"
     # env_file: ".env"
     depends_on:
-    # - api-gateway
     - grafana
     - prometheus
     - node-exporter
     - alertmanager
     volumes:
+      - ./media:/app/media:rw
       - ./proxy/logs:/var/log/nginx
       - ./frontend:/var/www/html # mount the static frontend directly to ngnix
       # - ./proxy/logs:/var/log/modsecurity
@@ -29,41 +29,14 @@ services:
     networks:
       - internal
 
-  # API Gateway
-  # api-gateway:
-  #   image: api-gateway
-  #   container_name: api-gateway
-  #   build:
-  #     context: ./gateway
-  #     dockerfile : Dockerfile
-  #   restart: unless-stopped
-  #   ports:
-  #   - "8000:8000"
-  #   volumes:
-  #     - ./media:/app/media:rw  # Shared volume with read/write access
-  #   depends_on:
-  #      - auth-service
-  #      - tournament-service
-  #      - history-service
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 20s
-  #   networks:
-  #     - internal
-
   nginx-prometheus-exporter:
     image: nginx/nginx-prometheus-exporter:1.4
     container_name: nginx-prometheus-exporter
     restart: unless-stopped
     depends_on:
       - proxy
-      # - api-gateway
     command: [
       "--nginx.scrape-uri", "http://proxy:8080/stub_status",
-      # "--nginx.scrape-uri", "http://api-gateway:8080/stub_status",
     ]
     networks:
       - internal
