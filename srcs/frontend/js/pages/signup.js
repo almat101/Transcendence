@@ -120,7 +120,7 @@ export function renderSignupPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/user/signup/', {
+      const response = await fetch('/api/user/signup/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
