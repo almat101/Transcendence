@@ -22,9 +22,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('auth_app.urls')),
-    path('user/', include('user_app.urls')),
-    path('oauth/', include('oauth_app.urls')),
+    path('/api/auth/', include('auth_app.urls')),
+    path('/api/user/', include('user_app.urls')),
+    path('/api/oauth/', include('oauth_app.urls')),
     path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
 	re_path(r'^watchman/', include('watchman.urls')) #health status
 ]
