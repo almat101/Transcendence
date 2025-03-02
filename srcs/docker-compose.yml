@@ -77,8 +77,6 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    ports:
-      - "8001:8001"
     volumes:
       - ./media:/app/media:rw  # Shared volume with read/write access
     depends_on:
@@ -254,8 +252,6 @@ services:
     image: adminer
     container_name: adminer
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     networks:
       - internal
 
