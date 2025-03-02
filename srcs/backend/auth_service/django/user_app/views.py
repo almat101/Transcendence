@@ -126,7 +126,7 @@ def update_avatar(request):
             serializer.save()
 
             # Return the complete URL
-            avatar_url = request.build_absolute_uri(request.user.avatar.url)
+            avatar_url = f"/media/avatars/{os.path.basename(request.user.avatar.name)}"
 
             return Response({
                 'message': 'Avatar updated successfully',

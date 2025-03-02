@@ -9,6 +9,7 @@ import re
 
 class BaseUserSerializer(serializers.ModelSerializer):
     """Base serializer for user data with common fields and validations"""
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
