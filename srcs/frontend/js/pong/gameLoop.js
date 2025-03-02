@@ -45,6 +45,8 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 		paddle1.update(keys);
 
 		// Update right paddle: if CPU mode, follow the ball; otherwise, use keys
+		//here is the bheaviour of the cpu
+		//we need to change it and it doens't need to be A* algorithm
 		if (isCpu) {
 			const paddleCenter = paddle2.y + paddle2.height / 2;
 			if (ball.y > paddleCenter && paddle2.y < canvas.height - paddle2.height) {
