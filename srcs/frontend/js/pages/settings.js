@@ -141,7 +141,7 @@ export async function renderSettingsPage() {
 
     // Add event listeners
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
-
+        e.preventDefault();
         try {
             const response = await fetch('/api/user/updateuser/', {
                 method: 'POST',
@@ -155,7 +155,6 @@ export async function renderSettingsPage() {
                     bio: document.getElementById('bio').value
                 })
             });
-
             if (response.ok) {
                 authService.fetchAndStoreUserData();
                 showAlert('Profile updated successfully', 'success');

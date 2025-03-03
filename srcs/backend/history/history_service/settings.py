@@ -27,17 +27,7 @@ SECRET_KEY = 'django-insecure-m4jmal%lp6k0$l=@^$y6qkr6a!^jf-sk8d85@o2we=budpdp^s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
-
-CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
-
-CORS_ALLOWED_ORIGINS = [
-    #"https://localhost",
-]
-
-
+ALLOWED_HOSTS = ['localhost']
 
 # Application definition
 
@@ -64,6 +54,46 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ALLOW_ALL_ORIGINS = False  # Not recommended in production, change after development
+
+CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
+
+CORS_ALLOWED_ORIGINS = [
+    "https://localhost",
+]
+
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Allow specific methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+
+#CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
 ]
 
 ROOT_URLCONF = 'history_service.urls'

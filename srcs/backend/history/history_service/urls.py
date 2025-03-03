@@ -19,6 +19,6 @@ from django.urls import path,include,re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-	path('', include('history_app.urls')),
+	path('api/history/', include('history_app.urls')),
 	re_path(r'^watchman/', include('watchman.urls')) #health status
 ]
