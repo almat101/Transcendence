@@ -47,7 +47,7 @@ services:
     build:
       context: ./backend/auth_service
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
+    command: bash -c "/app/start.sh"
     env_file:
       - .env
     restart: unless-stopped

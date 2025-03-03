@@ -297,33 +297,45 @@ def get_friend_status(request):
         'status': relationship.status,
         'initiator': relationship.user.username
     })
-
+'''
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
     """Accept or reject a friend request"""
-    friend_username = request.data.get('username')
+    friend_id = request.data.get('id')
     action = request.data.get('action')  # 'accept' or 'reject'
 
-    friend = get_object_or_404(UserProfile, username=friend_username)
+    if not friend_id or not action:
+        return Response(
+            {'error': 'Friend ID and action are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    friends = Friends.objects.filter(
+    if action not in ['accept', 'reject']:
+        return Response(
+            {'error': 'Invalid action'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friend = get_object_or_404(UserProfile, username=friend_id)
+
+    friend_request = Friends.objects.filter(
         user=friend,
         friend=request.user,
         status='pending'
     ).first()
 
-    if not friends:
+    if not friend_request:
         return Response(
             {'error': 'No pending friend request found'},
             status=status.HTTP_404_NOT_FOUND
         )
 
     if action == 'accept':
-        friends.status = 'accepted'
-        friends.save()
+        friend_request.status = 'accepted'
+        friend_request.save()
 
         # Create reciprocal friends
         Friends.objects.create(
@@ -340,12 +352,14 @@ def respond_to_friend_request(request):
         )
 
     # If rejected, just delete the friends
-    friends.delete()
+    friend_request.delete()
     return Response(
         {'message': 'Friend request rejected'},
         status=status.HTTP_200_OK
     )
 
+
+'''
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def block_user(request):
@@ -396,7 +410,7 @@ def list_friends(request):
     )
     return Response(serializer.data)
 
-'''
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friend_requests(request):
@@ -405,8 +419,11 @@ def list_friend_requests(request):
         status='pending'
     )
 
-    serializer = FriendsSerializer(friend_requests, many=True)
+    serializer = FriendSerializer(friend_requests, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+'''
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
