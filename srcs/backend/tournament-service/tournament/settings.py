@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-7rsuc(m^3(%fw@tv21fwv$l7j80um+i_d$57+roq2%7)a6nz#f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'tournament-service', '127.0.0.1', '0.0.0.0     ']
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition
@@ -53,6 +53,46 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ALLOW_ALL_ORIGINS = False  # Not recommended in production, change after development
+
+CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
+
+CORS_ALLOWED_ORIGINS = [
+    "https://localhost",
+]
+
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Allow specific methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+
+#CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
 ]
 
 ROOT_URLCONF = 'tournament.urls'
@@ -133,16 +173,3 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:8000",  # Add your front-end URL here
-#     "http://127.0.0.1:8000",
-# ]
-
-CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
-
-CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
-
-CORS_ALLOWED_ORIGINS = [
-    #"https://localhost",
-]

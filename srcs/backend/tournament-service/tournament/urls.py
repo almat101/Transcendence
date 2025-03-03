@@ -25,6 +25,6 @@ from . import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-	path("api/", include("api.urls")),
+	path("api/tournament/", include("api.urls")),
 	re_path(r'^watchman/', include('watchman.urls')) #health status
 ]

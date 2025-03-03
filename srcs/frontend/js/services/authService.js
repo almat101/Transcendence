@@ -1,4 +1,5 @@
 import { showAlert } from '../components/alert.js';
+import { userService } from './userService.js';
 
 export const authService = {
 	async logout() {
@@ -14,6 +15,7 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.removeTokens();
+				userService.clearUserData();
 				return true;
 			}
 			return false;
@@ -42,6 +44,7 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.setAccessToken(data.access);
+				await this.fetchAndStoreUserData();
 				showAlert('Login successful', 'success');
 				return { success: true };
 			}
@@ -99,7 +102,26 @@ export const authService = {
 		} catch (error) {
 			return { success: false, error: error.message };
 		}
-	}
+	},
+
+	async fetchAndStoreUserData() {
+        try {
+            const response = await fetch('/api/user/getuserinfo/', {
+                headers: {
+                    'Authorization': `Bearer ${tokenService.getAccessToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                userService.setUserData(userData);
+                return userData;
+            }
+        } catch (error) {
+            console.error('Failed to fetch user data:', error);
+        }
+        return null;
+    }
 };
 
 export const tokenService = {

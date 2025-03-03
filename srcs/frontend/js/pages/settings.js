@@ -1,6 +1,7 @@
-import { tokenService } from "../services/authService.js";
+import { authService, tokenService } from "../services/authService.js";
 import { Navbar } from "../components/navbar.js";
 import { showAlert } from '../components/alert.js';
+import { userService } from '../services/userService.js';
 
 export async function renderSettingsPage() {
     let userData;
@@ -12,7 +13,6 @@ export async function renderSettingsPage() {
             }
         });
         userData = await response.json();
-        showAlert(userData.avatar);
     } catch (error) {
         console.error('Error fetching user data:', error);
         showAlert('Failed to fetch user data', 'danger');
@@ -138,9 +138,10 @@ export async function renderSettingsPage() {
     section.innerHTML += profileSection;
     root.appendChild(section);
 
+
     // Add event listeners
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
-
+        e.preventDefault();
         try {
             const response = await fetch('/api/user/updateuser/', {
                 method: 'POST',
@@ -154,8 +155,8 @@ export async function renderSettingsPage() {
                     bio: document.getElementById('bio').value
                 })
             });
-
             if (response.ok) {
+                authService.fetchAndStoreUserData();
                 showAlert('Profile updated successfully', 'success');
             } else {
                 const error = await response.json();
@@ -228,6 +229,7 @@ export async function renderSettingsPage() {
 
             if (response.ok) {
                 tokenService.removeTokens();
+                userService.clearUserData();
                 window.location.replace('/login');
             } else {
                 const error = await response.json();
@@ -298,6 +300,7 @@ export async function renderSettingsPage() {
             if (response.ok) {
                 // Update the avatar preview
                 userData.avatar = data.avatar; // Update the stored user data
+                userService.updateUserData({ avatar: data.avatar });
                 avatarPreview.innerHTML = `<img src="${data.avatar}" style="width: 100%; height: 100%; object-fit: cover;" alt="${userData.username}'s avatar">`;
                 showAlert('Avatar updated successfully', 'success');
             } else {
