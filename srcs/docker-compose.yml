@@ -17,8 +17,12 @@ services:
         condition: service_healthy
       alertmanager:
         condition: service_healthy
-      # auth-service:
-      #   condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      history-service:
+        condition: service_healthy
+      tournament-service:
+        condition: service_healthy
     volumes:
       - ./media:/app/media:rw
       - ./proxy/logs:/var/log/nginx
