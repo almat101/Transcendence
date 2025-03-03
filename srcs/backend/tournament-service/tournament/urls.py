@@ -26,5 +26,6 @@ from . import views
 urlpatterns = [
     path("admin/", admin.site.urls),
 	path("api/tournament/", include("api.urls")),
-	re_path(r'^watchman/', include('watchman.urls')) #health status
+	re_path(r'^watchman/', include('watchman.urls')), #health status
+	path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
 ]
