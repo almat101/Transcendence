@@ -13,7 +13,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth']
+        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth', 'is_online', 'last_activity']
         read_only_fields = ['created_at']
 
     def validate_username(self, value):
@@ -212,7 +212,6 @@ class FriendSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friends
         fields = ['id', 'user', 'friend', 'status', 'friends_since']
-        read_only_fields = ['friends_since']
 
     def validate(self, data):
         user = self.context.get('user')

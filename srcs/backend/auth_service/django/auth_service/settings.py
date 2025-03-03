@@ -80,7 +80,7 @@ DEBUG = os.getenv('DEBUG')
 #SECURE_SSL_REDIRECT = True
 
 # If using nginx/proxy
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost', 'auth-service']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 
@@ -124,6 +124,17 @@ INSTALLED_APPS = [
 
     'django_prometheus', #prometheus
 	'watchman', #health check
+    'django_crontab', #cron job
+]
+
+# Add these to your settings.py
+# Set base directory for cron
+CRONTAB_DJANGO_PROJECT_NAME = 'auth_service'
+CRONTAB_COMMAND_PREFIX = 'cd /app && '
+
+CRONJOBS = [
+    # Format: ('cron schedule', 'path.to.function', ['optional args'], {'optional kwargs'}, 'job comment')
+    ('*/10 * * * *', 'user_app.tasks.update_inactive_users', '>> /app/cron.log 2>&1')
 ]
 
 MIDDLEWARE = [
@@ -136,6 +147,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'user_app.middleware.UserActivityMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
 ]
 
@@ -259,7 +271,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-        #'rest_framework.permissions.AllowAny',  # Change this for testing
     ),
 }
 

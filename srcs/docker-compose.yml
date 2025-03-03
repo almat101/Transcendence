@@ -47,7 +47,7 @@ services:
     build:
       context: ./backend/auth_service
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
+    command: bash -c "/app/start.sh"
     env_file:
       - .env
     restart: unless-stopped
@@ -208,9 +208,9 @@ services:
     networks:
       - internal
 
-  postgres-exporter-test:
+  postgres-exporter-auth-db:
     image: prometheuscommunity/postgres-exporter:v0.16.0
-    container_name: postgres-exporter-test
+    container_name: postgres-exporter-auth-db
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth_db:5432/auth_db?sslmode=disable"
     restart: unless-stopped

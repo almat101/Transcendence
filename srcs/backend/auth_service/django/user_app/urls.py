@@ -11,9 +11,9 @@ urlpatterns = [
     path('search/', views.search_users, name='search'),
 
     path('friends/send/', views.send_friend_request, name='send_friend_request'),
-  #  path('friends/respond', views.respond_to_friend_request, name='respond_to_friend_request'),
+    path('friends/respond', views.respond_to_friend_request, name='respond_to_friend_request'),
   #  path('friends/block', views.block_user, name='block_user'),
     path('friends/list-friends/', views.list_friends, name='list_friends'),
-  #  path('friends/list_friend_requests', views.list_friend_requests, name='list_friend_requests'),
+    path('friends/requests/', views.list_friend_requests, name='list_friend_requests'),
   #  path('friends/list_blocked_users', views.list_blocked_users, name='list_blocked_users'),
 ]

@@ -11,3 +11,4 @@ django-dotenv
 
 django-prometheus #prometheus monitoring
 django-watchman #health check status
+django-crontab

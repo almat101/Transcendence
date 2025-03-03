@@ -5,7 +5,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.core.mail import send_mail
 import logging
 from .serializers import CustomTokenObtainPairSerializer
@@ -103,6 +103,9 @@ def logout_view(request):
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
+
+        # Log user out
+        logout(request)
 
         response = Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
         response.delete_cookie(
