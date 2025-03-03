@@ -80,7 +80,7 @@ DEBUG = os.getenv('DEBUG')
 #SECURE_SSL_REDIRECT = True
 
 # If using nginx/proxy
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost', 'auth-service']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 
@@ -271,7 +271,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-        #'rest_framework.permissions.AllowAny',  # Change this for testing
     ),
 }
 
