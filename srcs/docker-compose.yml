@@ -8,13 +8,21 @@ services:
     restart: unless-stopped
     ports:
       - "443:443"
-      #- "80:80"
-    # env_file: ".env"
     depends_on:
-    - grafana
-    - prometheus
-    - node-exporter
-    - alertmanager
+      grafana:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+      node-exporter:
+        condition: service_healthy
+      alertmanager:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      history-service:
+        condition: service_healthy
+      tournament-service:
+        condition: service_healthy
     volumes:
       - ./media:/app/media:rw
       - ./proxy/logs:/var/log/nginx
@@ -76,7 +84,7 @@ services:
      - POSTGRES_HOST=${POSTGRES_AUTH_HOST}
     restart: always
     volumes:
-      - postgres_test:/var/lib/postgresql/data
+      - postgres_auth:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
       interval: 10s
@@ -173,6 +181,12 @@ services:
     command:
       - '--no-collector.thermal_zone'
       - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)'
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:9100 || exit 1"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
     networks:
       - internal
 
@@ -189,6 +203,12 @@ services:
       - alertmanager_data:/data
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:9093 || exit 1"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
     networks:
       - internal
 
@@ -321,7 +341,7 @@ networks:
   #   driver: bridge
 
 volumes:
-  postgres_test:
+  postgres_auth:
   postgres_grafana:
   prometheus_data:
   alertmanager_data:

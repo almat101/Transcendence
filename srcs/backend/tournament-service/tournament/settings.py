@@ -42,9 +42,11 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'api',
 	'watchman',
+	'django_prometheus',
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware', # prometheus
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False  # Not recommended in production, change after development

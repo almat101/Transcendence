@@ -37,3 +37,11 @@ scrape_configs:
   - job_name: 'nginx'
     static_configs:
       - targets: ["nginx-prometheus-exporter:9113"]
+
+  - job_name: "history-service"
+    static_configs:
+      - targets: ["history-service:8002"]
+
+  - job_name: "tournament-service"
+    static_configs:
+      - targets: ["tournament-service:8003"]

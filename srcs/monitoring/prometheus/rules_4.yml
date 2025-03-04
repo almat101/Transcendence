@@ -9,12 +9,3 @@ groups:
         annotations:
           summary: "Nginx Proxy instance is down"
           description: "Nginx Proxy instance has been down for more than 1 minute."
-
-      - alert: NginxApiGatewayDown
-        expr: nginx_up{addr="http://api-gateway:8080/stub_status"} == 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Nginx API Gateway instance is down"
-          description: "Nginx API Gateway instance has been down for more than 1 minute."
