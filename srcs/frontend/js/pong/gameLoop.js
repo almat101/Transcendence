@@ -1,6 +1,7 @@
 import { Ball } from './ball.js';
 import { Paddle } from './paddle.js';
 
+
 export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', player2Name = 'Player 2', isCpu = false) {
 	const ctx = canvas.getContext('2d');
 	const ball = new Ball(canvas.width / 2, canvas.height / 2, 10, 4, 3, canvas);
@@ -16,6 +17,12 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 	player2ScoreElement.textContent = `${player2Name}: 0`;
 
 	function updateScores() {
+		// i reduce the ball speed of 20%
+		if ((ball.speedX > 4 && ball.speedY > 3 ) || (-ball.speedX > 4 && -ball.speedY > 3) ){
+			console.log("%cSpeed decreased to: ", "color: red;", ball.speedX, ball.speedY);
+			ball.speedX = ball.speedX < 0 ? -ball.speedX * 0.8 : ball.speedX * 0.8;
+			ball.speedY = ball.speedY < 0 ? -ball.speedY * 0.8 : ball.speedY * 0.8;
+		}
 		player1ScoreElement.textContent = `${player1Name}: ${score1}`;
 		player2ScoreElement.textContent = `${player2Name}: ${score2}`;
 	}
@@ -24,6 +31,9 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 	let keys = {};
 	window.addEventListener('keydown', (e) => { keys[e.key] = true; });
 	window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+	let lastReactionTime = performance.now(); // Moved outside for persistence
+	let predictedY = paddle2.y; // initial prediction
 
 	function drawDottedLine() {
 		ctx.setLineDash([5, 15]);
@@ -41,19 +51,57 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 		ball.draw();
 		ball.move();
 
-		// Update left paddle (player-controlled using keys)
+		// Update left paddle (player-controlled)
 		paddle1.update(keys);
 
-		// Update right paddle: if CPU mode, follow the ball; otherwise, use keys
-		//here is the bheaviour of the cpu
-		//we need to change it and it doens't need to be A* algorithm
+		// Update right paddle: CPU behavior versus human control
 		if (isCpu) {
-			const paddleCenter = paddle2.y + paddle2.height / 2;
-			if (ball.y > paddleCenter && paddle2.y < canvas.height - paddle2.height) {
-				paddle2.y += paddle2.speed;
-			} else if (ball.y < paddleCenter && paddle2.y > 0) {
-				paddle2.y -= paddle2.speed;
+			const cpuReactionTime = 1; // Reaction delay in seconds
+			const currentTime = performance.now();
+			const timeSinceLastReaction = (currentTime - lastReactionTime) / 1000;
+			const minY = 0;
+			const maxY = canvas.height - paddle2.height;
+
+			if (ball.speedX > 0) {
+			// Only update prediction after the CPU reaction delay
+				if (timeSinceLastReaction >= cpuReactionTime) {
+					let remainingDistance = paddle2.x - ball.x;
+					let remainingTime = remainingDistance / Math.abs(ball.speedX);
+					let simulatedY = ball.y;
+					let simulatedSpeedY = ball.speedY;
+					let simulatedTime = 0;
+
+					//simulate wall bounces
+					while (simulatedTime < remainingTime){
+						const timeStep = Math.min(remainingTime - simulatedTime, 0.1);
+						simulatedY += simulatedSpeedY * timeStep;
+						simulatedTime += timeStep;
+
+						if (simulatedY < 0){
+							simulatedY = -simulatedY;
+							simulatedSpeedY = -simulatedSpeedY;
+						} else if (simulatedY > canvas.height){
+							simulatedY = 2 * canvas.height - simulatedY;
+							simulatedSpeedY = -simulatedSpeedY;
+						}
+					}
+
+					predictedY = simulatedY - paddle2.height / 2;
+					predictedY += Math.random() * 130 - 65; // Add some randomness to the prediction
+					predictedY = Math.min(Math.max(predictedY, minY), maxY);
+					lastReactionTime = currentTime;
+				}
+			}else{
+				predictedY = paddle2.y;
 			}
+				// Smooth movement with acceleration
+				const offset = predictedY - paddle2.y;
+				if (Math.abs(offset) > paddle2.speed) {
+					paddle2.y += (offset > 0 ? paddle2.speed : -paddle2.speed);
+				} else {
+					paddle2.y += offset;
+				}
+				  paddle2.y = Math.min(Math.max(paddle2.y, minY), maxY);
 		} else {
 			paddle2.update(keys);
 		}
@@ -61,7 +109,7 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 		paddle1.draw();
 		paddle2.draw();
 
-		// Collision and scoring logic
+		// Collision and scoring logic…
 		if (
 			(ball.x - ball.radius < paddle1.x + paddle1.width &&
 			 ball.y > paddle1.y &&
@@ -76,6 +124,7 @@ export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', play
 		if (ball.x - ball.radius < 0) {
 			score2++;
 			ball.reset();
+
 			updateScores();
 			if (score2 >= 5) {
 				endGameCallback(player2Name);
