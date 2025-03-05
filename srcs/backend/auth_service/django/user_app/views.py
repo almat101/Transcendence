@@ -217,16 +217,26 @@ def search_users(request):
         serializer = BaseUserSerializer(users, many=True)
 
         # Add friendship status to response
-        data = serializer.data
-        for user_data in data:
+        result = []
+        for user_data in serializer.data:
             matching_user = next(
                 (u for u in users if u.id == user_data['id']),
                 None
             )
-            if matching_user:
-                user_data['friendship_status'] = matching_user.friendship_status
 
-        return Response(data)
+            if matching_user:
+                status = matching_user.friendship_status
+
+                # Create an entry matching FriendSerializer format
+                result.append({
+                    'id': user_data['id'],
+                    'username': user_data['username'],
+                    'avatar': user_data['avatar'],
+                    'status': status,
+                    'is_online': user_data['is_online'],
+                })
+
+        return Response(result)
 
     except Exception as e:
         return Response({
@@ -247,30 +257,39 @@ def send_friend_request(request):
 
     friend = get_object_or_404(UserProfile, id=friend_id)
 
-    serializer = FriendSerializer(
-        data={},
-        context={
-            'user': request.user,
-            'friend': friend
-        }
+    # Prevent self-friending
+    if friend == request.user:
+        return Response({
+            'error': 'You cannot send a friend request to yourself'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for existing relationship
+    existing = Friends.objects.filter(
+        (models.Q(user=request.user, friend=friend) |
+         models.Q(user=friend, friend=request.user)),
+        status__in=['pending', 'accepted']
+    ).first()
+
+    if existing:
+        status_msg = 'pending' if existing.status == 'pending' else 'already friends'
+        return Response({
+            'error': f'A friend request is already {status_msg}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the friend request
+    friend_request = Friends.objects.create(
+        user=request.user,
+        friend=friend,
+        status='pending'
     )
 
-    if serializer.is_valid():
-        friend_request = Friends.objects.create(
-            user=request.user,
-            friend=friend,
-            status='pending'
-        )
+    # Serialize for response
+    serializer = FriendSerializer(friend_request, context={'request': request})
 
-        # Send notification (implement this later)
-        # notify_user(friend, f"{request.user.username} sent you a friend request")
-
-        return Response({
-            'message': 'Friend request sent successfully',
-            'request': FriendSerializer(friend_request).data
-        }, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'message': 'Friend request sent successfully',
+        'request': serializer.data
+    }, status=status.HTTP_201_CREATED)
 
 '''
 @api_view(['GET'])
@@ -319,7 +338,7 @@ def respond_to_friend_request(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    friend = get_object_or_404(UserProfile, username=friend_id)
+    friend = get_object_or_404(UserProfile, id=friend_id)
 
     friend_request = Friends.objects.filter(
         user=friend,
@@ -336,13 +355,6 @@ def respond_to_friend_request(request):
     if action == 'accept':
         friend_request.status = 'accepted'
         friend_request.save()
-
-        # Create reciprocal friends
-        Friends.objects.create(
-            user=request.user,
-            friend=friend,
-            status='accepted'
-        )
 
        #request.user.friends.add(friend)
 

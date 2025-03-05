@@ -698,15 +698,23 @@ section.text-lg-start {
 .friend-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
   cursor: pointer;
-  border-radius: 8px;
   transition: all 0.2s ease;
+  border-bottom: 1px solid #eee;
 }
 
 .friend-item:hover {
   background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .friend-avatar {
@@ -728,6 +736,43 @@ section.text-lg-start {
   padding: 0.25rem 0.5rem;
 }
 
+.friend-request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.pending-list {
+  max-height: 200px;
+  overflow-y: auto;
+  cursor: pointer;
+}
+
+.response-buttons {
+  display: flex;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 5px;
+}
+
+.online {
+  background-color: #28a745;
+}
+
+.offline {
+  background-color: #dc3545;
+}
 
 /*! Lnicoter style */
 

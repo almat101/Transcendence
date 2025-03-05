@@ -31,7 +31,7 @@ class UserProfile(AbstractUser):
             models.Q(username__icontains=query),
         ).exclude(id=current_user.id)
 
-        # Annotate friendship status
+        # Annotate friendship status with direction information
         users = base_query.annotate(
             friendship_status=models.Case(
                 models.When(
@@ -45,15 +45,18 @@ class UserProfile(AbstractUser):
                     then=models.Value('accepted')
                 ),
                 models.When(
-                    models.Q(friend_requests_received__user=current_user, friend_requests_received__status='pending') |
                     models.Q(friend_requests_sent__friend=current_user, friend_requests_sent__status='pending'),
-                    then=models.Value('pending')
+                    then=models.Value('pending_received')
+                ),
+                models.When(
+                    models.Q(friend_requests_received__user=current_user, friend_requests_received__status='pending'),
+                    then=models.Value('pending_sent')
                 ),
                 default=models.Value('none'),
                 output_field=models.CharField(),
             )
-        ).exclude(friendship_status='blocked')[:20]
-        
+        ).exclude(friendship_status='blocked').only('id', 'username', 'avatar', 'bio', 'is_online')[:20]
+
         return users
 
     def __str__(self):

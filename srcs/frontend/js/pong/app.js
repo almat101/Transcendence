@@ -6,7 +6,7 @@ import { showMenu } from './menu.js';
 import { buttonsHandler } from './buttonsHandler.js'
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
 import { showAlert } from '../components/alert.js';
-import { tokenService } from '../services/authService.js';
+import { userService } from '../services/userService.js';
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
@@ -19,19 +19,8 @@ export async function initializeGame(navbar) {
 	console.log("initizalizing game");
 
 	//*taking logged user data:
-	try {
-		const response = await fetch('http://localhost:8000/user/getuserinfo/', {
-				headers: {
-						'Authorization': `Bearer ${tokenService.getAccessToken()}`
-				}
-		});
-		userData = await response.json();
+	const userData = userService.getUserData();
 
-	} catch (error) {
-			console.error('Error fetching user data:', error);
-			showAlert('Failed to fetch user data', 'danger');
-	}
-  
 	//this is the calssic setup done to make the tournament part avaible
 	// showMenu(start1v1Game, startTournament, startCpuGame);
 	// If these elements exist in your rendered HTML, you can attach event listeners.
