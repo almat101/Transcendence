@@ -1,4 +1,7 @@
 from django.utils import timezone
+from django.db import connections, OperationalError
+from rest_framework.response import Response
+from rest_framework import status # type: ignore
 from datetime import timedelta
 
 class UserActivityMiddleware:
@@ -20,3 +23,30 @@ class UserActivityMiddleware:
                 request.user.save(update_fields=['last_activity', 'is_online'])
 
         return response
+
+
+class DatabaseConnectionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.db_available = True
+
+    def __call__(self, request):
+        # Check if database connection is available
+        self.db_available = self._check_db_connection()
+
+        if not self.db_available:
+            return Response({
+                'error': 'Database is currently unavailable. Please try again later.',
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # Continue processing the request
+        return self.get_response(request)
+
+    def _check_db_connection(self):
+        """Check if database connection is working"""
+        try:
+            # Try a simple query
+            connections['default'].cursor().execute('SELECT 1')
+            return True
+        except OperationalError:
+            return False
