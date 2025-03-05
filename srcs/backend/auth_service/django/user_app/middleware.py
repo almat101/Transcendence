@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db import connections, OperationalError
 from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework import status # type: ignore
 from datetime import timedelta
 
@@ -35,9 +36,9 @@ class DatabaseConnectionMiddleware:
         self.db_available = self._check_db_connection()
 
         if not self.db_available:
-            return Response({
+            return JsonResponse({
                 'error': 'Database is currently unavailable. Please try again later.',
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            }, status=503)
 
         # Continue processing the request
         return self.get_response(request)
