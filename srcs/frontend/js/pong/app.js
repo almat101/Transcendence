@@ -5,33 +5,21 @@ import { gameLoop } from './gameLoop.js';
 import { showMenu } from './menu.js';
 import { buttonsHandler } from './buttonsHandler.js'
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
-import { showAlert } from '../components/alert.js';
-import { tokenService } from '../services/authService.js';
+import { userService } from '../services/userService.js';
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
-let userData;
 
+//* change to take the data from the session storage
+const userData = userService.getUserData();
+//* sistemato posizione torneo e total_players
 //? amatta values he requested
-let usersInTournament = 0;
-let loggedUserTPosition = 0;
+let user_final_position = 0;
+let total_players = 0;
+
+
 export async function initializeGame(navbar) {
 	console.log("initizalizing game");
-
-	//*taking logged user data:
-	try {
-		const response = await fetch('http://localhost:8000/user/getuserinfo/', {
-				headers: {
-						'Authorization': `Bearer ${tokenService.getAccessToken()}`
-				}
-		});
-		userData = await response.json();
-
-	} catch (error) {
-			console.error('Error fetching user data:', error);
-			showAlert('Failed to fetch user data', 'danger');
-	}
-  
 	//this is the calssic setup done to make the tournament part avaible
 	// showMenu(start1v1Game, startTournament, startCpuGame);
 	// If these elements exist in your rendered HTML, you can attach event listeners.
@@ -48,7 +36,10 @@ export async function initializeGame(navbar) {
 			saveUsers(names, startTournament);
 			//* this way i can give amatta the amount of players
 			//* that participated in the tournament
-			usersInTournament = names.length;
+			//* + 1 for logged user
+			//!cambiato
+			user_final_position = names.length;
+			total_players = names.length;
 		});
 	}
 
@@ -103,8 +94,12 @@ export async function initializeGame(navbar) {
 			navbar.style.display = 'none';
 
 		gameMode = '1v1';
+
 		const player1Name = userData.username;
-		const player2Name = 'Player 2';
+		const player1_id = userData.id;
+
+		const player2Name = 'guest';
+
 		const canvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
 
@@ -120,7 +115,8 @@ export async function initializeGame(navbar) {
 		if (navbar)
 			navbar.style.display = 'none';
 		gameMode = 'cpu';
-		const player1Name = 'Player 1';
+		//*change
+		const player1Name = userData.username;
 		const player2Name = 'CPU';
 		const canvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
@@ -145,6 +141,8 @@ export async function initializeGame(navbar) {
 		// buttonsHandler(startButton, cpuButton, tournamentButton, false);
 		if (!tournamentMatches.length) {
 			alert('No matches available for the tournament.');
+			//!cambiato
+			deleteAllUsers();
 			showMenu(start1v1Game, startTournament, startCpuGame);
 			return;
 		}
@@ -185,15 +183,16 @@ export async function initializeGame(navbar) {
 		alert(`${winner} is victorious! Eliminating ${loser} from the tournament.`);
 
 		//? this for now is the simpler version of the tournament positining
-		if (loser === userData.username) {
-			loggedUserTPosition = usersInTournament;
-			console.log("%cdamn you lost already? final position: ", "color: red", loggedUserTPosition);
+		//!cambiato
+		if (loser != userData.username) {
+			user_final_position -= 1;
+			// loggedUserTPosition = user_final_position;
+			console.log("%cdamn you lost already? final position: ", "color: red", user_final_position);
 		}
 		// Delete the loser
 		await deleteUser(loser);
 		//update the number of users in the tournament for the final
 		//position of the logged user
-		usersInTournament -= 1;
 		// Check if all matches in the current round are played
 		if (!tournamentMatches.length) {
 			// Fetch remaining matches
@@ -213,13 +212,21 @@ export async function initializeGame(navbar) {
 
 			if (remainingUsers.length === 1) {
 				// Check if the remaining user is the logged user
-				if (remainingUsers[0].name === userData.username) {
-					loggedUserTPosition = 1;
-				}
+				// if (remainingUsers[0].name === userData.username) {
+				// 	loggedUserTPosition = 1;
+				// }
 				// Declare the remaining user as the champion
 				showWinningScreen(remainingUsers[0].name, restartGame);
 				//*added for next pull
+				if (winner === userData.username)
+				{
+					user_final_position = 1;
+				}
 				console.log("a winner is decided");
+				console.log("total players: ", total_players);
+				console.log("user final position: ", user_final_position);
+				// console.log("user positions:", loggedUserTPosition);
+				//* match history call
 				deleteAllUsers();
 				return;
 			} else if (remainingUsers.length > 1) {
@@ -232,10 +239,10 @@ export async function initializeGame(navbar) {
 			}
 
 			// If no users remain or an unexpected state occurs
-			alert('No players left in the tournament.');
-			//!amatta tournament finito
-			showMenu(start1v1Game, startTournament, );
-			return;
+			// alert('No players left in the tournament.');
+			// //!amatta tournament finito
+			// showMenu(start1v1Game, startTournament, );
+			// return;
 		}
 
 		if (tournamentMatches.length) {
@@ -253,7 +260,11 @@ export async function initializeGame(navbar) {
 			const player1Score = parseInt(scoreMatches[0]);
 			const player2Score = parseInt(scoreMatches[1]);
 			//? Will be used by amatta to know if the player1 won
-			const player1Won = winner === 'Player 1';
+			//* change to session storage
+
+			const player1Won = winner === userData.username;
+
+
 			const winningScreen = document.getElementById('winningScreen');
 			const winnerMessage = document.getElementById('winnerMessage');
 			const restartButton = document.getElementById('restartButton');
@@ -262,8 +273,15 @@ export async function initializeGame(navbar) {
 			scores.style.display = 'none';
 			winnerMessage.textContent = `${winner} wins!`;
 			winningScreen.style.display = 'block';
+
+
+
 			console.log("player1Score: ", player1Score);
 			console.log("player2Score: ", player2Score);
+			console.log("logger user win: ", player1Won);
+			console.log("player1_id", userData.id);
+
+
 			restartButton.onclick = () => {
 				winningScreen.style.display = 'none';
 				showMenu(start1v1Game, startTournament, startCpuGame);
@@ -271,6 +289,8 @@ export async function initializeGame(navbar) {
 				navbar.style.display = 'block';
 			};
 		}
+
+
 	}
 
 	function restartGame() {
