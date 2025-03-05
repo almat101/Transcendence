@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
@@ -8,10 +9,11 @@ import re
 
 class BaseUserSerializer(serializers.ModelSerializer):
     """Base serializer for user data with common fields and validations"""
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth']
+        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth', 'is_online', 'last_activity']
         read_only_fields = ['created_at']
 
     def validate_username(self, value):
@@ -30,6 +32,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
         if UserProfile.objects.filter(username__iexact=value).exclude(id=getattr(self.instance, 'id', None)).exists():
             raise serializers.ValidationError("This username is already taken")
         return value
+
+    def get_avatar(self, obj):
+        if obj.avatar:
+            return f"/media/avatars/{os.path.basename(obj.avatar.name)}"
+        return None
 
 
 class UserCreateSerializer(BaseUserSerializer):
@@ -97,6 +104,11 @@ class AvatarUpdateSerializer(serializers.ModelSerializer):
 
         if value.size > 5 * 1024 * 1024:  # 5MB limit
             raise serializers.ValidationError("Image size cannot exceed 5MB")
+
+        # Add image type validation
+        if not value.content_type.startswith('image/'):
+            raise serializers.ValidationError("File must be an image")
+
         return value
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -200,7 +212,6 @@ class FriendSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friends
         fields = ['id', 'user', 'friend', 'status', 'friends_since']
-        read_only_fields = ['friends_since']
 
     def validate(self, data):
         user = self.context.get('user')

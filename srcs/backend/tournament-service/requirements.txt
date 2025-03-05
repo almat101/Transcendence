@@ -5,3 +5,5 @@ django-filter  # Filtering support
 psycopg2-binary  # postgres
 psycopg
 django-cors-headers # cors
+django-watchman
+django-prometheus

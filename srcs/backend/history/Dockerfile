@@ -14,5 +14,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# Expose the desired port
-EXPOSE 8003
+EXPOSE 8002

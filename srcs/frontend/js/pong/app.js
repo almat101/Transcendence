@@ -31,7 +31,7 @@ export async function initializeGame(navbar) {
 			console.error('Error fetching user data:', error);
 			showAlert('Failed to fetch user data', 'danger');
 	}
-
+  
 	//this is the calssic setup done to make the tournament part avaible
 	// showMenu(start1v1Game, startTournament, startCpuGame);
 	// If these elements exist in your rendered HTML, you can attach event listeners.

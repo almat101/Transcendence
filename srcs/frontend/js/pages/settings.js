@@ -1,18 +1,18 @@
-import { tokenService } from "../services/authService.js";
+import { authService, tokenService } from "../services/authService.js";
 import { Navbar } from "../components/navbar.js";
 import { showAlert } from '../components/alert.js';
+import { userService } from '../services/userService.js';
 
 export async function renderSettingsPage() {
     let userData;
 
     try {
-        const response = await fetch('http://localhost:8000/user/getuserinfo/', {
+        const response = await fetch('/api/user/getuserinfo/', {
             headers: {
                 'Authorization': `Bearer ${tokenService.getAccessToken()}`
             }
         });
         userData = await response.json();
-
     } catch (error) {
         console.error('Error fetching user data:', error);
         showAlert('Failed to fetch user data', 'danger');
@@ -38,7 +38,15 @@ export async function renderSettingsPage() {
                                 <a">Member since: ${new Date(userData.created_at).toLocaleDateString()}</a>
                             </div>
                             <div class="text-center mb-4">
-                                <div id="avatarPreview" style="width: 100px; height: 100px; border-radius: 50%; background-color: ${userData.avatar_color || '#0d6efd'}; margin: 0 auto;"></div>
+                                <div id="avatarContainer" style="position: relative; width: 100px; height: 100px; margin: 0 auto;">
+                                    <div id="avatarPreview" style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto; overflow: hidden; cursor: pointer;">
+                                        ${userData.avatar ? `<img src="${userData.avatar}" style="width: 100%; height: 100%; object-fit: cover;" alt="${userData.username}'s avatar">` : ''}
+                                    </div>
+                                    <div id="avatarOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: rgba(0,0,0,0.5); color: white; display: none; justify-content: center; align-items: center; cursor: pointer;">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </div>
+                                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                                </div>
                             </div>
 
                             <form id="profileForm" class="flex-grow-1 d-flex flex-column">
@@ -130,11 +138,12 @@ export async function renderSettingsPage() {
     section.innerHTML += profileSection;
     root.appendChild(section);
 
+
     // Add event listeners
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
-
+        e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8000/user/updateuser/', {
+            const response = await fetch('/api/user/updateuser/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -146,8 +155,8 @@ export async function renderSettingsPage() {
                     bio: document.getElementById('bio').value
                 })
             });
-
             if (response.ok) {
+                authService.fetchAndStoreUserData();
                 showAlert('Profile updated successfully', 'success');
             } else {
                 const error = await response.json();
@@ -167,7 +176,7 @@ export async function renderSettingsPage() {
                 showAlert('Passwords do not match');
                 return;
             }
-            const response = await fetch('http://localhost:8000/user/password-reset/', {
+            const response = await fetch('/api/user/password-reset/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -209,7 +218,7 @@ export async function renderSettingsPage() {
                 headers['Content-Type'] = 'application/json';
             }
 
-            const response = await fetch('http://localhost:8000/user/deleteuser/', {
+            const response = await fetch('/api/user/deleteuser/', {
                 method: 'POST',
                 headers: headers,
                 body: !userData.has_oauth ? JSON.stringify({
@@ -220,6 +229,7 @@ export async function renderSettingsPage() {
 
             if (response.ok) {
                 tokenService.removeTokens();
+                userService.clearUserData();
                 window.location.replace('/login');
             } else {
                 const error = await response.json();
@@ -228,6 +238,77 @@ export async function renderSettingsPage() {
         } catch (error) {
             console.error('Error:', error);
             showAlert(error.error || 'Failed to delete account', 'danger');
+        }
+    });
+
+    //avatar upload
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarOverlay = document.getElementById('avatarOverlay');
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarContainer = document.getElementById('avatarContainer');
+
+    // Show overlay on hover
+    avatarContainer.addEventListener('mouseenter', () => {
+        avatarOverlay.style.display = 'flex';
+    });
+
+    avatarContainer.addEventListener('mouseleave', () => {
+        avatarOverlay.style.display = 'none';
+    });
+
+    // Trigger file input on click
+    avatarContainer.addEventListener('click', () => {
+        avatarInput.click();
+    });
+
+    // Handle file selection
+    avatarInput.addEventListener('change', async (event) => {
+        if (!event.target.files.length) return;
+
+        const file = event.target.files[0];
+
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            showAlert('Please select an image file', 'warning');
+            return;
+        }
+
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('File size cannot exceed 5MB', 'warning');
+            return;
+        }
+
+        try {
+            // Show loading indicator
+            avatarPreview.innerHTML = '<div class="spinner-border text-light" style="margin: 30px auto;"></div>';
+            avatarOverlay.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const response = await fetch('/api/user/updateavatar/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${tokenService.getAccessToken()}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update the avatar preview
+                userData.avatar = data.avatar; // Update the stored user data
+                userService.updateUserData({ avatar: data.avatar });
+                avatarPreview.innerHTML = `<img src="${data.avatar}" style="width: 100%; height: 100%; object-fit: cover;" alt="${userData.username}'s avatar">`;
+                showAlert('Avatar updated successfully', 'success');
+            } else {
+                throw new Error(data.error || 'Failed to update avatar');
+            }
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            showAlert(error.message, 'danger');
         }
     });
 }

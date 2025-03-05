@@ -1,10 +1,11 @@
 import { showAlert } from '../components/alert.js';
+import { userService } from './userService.js';
 
 export const authService = {
 	async logout() {
 		try {
 			const token = tokenService.getAccessToken();
-			const response = await fetch('http://localhost:8000/auth/logout/', {
+			const response = await fetch('/api/auth/logout/', {
 				method: 'POST',
 				headers: {
 					'Authorization': `Bearer ${token}`,
@@ -14,6 +15,7 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.removeTokens();
+				userService.clearUserData();
 				return true;
 			}
 			return false;
@@ -25,7 +27,7 @@ export const authService = {
 
 	async login(username_or_email, password) {
 		try {
-			const response = await fetch('http://localhost:8000/auth/login/', {
+			const response = await fetch('/api/auth/login/', {
 				method: 'POST',
 				headers: {
 				'Content-Type': 'application/json',
@@ -42,6 +44,7 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.setAccessToken(data.access);
+				await this.fetchAndStoreUserData();
 				showAlert('Login successful', 'success');
 				return { success: true };
 			}
@@ -57,7 +60,7 @@ export const authService = {
 
 	async oauth42Login() {
 		try {
-			const response = await fetch(`http://localhost:8000/oauth/42/login/`, {
+			const response = await fetch(`/api/oauth/42/login/`, {
 				method: 'GET',
 				headers: {
 					'Accept': 'application/json'
@@ -80,7 +83,7 @@ export const authService = {
 
 	async handleOAuthCallback(code) {
 		try {
-			const response = await fetch(`http://localhost:8000/oauth/42/callback`, {
+			const response = await fetch(`/api/oauth/42/callback`, {
 				method: 'GET',
 				credentials: 'include',
 				body: JSON.stringify({
@@ -99,7 +102,26 @@ export const authService = {
 		} catch (error) {
 			return { success: false, error: error.message };
 		}
-	}
+	},
+
+	async fetchAndStoreUserData() {
+        try {
+            const response = await fetch('/api/user/getuserinfo/', {
+                headers: {
+                    'Authorization': `Bearer ${tokenService.getAccessToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                userService.setUserData(userData);
+                return userData;
+            }
+        } catch (error) {
+            console.error('Failed to fetch user data:', error);
+        }
+        return null;
+    }
 };
 
 export const tokenService = {
@@ -114,7 +136,7 @@ export const tokenService = {
 	removeTokens() {
 		localStorage.removeItem('access_token');
 		//remove cookie
-		
+
 	},
 
 	async validateToken() {
@@ -122,7 +144,7 @@ export const tokenService = {
 	  if (!token) return false;
 
 	  try {
-		  const response = await fetch('http://localhost:8000/auth/validate/', {
+		  const response = await fetch('/api/auth/validate/', {
 			  headers: {
 				  'Authorization': `Bearer ${token}`,
 				  'Content-Type': 'application/json'
@@ -132,7 +154,7 @@ export const tokenService = {
 
 		  if (response.ok) return true;
 
-		  const refreshResponse = await fetch('http://localhost:8000/auth/refresh/', {
+		  const refreshResponse = await fetch('/api/auth/refresh/', {
 			  method: 'POST',
 			  credentials: 'include'
 		  });

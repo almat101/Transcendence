@@ -5,10 +5,11 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.core.mail import send_mail
 import logging
 from .serializers import CustomTokenObtainPairSerializer
+from django.contrib.auth import get_user_model
 
 
 # Setup logging
@@ -89,7 +90,7 @@ def login_view(request):
         value=refresh_token,
         httponly=True,
         secure=True,  # Ensures the cookie is only sent over HTTPS
-        samesite='None',  # Prevents CSRF attacks
+        samesite='Lax',  # Prevents CSRF attacks
         max_age=7 * 24 * 60 * 60,  # Match the refresh token lifetime (7 days in your settings)
     )
     return response
@@ -102,6 +103,9 @@ def logout_view(request):
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
+
+        # Log user out
+        logout(request)
 
         response = Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
         response.delete_cookie(
@@ -129,19 +133,21 @@ def refresh_access_token(request):
 
         # Check if token is blacklisted
         if refresh.check_blacklist():
-            response = Response(
+            return Response(
                 {'error': 'Refresh token is blacklisted'},
                 status=status.HTTP_401_UNAUTHORIZED
+            ).delete_cookie(
+                key='refresh_token'
             )
-            response.delete_cookie(key='refresh_token')
-            return response
 
-        if refresh.payload['user_id'] != request.user.id:
+        User = get_user_model()
+
+        if not User.objects.filter(id=refresh.payload['user_id']).exists():
             response = Response(
-                {'error': 'Invalid refresh token'},
-                status=status.HTTP_401_UNAUTHORIZED
+            {'error': 'User does not exist'},
+            status=status.HTTP_401_UNAUTHORIZED
             )
-            response.delete_cookie(key='refresh_token')
+            response.delete_cookie('refresh_token')
             return response
 
         # Generate new access token

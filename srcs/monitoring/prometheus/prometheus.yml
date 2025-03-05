@@ -30,10 +30,18 @@ scrape_configs:
     static_configs:
       - targets: ["postgres-exporter-grafana:9188"] #also works with 9187 and 9188:9187 as ports in compose
 
-  - job_name: 'postgres-exporter-test'
+  - job_name: 'postgres-exporter-auth-db'
     static_configs:
-      - targets: ["postgres-exporter-test:9187"]
+      - targets: ["postgres-exporter-auth-db:9187"]
 
   - job_name: 'nginx'
     static_configs:
       - targets: ["nginx-prometheus-exporter:9113"]
+
+  - job_name: "history-service"
+    static_configs:
+      - targets: ["history-service:8002"]
+
+  - job_name: "tournament-service"
+    static_configs:
+      - targets: ["tournament-service:8003"]

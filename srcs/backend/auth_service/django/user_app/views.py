@@ -1,3 +1,4 @@
+import os
 from rest_framework import status # type: ignore
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
@@ -100,23 +101,43 @@ def user_info(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_avatar(request):
-    if request.user.has_oauth:
-        return Response({
-            'error': 'OAuth users cannot update their avatar'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
     serializer = AvatarUpdateSerializer(
         request.user,
         data=request.data,
-        partial=True
+        context={'request': request}
     )
 
     if serializer.is_valid():
-        serializer.save()
-        return Response({
-            'message': 'Avatar updated successfully',
-            'avatar': serializer.data['avatar']
-        }, status=status.HTTP_200_OK)
+        try:
+            avatar_file = request.FILES['avatar']
+
+            # Get file extension
+            file_ext = os.path.splitext(avatar_file.name)[1]
+
+            # Create new filename with username to avoid conflicts
+            avatar_file.name = f"avatar_{request.user.username}{file_ext}"
+
+            # Delete old avatar if it exists and isn't the default
+            if request.user.avatar and 'default_avatar' not in request.user.avatar.name:
+                if os.path.isfile(request.user.avatar.path):
+                    os.remove(request.user.avatar.path)
+
+            # Save using the serializer
+            serializer.save()
+
+            # Return the complete URL
+            avatar_url = f"/media/avatars/{os.path.basename(request.user.avatar.name)}"
+
+            return Response({
+                'message': 'Avatar updated successfully',
+                'avatar': avatar_url
+            })
+
+        except Exception as e:
+            return Response({
+                'error': f'Failed to update avatar: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
@@ -276,33 +297,45 @@ def get_friend_status(request):
         'status': relationship.status,
         'initiator': relationship.user.username
     })
-
+'''
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
     """Accept or reject a friend request"""
-    friend_username = request.data.get('username')
+    friend_id = request.data.get('id')
     action = request.data.get('action')  # 'accept' or 'reject'
 
-    friend = get_object_or_404(UserProfile, username=friend_username)
+    if not friend_id or not action:
+        return Response(
+            {'error': 'Friend ID and action are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    friends = Friends.objects.filter(
+    if action not in ['accept', 'reject']:
+        return Response(
+            {'error': 'Invalid action'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friend = get_object_or_404(UserProfile, username=friend_id)
+
+    friend_request = Friends.objects.filter(
         user=friend,
         friend=request.user,
         status='pending'
     ).first()
 
-    if not friends:
+    if not friend_request:
         return Response(
             {'error': 'No pending friend request found'},
             status=status.HTTP_404_NOT_FOUND
         )
 
     if action == 'accept':
-        friends.status = 'accepted'
-        friends.save()
+        friend_request.status = 'accepted'
+        friend_request.save()
 
         # Create reciprocal friends
         Friends.objects.create(
@@ -319,12 +352,14 @@ def respond_to_friend_request(request):
         )
 
     # If rejected, just delete the friends
-    friends.delete()
+    friend_request.delete()
     return Response(
         {'message': 'Friend request rejected'},
         status=status.HTTP_200_OK
     )
 
+
+'''
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def block_user(request):
@@ -375,7 +410,7 @@ def list_friends(request):
     )
     return Response(serializer.data)
 
-'''
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friend_requests(request):
@@ -384,8 +419,11 @@ def list_friend_requests(request):
         status='pending'
     )
 
-    serializer = FriendsSerializer(friend_requests, many=True)
+    serializer = FriendSerializer(friend_requests, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+'''
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

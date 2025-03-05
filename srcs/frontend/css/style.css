@@ -447,6 +447,31 @@ section.text-lg-start {
   user-select: none;
 }
 
+#avatarContainer {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+#avatarContainer:hover {
+  transform: scale(1.05);
+}
+
+#avatarPreview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  justify-content: center/* Avatar upload styling */
+}
+
 #profileSection {
   display: flex;
   align-items: flex-start;

@@ -1,5 +1,5 @@
 """
-URL configuration for auth_service project.
+URL configuration for history_service project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -15,16 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include, re_path
-from django.conf import settings
-from django.conf.urls.static import static
-
+from django.urls import path,include,re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/auth/', include('auth_app.urls')),
-    path('api/user/', include('user_app.urls')),
-    path('api/oauth/', include('oauth_app.urls')),
-    path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
-	re_path(r'^watchman/', include('watchman.urls')) #health status
+	path('api/history/', include('history_app.urls')),
+	re_path(r'^watchman/', include('watchman.urls')), #health status
+	path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
 ]

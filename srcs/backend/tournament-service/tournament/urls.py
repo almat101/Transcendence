@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path , re_path
 from . import views
 
 #! remember to always link up the project with
@@ -25,5 +25,7 @@ from . import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-	path("api/", include("api.urls")),
+	path("api/tournament/", include("api.urls")),
+	re_path(r'^watchman/', include('watchman.urls')), #health status
+	path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
 ]

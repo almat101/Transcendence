@@ -1,9 +1,14 @@
-const API_URL = 'http://127.0.0.1:8000';  // Ensure this matches your backend URL
-
 // Fetch all matches from the backend
+import { authService, tokenService } from "../services/authService.js";
 export async function fetchMatches() {
 	try {
-		const response = await fetch(`${API_URL}/api/users/`);
+		const response = await fetch(`/api/tournament/users/`, {
+			method: 'GET',
+			headers: {
+				'Content-type' : 'application/json',
+				'Authorization': `Bearer ${tokenService.getAccessToken()}`
+			}
+		});
 		console.log("Fetch Response:", response);
 		if (!response.ok) {
 			const errorData = await response.json();
@@ -23,10 +28,11 @@ export async function fetchMatches() {
 export async function saveUsers(names, afterSaveCallback) {
 	try {
 		console.log("Saving Users:", names);
-		const response = await fetch(`${API_URL}/api/users/save/`, {
+		const response = await fetch(`/api/tournament/users/save/`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${tokenService.getAccessToken()}`
 			},
 			body: JSON.stringify({ names }),
 		});
@@ -52,10 +58,11 @@ export async function saveUsers(names, afterSaveCallback) {
 // Delete a user (loser) from the backend
 export async function deleteUser(loserName) {
 	try {
-		const response = await fetch(`${API_URL}/api/users/delete/`, {
+		const response = await fetch(`/api/tournament/users/delete/`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${tokenService.getAccessToken()}`
 			},
 			body: JSON.stringify({ names: [loserName] }),
 		});
@@ -75,10 +82,11 @@ export async function deleteUser(loserName) {
 
 export async function deleteAllUsers() {
 	try {
-		const response = await fetch(`${API_URL}/api/users/delete_all/`, {
+		const response = await fetch(`/api/tournament/users/delete_all/`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${tokenService.getAccessToken()}`
 			},
 		});
 		if (!response.ok) {
@@ -97,7 +105,13 @@ export async function deleteAllUsers() {
 
 export async function fetchAllUsers() {
 	try {
-		const response = await fetch(`${API_URL}/api/users/list/`);
+		const response = await fetch(`/api/tournament/users/list/`, {
+			method  : 'GET',
+			headers : {
+					'Content-type' : 'application/json',
+					'Authorization': `Bearer ${tokenService.getAccessToken()}`
+			},
+		});
 		if (!response.ok) {
 			const errorData = await response.json();
 			throw new Error(errorData.error || 'Failed to fetch all users.');

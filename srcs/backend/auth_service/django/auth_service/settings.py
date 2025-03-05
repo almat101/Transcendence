@@ -21,7 +21,7 @@ from dotenv import read_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 #with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
@@ -80,7 +80,7 @@ DEBUG = os.getenv('DEBUG')
 #SECURE_SSL_REDIRECT = True
 
 # If using nginx/proxy
-ALLOWED_HOSTS = ['localhost', 'auth-service', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', 'auth-service']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 
@@ -92,7 +92,7 @@ EMAIL_HOST_PASSWORD = 'email_password'
 EMAIL_PORT = 587
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -124,6 +124,17 @@ INSTALLED_APPS = [
 
     'django_prometheus', #prometheus
 	'watchman', #health check
+    'django_crontab', #cron job
+]
+
+# Add these to your settings.py
+# Set base directory for cron
+CRONTAB_DJANGO_PROJECT_NAME = 'auth_service'
+CRONTAB_COMMAND_PREFIX = 'cd /app && '
+
+CRONJOBS = [
+    # Format: ('cron schedule', 'path.to.function', ['optional args'], {'optional kwargs'}, 'job comment')
+    ('*/10 * * * *', 'user_app.tasks.update_inactive_users', '>> /app/cron.log 2>&1')
 ]
 
 MIDDLEWARE = [
@@ -136,16 +147,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'user_app.middleware.UserActivityMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware', #prometheus
 ]
 
 
-CORS_ALLOW_ALL_ORIGINS = True  # Not recommended in production, change after development
+CORS_ALLOW_ALL_ORIGINS = False  # Not recommended in production, change after development
 
 CORS_ALLOW_CREDENTIALS = True # If you need to send cookies or authentication headers (e.g., for JWT)
 
 CORS_ALLOWED_ORIGINS = [
-    #"https://localhost",
+    "https://localhost",
 ]
 
 
@@ -170,6 +182,14 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
+]
+
+
+#CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
 ]
 
 ROOT_URLCONF = 'auth_service.urls'
@@ -211,11 +231,11 @@ OAUTH2_PROVIDERS = {
     '42': {
         'CLIENT_ID': CLIENT42_ID,
         'CLIENT_SECRET': CLIENT42_SECRET,
-        'REDIRECT_URI': 'http://localhost:8000/oauth/callback',
+        'REDIRECT_URI': 'https://localhost/api/oauth/callback',
         'AUTHORIZATION_URL': 'https://api.intra.42.fr/oauth/authorize',
         'TOKEN_URL': 'https://api.intra.42.fr/oauth/token',
         'USER_INFO_URL': 'https://api.intra.42.fr/v2/me',
-        'SCOPE': 'public'
+        'SCOPE': 'public',
     }
 }
 
@@ -251,7 +271,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-        #'rest_framework.permissions.AllowAny',  # Change this for testing
     ),
 }
 
