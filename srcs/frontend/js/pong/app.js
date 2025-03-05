@@ -13,10 +13,11 @@ let tournamentMatches = []; // Store tournament matches
 //* change to take the data from the session storage
 const userData = userService.getUserData();
 //* sistemato posizione torneo e total_players
-//? amatta values he requested
+//*tournament data
 let user_final_position = 0;
 let total_players = 0;
-
+const player1_id = userData.id;
+let check_lost = false;
 
 export async function initializeGame(navbar) {
 	console.log("initizalizing game");
@@ -184,10 +185,10 @@ export async function initializeGame(navbar) {
 
 		//? this for now is the simpler version of the tournament positining
 		//!cambiato
-		if (loser != userData.username) {
+		if (loser == userData.username)
+			check_lost = true;
+		if (loser != userData.username && check_lost != true) {
 			user_final_position -= 1;
-			// loggedUserTPosition = user_final_position;
-			console.log("%cdamn you lost already? final position: ", "color: red", user_final_position);
 		}
 		// Delete the loser
 		await deleteUser(loser);
@@ -222,10 +223,13 @@ export async function initializeGame(navbar) {
 				{
 					user_final_position = 1;
 				}
+
+				//*tournament data
 				console.log("a winner is decided");
+				console.log("player1_id: ", player1_id);
 				console.log("total players: ", total_players);
 				console.log("user final position: ", user_final_position);
-				// console.log("user positions:", loggedUserTPosition);
+
 				//* match history call
 				deleteAllUsers();
 				return;
@@ -240,7 +244,6 @@ export async function initializeGame(navbar) {
 
 			// If no users remain or an unexpected state occurs
 			// alert('No players left in the tournament.');
-			// //!amatta tournament finito
 			// showMenu(start1v1Game, startTournament, );
 			// return;
 		}
@@ -257,14 +260,10 @@ export async function initializeGame(navbar) {
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
 			const scoreMatches = scoreText.match(/\d+/g);
-			const player1Score = parseInt(scoreMatches[0]);
-			const player2Score = parseInt(scoreMatches[1]);
-			//? Will be used by amatta to know if the player1 won
-			//* change to session storage
-
-			const player1Won = winner === userData.username;
-
-
+			const player1_score = parseInt(scoreMatches[0]);
+			const player2_score = parseInt(scoreMatches[1]);
+			//*logged user has won the game
+			const has_won = winner === userData.username;
 			const winningScreen = document.getElementById('winningScreen');
 			const winnerMessage = document.getElementById('winnerMessage');
 			const restartButton = document.getElementById('restartButton');
@@ -274,13 +273,14 @@ export async function initializeGame(navbar) {
 			winnerMessage.textContent = `${winner} wins!`;
 			winningScreen.style.display = 'block';
 
+			const player2_name = "guest";
 
-
-			console.log("player1Score: ", player1Score);
-			console.log("player2Score: ", player2Score);
-			console.log("logger user win: ", player1Won);
-			console.log("player1_id", userData.id);
-
+			//*local game data
+			console.log("player1_id: ", player1_id);
+			console.log("player2_name: ", player2_name)
+			console.log("player1_score: ", player1_score);
+			console.log("player2_score: ", player2_score);
+			console.log("logger user win: ", has_won);
 
 			restartButton.onclick = () => {
 				winningScreen.style.display = 'none';
