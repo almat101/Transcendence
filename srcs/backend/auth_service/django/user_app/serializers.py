@@ -206,12 +206,21 @@ class PasswordUpdateSerializer(serializers.Serializer):
         validate_password(data['new_password'])
         return data
 
+'''
 class FriendSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer(read_only=True)
     friend = BaseUserSerializer(read_only=True)
+    direction = serializers.SerializerMethodField()
+
     class Meta:
         model = Friends
-        fields = ['id', 'user', 'friend', 'status', 'friends_since']
+        fields = ['user', 'friend', 'status', 'friends_since', 'direction']
+
+    def get_direction(self, obj):
+        user = self.context.get('user')
+        if obj.user == user:
+            return 'sent'
+        return 'received'
 
     def validate(self, data):
         user = self.context.get('user')
@@ -234,3 +243,48 @@ class FriendSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Already friends")
 
         return data
+'''
+
+class FriendSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+    is_online = serializers.SerializerMethodField()
+    direction = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Friends
+        fields = ['id', 'username', 'avatar', 'status', 'is_online', 'friends_since', 'direction']
+
+    def get_username(self, obj):
+        request = self.context.get('request')
+        if request:
+            # Return the other user's username, not the current user's
+            if obj.user == request.user:
+                return obj.friend.username
+            return obj.user.username
+
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        if request:
+            other_user = obj.friend if obj.user == request.user else obj.user
+            return other_user.avatar.url if other_user.avatar else None
+
+    def get_id(self, obj):
+        request = self.context.get('request')
+        if request:
+            other_user = obj.friend if obj.user == request.user else obj.user
+            return other_user.id
+
+    def get_is_online(self, obj):
+        request = self.context.get('request')
+        if request:
+            other_user = obj.friend if obj.user == request.user else obj.user
+            return other_user.is_online
+
+    def get_direction(self, obj):
+        request = self.context.get('request')
+        if request:
+            if obj.user == request.user:
+                return 'sent'
+            return 'received'
