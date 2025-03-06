@@ -3,30 +3,31 @@
 import { showWinningScreen } from './winningScreen.js';
 import { gameLoop } from './gameLoop.js';
 import { showMenu } from './menu.js';
-import { buttonsHandler } from './buttonsHandler.js'
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
 import { userService } from '../services/userService.js';
+import { create_local_game, create_tournament_game } from './history.js';
+
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
 
 //* change to take the data from the session storage
-const userData = userService.getUserData();
 //* sistemato posizione torneo e total_players
 //*tournament data
 let user_final_position = 0;
 let total_players = 0;
-const player1_id = userData.id;
 let check_lost = false;
 
 export async function initializeGame(navbar) {
+	//!moved inside the initialize game
+	const userData = userService.getUserData();
 	console.log("initizalizing game");
 	//this is the calssic setup done to make the tournament part avaible
 	// showMenu(start1v1Game, startTournament, startCpuGame);
 	// If these elements exist in your rendered HTML, you can attach event listeners.
 	const playerNamesForm = document.getElementById('playerNamesForm');
 	if (playerNamesForm) {
-		playerNamesForm.addEventListener('submit', (event) => {
+		playerNamesForm.addEventListener('submit', async (event) => {
 			event.preventDefault();
 			const names = document.getElementById('playerNames')
 				.value.split(',')
@@ -34,13 +35,19 @@ export async function initializeGame(navbar) {
 				.filter(name => name);
 				//* we add the logged user in the tournament as well
 				names.push(userData.username);
-			saveUsers(names, startTournament);
-			//* this way i can give amatta the amount of players
-			//* that participated in the tournament
-			//* + 1 for logged user
-			//!cambiato
-			user_final_position = names.length;
-			total_players = names.length;
+			const deleteSuccess = await deleteAllUsers();
+			if(deleteSuccess) {
+				saveUsers(names, startTournament);
+				//* this way i can give amatta the amount of players
+				//* that participated in the tournament
+				//* + 1 for logged user
+				//!cambiato
+				user_final_position = names.length;
+				total_players = names.length;
+			}
+			else {
+				console.log("failed");
+			}
 		});
 	}
 
@@ -97,7 +104,7 @@ export async function initializeGame(navbar) {
 		gameMode = '1v1';
 
 		const player1Name = userData.username;
-		const player1_id = userData.id;
+		// const player1_id = userData.id;
 
 		const player2Name = 'guest';
 
@@ -177,11 +184,32 @@ export async function initializeGame(navbar) {
 		// Hide the canvas before alerting:
 		const gameCanvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
+		const scoreText = scores.textContent;
+		//we use \d+ to match all the digits in the string
+		//! change this to parse match only after :  ex lol3434 : 3 has to take 3
+		const scoreMatches = scoreText.match(/\d+/g);
+		const player1_score = parseInt(scoreMatches[0]);
+		const player2_score = parseInt(scoreMatches[1]);
 		gameCanvas.style.display = 'none';
 		scores.style.display = 'none';
 
 		const loser = (winner === player1) ? player2 : player1;
 		alert(`${winner} is victorious! Eliminating ${loser} from the tournament.`);
+		//*api calls for tournament 1vs1 games
+
+		const player1_id = userData.id;
+		const is_tournament = true;
+		console.log("tournament match????");
+		const logged_user_has_won = winner === userData.username;
+
+		console.log("player1_id: ", player1_id);
+		console.log("player1_name: ", player1)
+		console.log("player2_name: ", player2)
+		console.log("player1_score: ", player1_score);
+		console.log("player2_score: ", player2_score);
+		console.log("logger user has won: ", logged_user_has_won);
+		console.log("is tournament", is_tournament);
+		await create_local_game(player1_id,player1,player2,player1_score,player2_score,logged_user_has_won,is_tournament);
 
 		//? this for now is the simpler version of the tournament positining
 		//!cambiato
@@ -220,17 +248,19 @@ export async function initializeGame(navbar) {
 				showWinningScreen(remainingUsers[0].name, restartGame);
 				//*added for next pull
 				if (winner === userData.username)
-				{
 					user_final_position = 1;
-				}
 
+				//TODO come collegare  match  local 1vs1 (tournament) a match tournament ??? 
 				//*tournament data
+				const player1_id = userData.id;
 				console.log("a winner is decided");
 				console.log("player1_id: ", player1_id);
 				console.log("total players: ", total_players);
 				console.log("user final position: ", user_final_position);
 
-				//* match history call
+				//* match history api call
+				await create_tournament_game(player1_id,total_players,user_final_position);
+
 				deleteAllUsers();
 				return;
 			} else if (remainingUsers.length > 1) {
@@ -252,18 +282,19 @@ export async function initializeGame(navbar) {
 			playTournamentMatch(tournamentMatches.shift());
 		}
 	}
-	function endGame(winner) {
+	async function endGame(winner) {
 		console.log('End Game:', winner);
 		if (gameMode === '1v1' || gameMode === 'cpu') {
 			const canvas = document.getElementById('gameCanvas');
 			const scores = document.getElementById('scores');
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
+			//! change this to parse match only after :  ex lol3434 : 3 has to take 3
 			const scoreMatches = scoreText.match(/\d+/g);
 			const player1_score = parseInt(scoreMatches[0]);
 			const player2_score = parseInt(scoreMatches[1]);
 			//*logged user has won the game
-			const has_won = winner === userData.username;
+			const logged_user_has_won = winner === userData.username;
 			const winningScreen = document.getElementById('winningScreen');
 			const winnerMessage = document.getElementById('winnerMessage');
 			const restartButton = document.getElementById('restartButton');
@@ -273,14 +304,21 @@ export async function initializeGame(navbar) {
 			winnerMessage.textContent = `${winner} wins!`;
 			winningScreen.style.display = 'block';
 
-			const player2_name = "guest";
-
-			//*local game data
-			console.log("player1_id: ", player1_id);
-			console.log("player2_name: ", player2_name)
-			console.log("player1_score: ", player1_score);
-			console.log("player2_score: ", player2_score);
-			console.log("logger user win: ", has_won);
+			if (gameMode === '1v1'){
+				const player2_name = "guest";
+				const player1_id = userData.id;
+				const player1_name = userData.username;
+				//*local game data
+				console.log("local game")
+				console.log("player1_id: ", player1_id);
+				console.log("player1_name: ", player1_name)
+				console.log("player2_name: ", player2_name)
+				console.log("player1_score: ", player1_score);
+				console.log("player2_score: ", player2_score);
+				console.log("logger user has won: ", logged_user_has_won);
+				await create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,logged_user_has_won);
+			}
+			//* tournament history api call
 
 			restartButton.onclick = () => {
 				winningScreen.style.display = 'none';

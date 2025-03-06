@@ -50,7 +50,7 @@ def create_match(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error saving match: {e}")
-            return Response({"detail": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
     logger.warning(f"Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,7 +63,7 @@ def get_match(request):
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
-        return Response({"detail": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
 
 
 
@@ -78,7 +78,7 @@ def create_match_tournament(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error saving match: {e}")
-            return Response({"detail": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
     logger.warning(f"Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -91,5 +91,5 @@ def get_match_tournament(request):
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
-        return Response({"detail": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
 

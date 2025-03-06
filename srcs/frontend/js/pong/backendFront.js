@@ -98,7 +98,7 @@ export async function deleteAllUsers() {
 		return true;
 	} catch (error) {
 		console.error('Error deleting all users:', error);
-		alert(`Failed to delete all users: ${error.message}`);
+		// alert(`Failed to delete all users: ${error.message}`);
 		return false;
 	}
 }
