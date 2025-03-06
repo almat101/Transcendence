@@ -14,7 +14,7 @@ class UserActivityMiddleware:
         # Update last_activity for authenticated users
         if request.user.is_authenticated:
             current_time = timezone.now()
-            # Only update once per minute to reduce database writes
+            # Only update last_activity if it was more than 10 minutes ago
             update_threshold = current_time - timedelta(minutes=10)
 
             if not request.user.last_activity or request.user.last_activity < update_threshold:

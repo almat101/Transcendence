@@ -19,6 +19,7 @@ class UserProfile(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
 
     has_2fa = models.BooleanField(default=False)
+    twofa_secret = models.CharField(max_length=255, blank=True, null=True)
     has_oauth = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
