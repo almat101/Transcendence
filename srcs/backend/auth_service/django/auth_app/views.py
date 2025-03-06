@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, logout
 from django.core.mail import send_mail
 import logging
-from .serializers import CustomTokenObtainPairSerializer, TwoFASetupSerializer, TwoFAVerifySerializer
+from .serializers import CustomTokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 import base64
 import pyotp
@@ -37,35 +37,8 @@ def login_view(request):
         return Response({'error': 'Please provide both username/email and password'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    # Check for IP-based lockout
-    #ip_cache_key = f'login_attempts_ip_{ip_address}'
-    #ip_failed_attempts = cache.get(ip_cache_key, 0)
-
-    '''if ip_failed_attempts >= 10:  # Lock IP after 10 failed attempts
-        logger.warning(f'IP address locked due to multiple failed attempts: {ip_address}')
-        return Response({
-            'error': 'Too many login attempts from this IP',
-            'locked_until': cache.ttl(ip_cache_key)
-        }, status=status.HTTP_403_FORBIDDEN)'''
-
-
-    # Check for account lockout
-    #account_cache_key = f'login_attempts_{username_or_email}'
-    #account_failed_attempts = cache.get(account_cache_key, 0)
-
-    '''if account_failed_attempts >= 5:  # Lock after 5 failed attempts
-        logger.warning(f'Account locked due to multiple failed attempts: {username_or_email}')
-        return Response({
-            'error': 'Account temporarily locked',
-            'details': 'Too many failed login attempts. Please try again later or reset your password.',
-            'locked_until': cache.ttl(account_cache_key)
-        }, status=status.HTTP_403_FORBIDDEN)'''
-
     user = authenticate(request, username=username_or_email, password=password)
     if user is None:
-        # Increment both IP and account failed attempts
-        #cache.set(ip_cache_key, ip_failed_attempts + 1, timeout=600)  # IP lock for 10 minutes
-        #cache.set(account_cache_key, account_failed_attempts + 1, timeout=300)  # Account lock for 5 minutes
         return Response({
             'error': 'Invalid credentials',
             #'attempts_remaining': 5 - (account_failed_attempts + 1)
@@ -196,7 +169,7 @@ def setup_2fa(request):
 
     # Create a QR code for the secret
     totp = pyotp.TOTP(secret)
-    uri = totp.provisioning_uri(request.user.email, issuer_name="YourAppName")
+    uri = totp.provisioning_uri(request.user.email, issuer_name="Transcendence")
 
     # Generate QR code image
     qr = qrcode.QRCode(
@@ -239,7 +212,7 @@ def verify_2fa_setup(request):
 
     # Verify the token
     totp = pyotp.TOTP(secret)
-    if not totp.verify(token):
+    if not totp.verify(token, valid_window=1):
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Token is valid, save the secret and enable 2FA
@@ -266,7 +239,7 @@ def disable_2fa(request):
     # Verify token before disabling
     if token:
         totp = pyotp.TOTP(request.user.twofa_secret)
-        if not totp.verify(token):
+        if not totp.verify(token, valid_window=1):
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         # If no token provided, require password verification instead
@@ -296,7 +269,7 @@ def verify_2fa_token(request):
         return Response({'error': '2FA is not enabled for this user'}, status=status.HTTP_400_BAD_REQUEST)
 
     totp = pyotp.TOTP(request.user.twofa_secret)
-    if not totp.verify(token):
+    if not totp.verify(token, valid_window=1):
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'valid': True})
@@ -318,7 +291,7 @@ def verify_2fa_login(request):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
     totp = pyotp.TOTP(user.twofa_secret)
-    if not totp.verify(token):
+    if not totp.verify(token, valid_window=1):
         return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clear the session

@@ -46,7 +46,6 @@ class DatabaseConnectionMiddleware:
     def _check_db_connection(self):
         """Check if database connection is working"""
         try:
-            # Try a simple query
             connections['default'].cursor().execute('SELECT 1')
             return True
         except OperationalError:

@@ -16,7 +16,7 @@
 }
 
 @media (max-width: 991px) {
-  #profileSection {
+  #settingsSection {
     padding: 10px;
     flex-direction: column;
   }
@@ -472,22 +472,22 @@ section.text-lg-start {
   justify-content: center/* Avatar upload styling */
 }
 
-#profileSection {
+#settingsSection {
   display: flex;
   align-items: flex-start;
   justify-content: center;
   gap: 20px;
 }
 
-#profileSection .profile-card,
-#profileSection .password-card,
-#profileSection .delete-account-card {
+#settingsSection .profile-card,
+#settingsSection .password-card,
+#settingsSection .twofa-card,
+#settingsSection .delete-account-card {
   width: 100%;
   margin-top: 20px;
 }
 
-
-#profileSection button {
+#settingsSection button {
   font-family: 'Press Start 2P', cursive;
   font-size: 13px;
   padding: 10px 20px;
@@ -501,19 +501,19 @@ section.text-lg-start {
   letter-spacing: 1px;
 }
 
-#profileSection button:hover {
+#settingsSection button:hover {
   background-color: var(--hover-color);
   color: var(--bg-color);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-#profileSection button:hover img {
+#settingsSection button:hover img {
   filter: invert(1);
   transition: filter 0.3s ease;
 }
 
-#profileSection .btn-floating {
+#settingsSection .btn-floating {
   padding: 8px;
   border-radius: 50%;
   width: 40px;
@@ -524,34 +524,34 @@ section.text-lg-start {
   box-shadow: inset 0 0 10px #000;
 }
 
-#profileSection h3 {
+#settingsSection h3 {
   font-family: 'Poppins', cursive;
   font-size: 28px;
 }
 
-#profileSection label {
+#settingsSection label {
   font-family: 'Poppins', cursive;
   font-size: 16px;
 }
 
-#profileSection .form-control {
+#settingsSection .form-control {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   background-color: var(--bg-color);
   color: var(--text-color);
   border-color: var(--border-color);
 }
 
-#profileSection .form-control:focus {
+#settingsSection .form-control:focus {
   border-color: var(--hover-color);
   box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
-#profileSection input {
+#settingsSection input {
   font-family: 'Press Start 2P', cursive;
   font-size: 12px;
 }
 
-#profileSection .form-control:focus {
+#settingsSection .form-control:focus {
   border-color: none;
   outline: none;
 }

@@ -13,7 +13,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth', 'is_online', 'last_activity']
+        fields = ['id', 'username', 'email', 'avatar', 'bio', 'created_at', 'has_oauth', 'has_2fa' ,'is_online', 'last_activity']
         read_only_fields = ['created_at']
 
     def validate_username(self, value):
