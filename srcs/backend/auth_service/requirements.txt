@@ -8,7 +8,8 @@ Pillow
 hvac #for hashicorp vault
 django-redis
 django-dotenv
-
+qrcode
+pyotp
 django-prometheus #prometheus monitoring
 django-watchman #health check status
 django-crontab

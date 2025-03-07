@@ -1,4 +1,5 @@
 import { showAlert } from '../components/alert.js';
+import { TwoFAVerify } from '../components/TwoFA.js';
 import { userService } from './userService.js';
 
 export const authService = {
@@ -43,10 +44,25 @@ export const authService = {
 			const data = await response.json();
 
 			if (response.ok) {
-				tokenService.setAccessToken(data.access);
-				await this.fetchAndStoreUserData();
-				showAlert('Login successful', 'success');
-				return { success: true };
+				if (data.requires_2fa) {
+					// Handle 2FA verification
+					try {
+						const result = await TwoFAVerify.show(data.user_id);
+						if (result.success) {
+							return { success: true };
+						} else {
+							return { success: false, error: result.error || 'Verification failed' };
+						}
+					} catch (error) {
+						console.error('2FA error:', error);
+						return { success: false, error: 'Authentication failed' };
+					}
+				} else {
+					tokenService.setAccessToken(data.access);
+					await this.fetchAndStoreUserData();
+					showAlert('Login successful', 'success');
+					return { success: true };
+				}
 			}
 
 			showAlert(data.error);
