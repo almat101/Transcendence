@@ -1,3 +1,21 @@
+"""
+URL patterns for authentication endpoints.
+
+Endpoints:
+    - /login/ (POST): User login endpoint
+    - /logout/ (POST): User logout endpoint
+    - /refresh/ (POST): Refresh access token endpoint
+    - /validate/ (POST): Validate token endpoint
+    - /2fa/setup/ (POST): Setup 2FA for user account
+    - /2fa/verify-setup/ (POST): Verify 2FA setup process
+    - /2fa/disable/ (POST): Disable 2FA for user account
+    - /2fa/verify/ (POST): Verify 2FA token
+    - /2fa/verify-login/ (POST): Verify 2FA during login process
+
+The urls are mapped to their respective view functions in views.py.
+All endpoints handle authentication and 2FA-related operations.
+"""
+
 from django.urls import path
 from . import views
 

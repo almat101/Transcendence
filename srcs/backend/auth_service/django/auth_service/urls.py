@@ -1,30 +1,31 @@
 """
-URL configuration for auth_service project.
+This module defines the main URL routing configuration for the auth_service Django project.
+It maps URL patterns to their corresponding views and includes URL configurations from other apps.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+URL Patterns:
+    - admin/: Django admin interface
+    - api/auth/: Authentication related endpoints from auth_app
+    - api/user/: User management endpoints from user_app
+    - api/oauth/: OAuth authentication endpoints from oauth_app
+    - /: Prometheus metrics endpoints
+    - watchman/: Health check endpoints for monitoring service status
+
+Dependencies:
+    - django.contrib.admin: For admin interface
+    - django.urls: For URL routing functionality
+    - django_prometheus: For metrics collection
+    - watchman: For health monitoring
+    - auth_app, user_app, oauth_app: Custom apps for authentication and user management
 """
+
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.conf import settings
-from django.conf.urls.static import static
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('auth_app.urls')),
     path('api/user/', include('user_app.urls')),
     path('api/oauth/', include('oauth_app.urls')),
-    path('', include('django_prometheus.urls')), #add this value to include prometheus metrics endpoint
-	re_path(r'^watchman/', include('watchman.urls')) #health status
+    path('', include('django_prometheus.urls')),
+    re_path(r'^watchman/', include('watchman.urls')) # Health status
 ]

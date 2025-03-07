@@ -1,13 +1,10 @@
-from rest_framework import status # type: ignore
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, logout
-from django.core.mail import send_mail
-import logging
 from .serializers import CustomTokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 import base64
@@ -15,25 +12,44 @@ import pyotp
 import qrcode
 import io
 
-# Setup logging
-logger = logging.getLogger(__name__)
+"""
+Handle user login requests and authentication.
 
-class LoginRateThrottle(AnonRateThrottle):
-    rate = '5/min'  # Limit to 5 attempts per minute
+This view function processes login attempts, handles two-factor authentication if enabled,
+and manages token-based authentication responses.
 
-# Authentication
+Args:
+    request: The HTTP request object containing user credentials.
+        Expected POST data:
+        - username_or_email (str): User's username or email
+        - password (str): User's password
 
+Returns:
+    Response: A Django REST framework Response object with different possible outcomes:
+        - 400 Bad Request: If credentials are missing or invalid
+        - 200 OK with requires_2fa=True: If 2FA is enabled for the user
+        - 200 OK with access token: If authentication is successful
+            - Sets HttpOnly refresh token cookie
+            - Returns access token in response body
+
+Raises:
+    N/A
+
+Example:
+    POST /api/login/
+    {
+        "username_or_email": "user@example.com",
+        "password": "userpassword"
+    }
+"""
 @api_view(['POST'])
 @permission_classes([AllowAny])
-#@throttle_classes([LoginRateThrottle])
 def login_view(request):
     data = request.data
     username_or_email = data.get('username_or_email')
     password = data.get('password')
-    #ip_address = request.META.get("REMOTE_ADDR")
 
     if username_or_email is None or password is None:
-        #logger.warning(f'Login attempt with missing credentials from IP: {ip_address}')
         return Response({'error': 'Please provide both username/email and password'},
                         status=status.HTTP_400_BAD_REQUEST)
 
@@ -41,7 +57,6 @@ def login_view(request):
     if user is None:
         return Response({
             'error': 'Invalid credentials',
-            #'attempts_remaining': 5 - (account_failed_attempts + 1)
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # Check if 2FA is enabled for this user
@@ -59,7 +74,6 @@ def login_view(request):
 
     response = Response({
         'access': access_token,
-        #'avatar': user.avatar.url
     }, status=status.HTTP_200_OK)
 
     # Set refresh token in HttpOnly cookie
@@ -73,6 +87,24 @@ def login_view(request):
     )
     return response
 
+"""
+Handles user logout by blacklisting refresh token and removing cookie.
+
+This view requires authentication and expects a POST request.
+The function will blacklist the refresh token if present in cookies
+and remove it from response cookies.
+
+Args:
+    request: Django HTTP request object containing user and cookie information
+
+Returns:
+    Response: JSON response with success message and HTTP 200 status
+        if logout successful, or error message with HTTP 400 status
+        if token error occurs
+
+Raises:
+    TokenError: If refresh token is invalid or expired
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
@@ -94,6 +126,32 @@ def logout_view(request):
     except TokenError as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+"""
+Refresh the access token using a refresh token stored in cookies.
+
+This view function handles the token refresh process for authentication. It verifies the provided
+refresh token and generates a new access token if the refresh token is valid.
+
+Args:
+    request: The HTTP request object containing the refresh token in cookies.
+
+Returns:
+    Response: A Django REST framework Response object with either:
+        - 200 OK: New access token if refresh successful
+        - 401 UNAUTHORIZED: If refresh token is missing, invalid, expired, or blacklisted
+        - 500 INTERNAL_SERVER_ERROR: If token refresh fails due to unexpected error
+
+The function performs the following checks:
+    1. Verifies refresh token presence in cookies
+    2. Validates the refresh token
+    3. Checks if the token is blacklisted
+    4. Confirms the user still exists in the database
+    5. Generates a new access token
+
+Raises:
+    TokenError: When refresh token is invalid or expired
+    Exception: For unexpected errors during token refresh process
+"""
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def refresh_access_token(request):
@@ -112,8 +170,9 @@ def refresh_access_token(request):
         # Check if token is blacklisted
         if refresh.check_blacklist():
             return Response(
-                {'error': 'Refresh token is blacklisted'},
-                status=status.HTTP_401_UNAUTHORIZED
+                {
+                    'error': 'Refresh token is blacklisted'},
+                    status=status.HTTP_401_UNAUTHORIZED
             ).delete_cookie(
                 key='refresh_token'
             )
@@ -122,8 +181,9 @@ def refresh_access_token(request):
 
         if not User.objects.filter(id=refresh.payload['user_id']).exists():
             response = Response(
-            {'error': 'User does not exist'},
-            status=status.HTTP_401_UNAUTHORIZED
+            {
+                'error': 'User does not exist'},
+                status=status.HTTP_401_UNAUTHORIZED
             )
             response.delete_cookie('refresh_token')
             return response
@@ -154,8 +214,29 @@ def validate_token(request):
     return Response({'valid': True}, status=status.HTTP_200_OK)
 
 
-#2fa
+"""Initialize 2FA setup by generating a secret and QR code.
 
+This view handles the initialization of Two-Factor Authentication (2FA) setup for an authenticated user.
+It generates a secret key and creates a QR code that can be scanned by authenticator apps.
+
+Args:
+    request: HTTP request object containing user information.
+
+Returns:
+    Response: JSON response containing:
+        - secret: Base32 encoded secret key
+        - qr_code: Base64 encoded QR code image in data URI format
+
+Raises:
+    HTTP 400: If user already has 2FA enabled
+
+Required permissions:
+    - User must be authenticated (IsAuthenticated)
+
+Notes:
+    - The secret is temporarily stored in the session as 'temp_2fa_secret'
+    - QR code is generated using the user's email and 'Transcendence' as issuer name
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def setup_2fa(request):
@@ -196,6 +277,35 @@ def setup_2fa(request):
     })
 
 
+"""
+Verify the 2FA setup token and enable two-factor authentication for the user.
+
+This endpoint validates the provided 2FA token against the temporary secret stored in the session.
+If validation succeeds, 2FA is enabled for the user by saving the secret and updating user settings.
+
+Args:
+    request: Django REST framework request object containing:
+        - token (str): The 2FA verification token from authenticator app
+        - user (User): The authenticated user from request
+        - session: Session containing temporary 2FA secret
+
+Returns:
+    Response: JSON response with:
+        - On success: {'message': '2FA has been successfully enabled'} with 200 status
+        - On error: {'error': error_message} with 400 status for:
+            - Missing token
+            - No setup in progress (no temp secret)
+            - Invalid token
+
+Requires:
+    - User authentication
+    - pyotp.TOTP for token verification
+    - Active session with temp_2fa_secret
+
+Side Effects:
+    - Updates user.twofa_secret and user.has_2fa in database
+    - Removes temp_2fa_secret from session
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_2fa_setup(request):
@@ -227,6 +337,32 @@ def verify_2fa_setup(request):
     return Response({'message': '2FA has been successfully enabled'})
 
 
+"""
+Disable Two-Factor Authentication (2FA) for the authenticated user.
+
+This view requires authentication and handles the disabling of 2FA for a user's account.
+The user must verify their identity either by providing a valid 2FA token or their password.
+
+Args:
+    request (Request): The HTTP request object containing:
+        - token (str, optional): Current valid 2FA token
+        - password (str, optional): User's current password if token not provided
+
+Returns:
+    Response: JSON response with:
+        - On success: {'message': '2FA has been disabled'} with HTTP 200
+        - On error: {'error': error_message} with HTTP 400
+            Possible errors:
+            - '2FA is not enabled'
+            - 'Invalid token'
+            - 'Password verification failed'
+
+Raises:
+    None
+
+Required Permissions:
+    - User must be authenticated (IsAuthenticated)
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def disable_2fa(request):
@@ -256,6 +392,36 @@ def disable_2fa(request):
     return Response({'message': '2FA has been disabled'})
 
 
+"""
+Verify a 2FA token for an authenticated user to validate specific actions.
+
+This endpoint allows verification of a 2FA token outside of the login process,
+typically used for validating sensitive operations that require additional security.
+
+Args:
+    request: The HTTP request object containing:
+        - token (str): The 2FA token to verify
+        - user (User): The authenticated user making the request (from authentication)
+
+Returns:
+    Response: A JSON response with the following possible formats:
+        - {'valid': True} with HTTP 200 if token is valid
+        - {'error': str} with HTTP 400 if:
+            - Token is missing
+            - 2FA is not enabled for the user
+            - Token is invalid
+
+Requires:
+    - Authentication
+    - User must have 2FA enabled
+    - Valid 2FA token within the current time window
+
+Example:
+    POST /verify-2fa-token/
+    {
+        "token": "123456"
+    }
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_2fa_token(request):
@@ -274,6 +440,36 @@ def verify_2fa_token(request):
 
     return Response({'valid': True})
 
+"""Verify 2FA code during login process.
+
+This view handles the verification of Two-Factor Authentication (2FA) codes
+during the login process. It expects a POST request with a token and checks
+it against the user's 2FA secret.
+
+Args:
+    request: The HTTP request object containing:
+        - token (str): The 2FA verification code
+        - session with '2fa_user_id': User ID stored during initial login
+
+Returns:
+    Response: JSON response with:
+        - On success:
+            - HTTP 200 with access token in body
+            - refresh token set in HttpOnly cookie
+        - On failure:
+            - HTTP 400 if token/session missing or invalid token
+            - HTTP 404 if user not found
+
+Security:
+    - Endpoint is publicly accessible (@AllowAny)
+    - Refresh token is set as HttpOnly cookie
+    - Cookie is secure and SameSite=Lax
+    - Session data is cleared after successful verification
+
+Dependencies:
+    - pyotp.TOTP for token verification
+    - CustomTokenObtainPairSerializer for JWT token generation
+"""
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_2fa_login(request):
