@@ -82,3 +82,23 @@ def get_match_tournament_by_player(request, player1_id):
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
         return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+# ...existing code...
+
+@api_view(['PATCH'])
+def update_match_tournament(request, tournamentId):
+    try:
+        match_tournament = Match_tournament.objects.get(id=tournamentId)
+    except Match_tournament.DoesNotExist:
+        return Response({"detail": "Tournament not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MatchSerializerTournament(match_tournament, data=request.data, partial=True)
+    if serializer.is_valid():
+        try:
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error updating match: {e}")
+            return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    logger.warning(f"Validation errors: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

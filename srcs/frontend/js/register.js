@@ -14,8 +14,6 @@ import { userService } from "./services/userService.js";
 import { renderProfilePage } from "./pages/profile.js";
 //import { navigateTo } from "./router.js";
 
-console.log("register triggered")
-
 // Register routes
 registerRoute("/", renderHomePage);
 registerRoute("/login", renderLoginPage);

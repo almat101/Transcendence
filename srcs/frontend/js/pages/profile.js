@@ -22,7 +22,7 @@ export async function renderProfilePage() {
                 <div class="local-games-card">
                     <div class="card">
                         <div class="card-body">
-                            <h3 class="card-title mb-4">1vs1 Games</h3>
+                            <h3 class="card-title mb-4">Local Games</h3>
                             <table class="table table-striped" id="localGamesTable">
                                 <thead>
                                     <tr>
@@ -30,7 +30,7 @@ export async function renderProfilePage() {
                                         <th>Player 2</th>
                                         <th>Score</th>
                                         <th>Winner</th>
-                                        <th>Tournament</th>
+                                        <th>Tournament ID</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,9 +48,9 @@ export async function renderProfilePage() {
                             <table class="table table-striped" id="tournamentGamesTable">
                                 <thead>
                                     <tr>
-                                        <th>Player 1</th>
-                                        <th>Total Players</th>
-                                        <th>Final Position</th>
+                                    <th>Tournament ID</th>
+                                    <th>Total Players</th>
+                                    <th>User Final Position</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -78,12 +78,13 @@ export async function renderProfilePage() {
         } else {
             localGames.forEach(game => {
                 const row = document.createElement('tr');
+                // <td>${game.is_tournament ? 'Yes' : 'No'}</td>
                 row.innerHTML = `
                     <td>${game.player1_name}</td>
                     <td>${game.player2_name}</td>
                     <td>${game.player1_score} - ${game.player2_score}</td>
                     <td>${game.winner}</td>
-                    <td>${game.is_tournament ? 'Yes' : 'No'}</td>
+                    <td>${game.is_tournament ? `${game.tournament}` : ' '}</td>
                 `;
                 localGamesTableBody.appendChild(row);
             });
@@ -99,15 +100,15 @@ export async function renderProfilePage() {
         tournamentGamesTableBody.innerHTML = '';
         if (tournamentGames.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="3">No tournament games found.</td>`;
+            row.innerHTML = `<td colspan="4">No tournament games found.</td>`;
             tournamentGamesTableBody.appendChild(row);
         } else {
             tournamentGames.forEach(game => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${userData.username}</td>
-                    <td>${game.total_players}</td>
-                    <td>${game.user_final_position}</td>
+                <td>${game.id}</td>
+                <td>${game.total_players}</td>
+                <td>${game.user_final_position}</td>
                 `;
                 tournamentGamesTableBody.appendChild(row);
             });

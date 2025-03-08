@@ -7,6 +7,8 @@ import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } fr
 import { userService } from '../services/userService.js';
 import { create_local_game, create_tournament_game } from './history.js';
 
+import { tokenService } from '../services/authService.js';
+
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
@@ -18,8 +20,11 @@ let user_final_position = 0;
 let total_players = 0;
 let check_lost = false;
 
+//*global ID of the tournament
+let tournamentId = null;
+
 export async function initializeGame(navbar) {
-	//!moved inside the initialize game
+	//!moved inside the initialize game to avoid error
 	const userData = userService.getUserData();
 	console.log("initizalizing game");
 	//this is the calssic setup done to make the tournament part avaible
@@ -138,7 +143,48 @@ export async function initializeGame(navbar) {
 
 	// startTournament remains unchanged...
 	async function startTournament() {
+		const player1_id = userData.id;
 		console.log('Starting Tournament');
+		console.log("total player in start tournament", total_players);
+		console.log("usf in start tournament", user_final_position);
+
+		//* lets try to create the tournament first
+		//* getting the tournament ID that later i can link to every single 1vs1 tournament match
+			try {
+				const response = await fetch('/api/history/tournament/create', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${tokenService.getAccessToken()}`
+					},
+					body: JSON.stringify({
+						player1_id: player1_id,
+						total_players: total_players,
+						user_final_position: user_final_position
+					})
+				});
+
+				if (!response.ok) {
+					let errorData;
+					try {
+						errorData = await response.json();
+					} catch (jsonError) {
+						throw new Error('Failed to save tournament game data. Server returned non-JSON response.');
+					}
+					throw new Error(errorData.error || 'Failed to save tournament game data.');
+				}
+				const responseData = await response.json();
+				//*now i have the tournament id to link all local match of the tournament
+				tournamentId = responseData.id;
+				console.log('Tournament ID:', tournamentId);
+				// alert('Tournament data saved successfully!');
+			} catch (error) {
+				console.log("Error saving tournament game data.", error);
+			}
+
+		 console.log("ttttiddddddddddd c'eeeeeeeeee ", tournamentId);
+
+		console.log("tournamented created ");
 		if (navbar)
 			navbar.style.display = 'none';
 
@@ -187,7 +233,7 @@ export async function initializeGame(navbar) {
 		const scoreText = scores.textContent;
 		//we use \d+ to match all the digits in the string
 		//! change this to parse match only after :  ex lol3434 : 3 has to take 3
-		const scoreMatches = scoreText.match(/(?<=:\s*)\d+/g);
+		const scoreMatches = scoreText.match(/(?<=:\s*)\d/g);
 		const player1_score = parseInt(scoreMatches[0]);
 		const player2_score = parseInt(scoreMatches[1]);
 		gameCanvas.style.display = 'none';
@@ -200,6 +246,8 @@ export async function initializeGame(navbar) {
 		const player1_id = userData.id;
 		const is_tournament = true;
 		console.log("tournament match????");
+
+		console.log("user final position", user_final_position)
 		// const logged_user_has_won = winner === userData.username;
 
 		console.log("player1_id: ", player1_id);
@@ -209,7 +257,10 @@ export async function initializeGame(navbar) {
 		console.log("player2_score: ", player2_score);
 		console.log("winner: ", winner);
 		console.log("is tournament", is_tournament);
-		await create_local_game(player1_id,player1,player2,player1_score,player2_score,winner,is_tournament);
+
+		console.log("tid tid tid ", tournamentId);
+		//*this create every 1vs1 tournament games
+		await create_local_game(player1_id,player1,player2,player1_score,player2_score,winner,is_tournament,tournamentId);
 
 		//? this for now is the simpler version of the tournament positining
 		//!cambiato
@@ -258,8 +309,45 @@ export async function initializeGame(navbar) {
 				console.log("total players: ", total_players);
 				console.log("user final position: ", user_final_position);
 
+
+				console.log("final tiddddddddddddd", tournamentId);
+
+				//*now we need a PATCH to update an existing tournament value
+				console.log("trying patch it will work????");
+				try {
+					const response = await fetch(`/api/history/tournament/${tournamentId}/update/`, {
+						method: 'PATCH',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${tokenService.getAccessToken()}`
+						},
+						body: JSON.stringify({
+							user_final_position: user_final_position
+						})
+					});
+
+					if (!response.ok) {
+						let errorData;
+						try {
+							errorData = await response.json();
+						} catch (jsonError) {
+							throw new Error('Failed to update tournament game data. Server returned non-JSON response.');
+						}
+						throw new Error(errorData.error || 'Failed to update tournament game data.');
+					}
+
+					// Optionally, you can handle the success response here
+					// const data = await response.json();
+					// console.log('Tournament updated successfully:', data);
+				} catch (error) {
+					console.log("Error updating tournament game data.", error);
+				}
+
+
+
 				//* match history api call
-				await create_tournament_game(player1_id,total_players,user_final_position);
+				//!remove this api call that create another tournament ID
+				// await create_tournament_game(player1_id,total_players,user_final_position);
 
 				deleteAllUsers();
 				return;
@@ -290,7 +378,7 @@ export async function initializeGame(navbar) {
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
 			//! change this to parse match only after :  ex lol3434 : 3 has to take 3
-			const scoreMatches = scoreText.match(/(?<=:\s*)\d+/g);
+			const scoreMatches = scoreText.match(/(?<=:\s*)\d/g);
 			const player1_score = parseInt(scoreMatches[0]);
 			const player2_score = parseInt(scoreMatches[1]);
 			//*logged user has won the game now we use winner
@@ -321,6 +409,7 @@ export async function initializeGame(navbar) {
 			//* tournament history api call
 
 			restartButton.onclick = () => {
+				console.log("restarting game navbar is block??");
 				winningScreen.style.display = 'none';
 				showMenu(start1v1Game, startTournament, startCpuGame);
 				// buttonsHandler(startButton, cpuButton, tournamentButton, true);
@@ -333,10 +422,13 @@ export async function initializeGame(navbar) {
 
 	function restartGame() {
 		console.log('Restarting Game');
-		const player1ScoreElement = document.getElementById('player1Score');
-		const player2ScoreElement = document.getElementById('player2Score');
-		player1ScoreElement.textContent = 'Player 1: 0';
-		player2ScoreElement.textContent = 'Player 2: 0';
+		//!nicoter removed this 4 lines, navbar block is needed
+		navbar.style.display = 'block';
+		console.log("navbar block added")
+		// const player1ScoreElement = document.getElementById('player1Score');
+		// const player2ScoreElement = document.getElementById('player2Score');
+		// player1ScoreElement.textContent = 'Player 1: 0';
+		// player2ScoreElement.textContent = 'Player 2: 0';
 		//!strange but true this works? BUT i need to analyze properly the
 		//!the part where i should show case the winner of the tournament or am i dumb?
 		showMenu(start1v1Game, startTournament, startCpuGame);

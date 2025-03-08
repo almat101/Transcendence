@@ -1,6 +1,6 @@
 import { tokenService } from '../services/authService.js';
 
-export async function create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,winner, is_tournament) {
+export async function create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,winner, is_tournament,tournamentId = null) {
 	try {
 		const response = await fetch('/api/history/match/create', {
 			method: 'POST',
@@ -15,7 +15,8 @@ export async function create_local_game(player1_id,player1_name,player2_name,pla
 				player1_score: player1_score,
 				player2_score: player2_score,
 				winner: winner,
-				is_tournament: is_tournament
+				is_tournament: is_tournament,
+				tournament: tournamentId
 			})
 		});
 
