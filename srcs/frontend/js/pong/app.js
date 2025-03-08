@@ -187,7 +187,7 @@ export async function initializeGame(navbar) {
 		const scoreText = scores.textContent;
 		//we use \d+ to match all the digits in the string
 		//! change this to parse match only after :  ex lol3434 : 3 has to take 3
-		const scoreMatches = scoreText.match(/\d+/g);
+		const scoreMatches = scoreText.match(/(?<=:\s*)\d+/g);
 		const player1_score = parseInt(scoreMatches[0]);
 		const player2_score = parseInt(scoreMatches[1]);
 		gameCanvas.style.display = 'none';
@@ -200,16 +200,16 @@ export async function initializeGame(navbar) {
 		const player1_id = userData.id;
 		const is_tournament = true;
 		console.log("tournament match????");
-		const logged_user_has_won = winner === userData.username;
+		// const logged_user_has_won = winner === userData.username;
 
 		console.log("player1_id: ", player1_id);
 		console.log("player1_name: ", player1)
 		console.log("player2_name: ", player2)
 		console.log("player1_score: ", player1_score);
 		console.log("player2_score: ", player2_score);
-		console.log("logger user has won: ", logged_user_has_won);
+		console.log("winner: ", winner);
 		console.log("is tournament", is_tournament);
-		await create_local_game(player1_id,player1,player2,player1_score,player2_score,logged_user_has_won,is_tournament);
+		await create_local_game(player1_id,player1,player2,player1_score,player2_score,winner,is_tournament);
 
 		//? this for now is the simpler version of the tournament positining
 		//!cambiato
@@ -250,7 +250,7 @@ export async function initializeGame(navbar) {
 				if (winner === userData.username)
 					user_final_position = 1;
 
-				//TODO come collegare  match  local 1vs1 (tournament) a match tournament ??? 
+				//TODO come collegare  match  local 1vs1 (tournament) a match tournament ???
 				//*tournament data
 				const player1_id = userData.id;
 				console.log("a winner is decided");
@@ -290,11 +290,11 @@ export async function initializeGame(navbar) {
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
 			//! change this to parse match only after :  ex lol3434 : 3 has to take 3
-			const scoreMatches = scoreText.match(/\d+/g);
+			const scoreMatches = scoreText.match(/(?<=:\s*)\d+/g);
 			const player1_score = parseInt(scoreMatches[0]);
 			const player2_score = parseInt(scoreMatches[1]);
-			//*logged user has won the game
-			const logged_user_has_won = winner === userData.username;
+			//*logged user has won the game now we use winner
+			// const logged_user_has_won = winner === userData.username;
 			const winningScreen = document.getElementById('winningScreen');
 			const winnerMessage = document.getElementById('winnerMessage');
 			const restartButton = document.getElementById('restartButton');
@@ -315,8 +315,8 @@ export async function initializeGame(navbar) {
 				console.log("player2_name: ", player2_name)
 				console.log("player1_score: ", player1_score);
 				console.log("player2_score: ", player2_score);
-				console.log("logger user has won: ", logged_user_has_won);
-				await create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,logged_user_has_won);
+				console.log("winner: ", winner);
+				await create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,winner);
 			}
 			//* tournament history api call
 

@@ -40,7 +40,7 @@ export async function saveUsers(names, afterSaveCallback) {
 			const errorData = await response.json();
 			throw new Error(errorData.error || 'Failed to save users.');
 		}
-		alert('Users saved successfully!');
+		console.log('Users saved successfully!');
 
 		// HIDE tournament button & setup form after saving
 		const startTournamentBtn = document.getElementById('startTournamentButton');
@@ -93,7 +93,7 @@ export async function deleteAllUsers() {
 			const errorData = await response.json();
 			throw new Error(errorData.error || 'Failed to delete all users.');
 		}
-		alert('All users were deleted successfully.');
+		console.log('All users were deleted successfully.');
 		// Return a success flag
 		return true;
 	} catch (error) {

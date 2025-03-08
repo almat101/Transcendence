@@ -1,21 +1,4 @@
-# from django.shortcuts import render
-
-# Create your views here.
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework import status
-# # from .models import Match
-# from .serializers import MatchSerializer
-
-# class MatchCreateView(APIView):
-#     def post(self, request):
-#         serializer = MatchSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 import logging
-# from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -27,19 +10,6 @@ from .models import Match_tournament
 
 logger = logging.getLogger(__name__)
 
-# class MatchCreateView(APIView):
-#     def post(self, request):
-#         serializer = MatchSerializer(data=request.data)
-#         if serializer.is_valid():
-#             try:
-#                 serializer.save()
-#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-#             except Exception as e:
-#                 logger.error(f"Error saving match: {e}")
-#                 return Response({"detail": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-#         logger.warning(f"Validation errors: {serializer.errors}")
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 #1vs1 views
 @api_view(['POST'])
 def create_match(request):
@@ -50,7 +20,7 @@ def create_match(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error saving match: {e}")
-            return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     logger.warning(f"Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,8 +33,18 @@ def get_match(request):
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
-        return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+
+@api_view(['GET'])
+def get_match_by_player(request, player1_id):
+    try:
+        match_local = Match_local.objects.filter(player1_id=player1_id)
+        serializer = MatchSerializer(match_local, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error retrieving matches: {e}")
+        return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 #tournament views
@@ -78,7 +58,7 @@ def create_match_tournament(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error saving match: {e}")
-            return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     logger.warning(f"Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -91,5 +71,14 @@ def get_match_tournament(request):
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
-        return Response({"detail": "Internal server error"}, status=status.HTTP_502_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+@api_view(['GET'])
+def get_match_tournament_by_player(request, player1_id):
+    try:
+        match_tournament = Match_tournament.objects.filter(player1_id=player1_id)
+        serializer = MatchSerializerTournament(match_tournament, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error retrieving matches: {e}")
+        return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

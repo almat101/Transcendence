@@ -59,6 +59,7 @@ export function Navbar() {
     { name: "Home", route: "/" },
     { name: "Games", route: "/pong" },
     { name: "Friends", route: "/friends" },
+    { name: "Profile ", route: "/profile"}
   ];
 
   const menuItems = [
