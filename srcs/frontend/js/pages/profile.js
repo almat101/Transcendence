@@ -80,11 +80,11 @@ export async function renderProfilePage() {
                 const row = document.createElement('tr');
                 // <td>${game.is_tournament ? 'Yes' : 'No'}</td>
                 row.innerHTML = `
-                    <td>${game.player1_name}</td>
-                    <td>${game.player2_name}</td>
-                    <td>${game.player1_score} - ${game.player2_score}</td>
-                    <td>${game.winner}</td>
-                    <td>${game.is_tournament ? `${game.tournament}` : ' '}</td>
+                    <td class="text-center" >${game.player1_name}</td>
+                    <td class="text-center">${game.player2_name}</td>
+                    <td class="text-center">${game.player1_score} - ${game.player2_score}</td>
+                    <td class="text-center">${game.winner}</td>
+                    <td class="text-center">${game.is_tournament ? `${game.tournament}` : ' '}</td>
                 `;
                 localGamesTableBody.appendChild(row);
             });
@@ -106,9 +106,9 @@ export async function renderProfilePage() {
             tournamentGames.forEach(game => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                <td>${game.id}</td>
-                <td>${game.total_players}</td>
-                <td>${game.user_final_position}</td>
+                <td class="text-center">${game.id}</td>
+                <td class="text-center">${game.total_players}</td>
+                <td class="text-center">${game.user_final_position}</td>
                 `;
                 tournamentGamesTableBody.appendChild(row);
             });
