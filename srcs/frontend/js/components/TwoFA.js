@@ -1,11 +1,9 @@
 import { authService, tokenService } from "../services/authService.js";
 import { showAlert } from './alert.js';
-import { userService } from "../services/userService.js";
 
 export const TwoFASetup = {
     show: async function() {
         try {
-            // Fetch setup data from API
             const response = await fetch('/api/auth/2fa/setup/', {
                 method: 'POST',
                 headers: {
@@ -21,7 +19,6 @@ export const TwoFASetup = {
 
             const data = await response.json();
 
-            // Create modal for setup
             const modal = document.createElement('div');
             modal.className = 'modal fade';
             modal.id = 'setup2faModal';
@@ -64,9 +61,13 @@ export const TwoFASetup = {
 
             document.body.appendChild(modal);
             const modalInstance = new bootstrap.Modal(document.getElementById('setup2faModal'));
+
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
+            });
+
             modalInstance.show();
 
-            // Add verification handler
             document.getElementById('verify2faSetup').addEventListener('click', async () => {
                 const token = document.getElementById('verificationCode').value;
 
@@ -109,7 +110,6 @@ export const TwoFASetup = {
 export const TwoFAVerify = {
     show: function(userId) {
         return new Promise((resolve, reject) => {
-            // Create modal for 2FA login verification
             const modal = document.createElement('div');
             modal.className = 'modal fade';
             modal.id = 'verify2faLoginModal';
