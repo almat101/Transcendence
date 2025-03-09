@@ -5,16 +5,11 @@ import { gameLoop } from './gameLoop.js';
 import { showMenu } from './menu.js';
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
 import { userService } from '../services/userService.js';
-import { create_local_game, create_tournament_game } from './history.js';
-
-import { tokenService } from '../services/authService.js';
-
+import { create_local_game, update_tournament, create_tournament } from './history.js';
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
 
-//* change to take the data from the session storage
-//* sistemato posizione torneo e total_players
 //*tournament data
 let user_final_position = 0;
 let total_players = 0;
@@ -43,9 +38,6 @@ export async function initializeGame(navbar) {
 			const deleteSuccess = await deleteAllUsers();
 			if(deleteSuccess) {
 				saveUsers(names, startTournament);
-				//* this way i can give amatta the amount of players
-				//* that participated in the tournament
-				//* + 1 for logged user
 				//!cambiato
 				user_final_position = names.length;
 				total_players = names.length;
@@ -144,47 +136,19 @@ export async function initializeGame(navbar) {
 	// startTournament remains unchanged...
 	async function startTournament() {
 		const player1_id = userData.id;
-		console.log('Starting Tournament');
-		console.log("total player in start tournament", total_players);
-		console.log("usf in start tournament", user_final_position);
-
-		//* lets try to create the tournament first
-		//* getting the tournament ID that later i can link to every single 1vs1 tournament match
-			try {
-				const response = await fetch('/api/history/tournament/create', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokenService.getAccessToken()}`
-					},
-					body: JSON.stringify({
-						player1_id: player1_id,
-						total_players: total_players,
-						user_final_position: user_final_position
-					})
-				});
-
-				if (!response.ok) {
-					let errorData;
-					try {
-						errorData = await response.json();
-					} catch (jsonError) {
-						throw new Error('Failed to save tournament game data. Server returned non-JSON response.');
-					}
-					throw new Error(errorData.error || 'Failed to save tournament game data.');
-				}
-				const responseData = await response.json();
-				//*now i have the tournament id to link all local match of the tournament
-				tournamentId = responseData.id;
-				console.log('Tournament ID:', tournamentId);
-				// alert('Tournament data saved successfully!');
-			} catch (error) {
-				console.log("Error saving tournament game data.", error);
+		//! if create_tournament fail(database down) we exit from the start tournament and we show the menu
+		try {
+			//* Creating tournament with 0 total_player, taking the new tournamentId from the response to link all tournament match 1vs1 to a tournament
+			tournamentId = await create_tournament(tournamentId, player1_id);
+			if (!tournamentId) {
+				throw new Error('Failed to create tournament');
 			}
-
-		 console.log("ttttiddddddddddd c'eeeeeeeeee ", tournamentId);
-
-		console.log("tournamented created ");
+		} catch (error) {
+			console.error("Error creating tournament:", error);
+			alert('Failed to create tournament. Please try again.');
+			showMenu(start1v1Game, startTournament, startCpuGame);
+			return;
+		}
 		if (navbar)
 			navbar.style.display = 'none';
 
@@ -195,6 +159,8 @@ export async function initializeGame(navbar) {
 		// buttonsHandler(startButton, cpuButton, tournamentButton, false);
 		if (!tournamentMatches.length) {
 			alert('No matches available for the tournament.');
+			//! aggiunto
+			navbar.style.display = 'block';
 			//!cambiato
 			deleteAllUsers();
 			showMenu(start1v1Game, startTournament, startCpuGame);
@@ -232,7 +198,7 @@ export async function initializeGame(navbar) {
 		const scores = document.getElementById('scores');
 		const scoreText = scores.textContent;
 		//we use \d+ to match all the digits in the string
-		//! change this to parse match only after :  ex lol3434 : 3 has to take 3
+		//! changeed to parse only 1 digit after :
 		const scoreMatches = scoreText.match(/(?<=:\s*)\d/g);
 		const player1_score = parseInt(scoreMatches[0]);
 		const player2_score = parseInt(scoreMatches[1]);
@@ -241,27 +207,39 @@ export async function initializeGame(navbar) {
 
 		const loser = (winner === player1) ? player2 : player1;
 		alert(`${winner} is victorious! Eliminating ${loser} from the tournament.`);
-		//*api calls for tournament 1vs1 games
 
+		//*Creating payload for POST
 		const player1_id = userData.id;
 		const is_tournament = true;
-		console.log("tournament match????");
+		// console.log("player1_id: ", player1_id);
+		// console.log("player1_name: ", player1)
+		// console.log("player2_name: ", player2)
+		// console.log("player1_score: ", player1_score);
+		// console.log("player2_score: ", player2_score);
+		// console.log("winner: ", winner);
+		// console.log("is tournament", is_tournament);
+		// console.log("tournamentID :", tournamentId);
+		// console.log("user final position", user_final_position)
 
-		console.log("user final position", user_final_position)
-		// const logged_user_has_won = winner === userData.username;
+		const tournament_1vs1_payload = {
+			player1_id : player1_id,
+			player1_name : player1,
+			player2_name : player2,
+			player1_score : player1_score,
+			player2_score : player2_score,
+			winner : winner,
+			is_tournament : is_tournament,
+			tournament : tournamentId
+		}
 
-		console.log("player1_id: ", player1_id);
-		console.log("player1_name: ", player1)
-		console.log("player2_name: ", player2)
-		console.log("player1_score: ", player1_score);
-		console.log("player2_score: ", player2_score);
-		console.log("winner: ", winner);
-		console.log("is tournament", is_tournament);
-
-		console.log("tid tid tid ", tournamentId);
-		//*this create every 1vs1 tournament games
-		await create_local_game(player1_id,player1,player2,player1_score,player2_score,winner,is_tournament,tournamentId);
-
+		//*POST for creating every 1vs1 tournament games
+		try {
+			await create_local_game(tournament_1vs1_payload);
+		} catch (error) {
+			console.error("Error creating tournament local game 1vs1:", error);
+			alert('Failed to create local game. Please try again.');
+			return;
+		}
 		//? this for now is the simpler version of the tournament positining
 		//!cambiato
 		if (loser == userData.username)
@@ -301,53 +279,8 @@ export async function initializeGame(navbar) {
 				if (winner === userData.username)
 					user_final_position = 1;
 
-				//TODO come collegare  match  local 1vs1 (tournament) a match tournament ???
-				//*tournament data
-				const player1_id = userData.id;
-				console.log("a winner is decided");
-				console.log("player1_id: ", player1_id);
-				console.log("total players: ", total_players);
-				console.log("user final position: ", user_final_position);
-
-
-				console.log("final tiddddddddddddd", tournamentId);
-
-				//*now we need a PATCH to update an existing tournament value
-				console.log("trying patch it will work????");
-				try {
-					const response = await fetch(`/api/history/tournament/${tournamentId}/update/`, {
-						method: 'PATCH',
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': `Bearer ${tokenService.getAccessToken()}`
-						},
-						body: JSON.stringify({
-							user_final_position: user_final_position
-						})
-					});
-
-					if (!response.ok) {
-						let errorData;
-						try {
-							errorData = await response.json();
-						} catch (jsonError) {
-							throw new Error('Failed to update tournament game data. Server returned non-JSON response.');
-						}
-						throw new Error(errorData.error || 'Failed to update tournament game data.');
-					}
-
-					// Optionally, you can handle the success response here
-					// const data = await response.json();
-					// console.log('Tournament updated successfully:', data);
-				} catch (error) {
-					console.log("Error updating tournament game data.", error);
-				}
-
-
-
-				//* match history api call
-				//!remove this api call that create another tournament ID
-				// await create_tournament_game(player1_id,total_players,user_final_position);
+				//*PATCH to update the total_players and user final position
+				await update_tournament(tournamentId, total_players, user_final_position)
 
 				deleteAllUsers();
 				return;
@@ -397,14 +330,31 @@ export async function initializeGame(navbar) {
 				const player1_id = userData.id;
 				const player1_name = userData.username;
 				//*local game data
-				console.log("local game")
-				console.log("player1_id: ", player1_id);
-				console.log("player1_name: ", player1_name)
-				console.log("player2_name: ", player2_name)
-				console.log("player1_score: ", player1_score);
-				console.log("player2_score: ", player2_score);
-				console.log("winner: ", winner);
-				await create_local_game(player1_id,player1_name,player2_name,player1_score,player2_score,winner);
+				// console.log("local game")
+				// console.log("player1_id: ", player1_id);
+				// console.log("player1_name: ", player1_name)
+				// console.log("player2_name: ", player2_name)
+				// console.log("player1_score: ", player1_score);
+				// console.log("player2_score: ", player2_score);
+				// console.log("winner: ", winner);
+
+				const local_1vs1_payload = {
+					player1_id : player1_id,
+					player1_name : player1_name,
+					player2_name : player2_name,
+					player1_score : player1_score,
+					player2_score : player2_score,
+					winner : winner
+				}
+
+				//TODO check this when the db is down
+				try {
+					await create_local_game(local_1vs1_payload);
+				} catch (error) {
+					console.error("Error creating local game 1vs1:", error);
+					alert('Failed to create local game. Please try again.');
+					return;
+				}
 			}
 			//* tournament history api call
 
@@ -424,7 +374,6 @@ export async function initializeGame(navbar) {
 		console.log('Restarting Game');
 		//!nicoter removed this 4 lines, navbar block is needed
 		navbar.style.display = 'block';
-		console.log("navbar block added")
 		// const player1ScoreElement = document.getElementById('player1Score');
 		// const player2ScoreElement = document.getElementById('player2Score');
 		// player1ScoreElement.textContent = 'Player 1: 0';

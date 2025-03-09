@@ -66,8 +66,8 @@ def create_match_tournament(request):
 @api_view(['GET'])
 def get_match_tournament(request):
     try:
-        match_local = Match_tournament.objects.all()
-        serializer = MatchSerializerTournament(match_local, many=True)
+        match_tournament = Match_tournament.objects.all()
+        serializer = MatchSerializerTournament(match_tournament, many=True)
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error retrieving matches: {e}")
@@ -102,3 +102,13 @@ def update_match_tournament(request, tournamentId):
             return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     logger.warning(f"Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def cleanup_invalid_tournaments(request):
+    try:
+        invalid_tournaments = Match_tournament.objects.filter(total_players=0)
+        count = invalid_tournaments.count()
+        invalid_tournaments.delete()
+        return Response({"detail": f"Deleted {count} invalid tournaments."}, status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
