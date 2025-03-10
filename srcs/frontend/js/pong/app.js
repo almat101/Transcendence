@@ -3,30 +3,31 @@
 import { showWinningScreen } from './winningScreen.js';
 import { gameLoop } from './gameLoop.js';
 import { showMenu } from './menu.js';
-import { buttonsHandler } from './buttonsHandler.js'
 import { fetchMatches, fetchAllUsers, saveUsers, deleteUser, deleteAllUsers } from './backendFront.js';
-import { showAlert } from '../components/alert.js';
 import { userService } from '../services/userService.js';
+import { create_local_game, update_tournament, create_tournament } from './history.js';
 
 let gameMode = '1v1'; // Default mode
 let tournamentMatches = []; // Store tournament matches
-let userData;
 
-//? amatta values he requested
-let usersInTournament = 0;
-let loggedUserTPosition = 0;
+//*tournament data
+let user_final_position = 0;
+let total_players = 0;
+let check_lost = false;
+
+//*global ID of the tournament
+let tournamentId = null;
+
 export async function initializeGame(navbar) {
-	console.log("initizalizing game");
-
-	//*taking logged user data:
+	//!moved inside the initialize game to avoid error
 	const userData = userService.getUserData();
-
+	console.log("initizalizing game");
 	//this is the calssic setup done to make the tournament part avaible
 	// showMenu(start1v1Game, startTournament, startCpuGame);
 	// If these elements exist in your rendered HTML, you can attach event listeners.
 	const playerNamesForm = document.getElementById('playerNamesForm');
 	if (playerNamesForm) {
-		playerNamesForm.addEventListener('submit', (event) => {
+		playerNamesForm.addEventListener('submit', async (event) => {
 			event.preventDefault();
 			const names = document.getElementById('playerNames')
 				.value.split(',')
@@ -34,10 +35,16 @@ export async function initializeGame(navbar) {
 				.filter(name => name);
 				//* we add the logged user in the tournament as well
 				names.push(userData.username);
-			saveUsers(names, startTournament);
-			//* this way i can give amatta the amount of players
-			//* that participated in the tournament
-			usersInTournament = names.length;
+			const deleteSuccess = await deleteAllUsers();
+			if(deleteSuccess) {
+				saveUsers(names, startTournament);
+				//!cambiato
+				user_final_position = names.length;
+				total_players = names.length;
+			}
+			else {
+				console.log("failed");
+			}
 		});
 	}
 
@@ -92,8 +99,12 @@ export async function initializeGame(navbar) {
 			navbar.style.display = 'none';
 
 		gameMode = '1v1';
+
 		const player1Name = userData.username;
-		const player2Name = 'Player 2';
+		// const player1_id = userData.id;
+
+		const player2Name = 'guest';
+
 		const canvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
 
@@ -109,7 +120,8 @@ export async function initializeGame(navbar) {
 		if (navbar)
 			navbar.style.display = 'none';
 		gameMode = 'cpu';
-		const player1Name = 'Player 1';
+		//*change
+		const player1Name = userData.username;
 		const player2Name = 'CPU';
 		const canvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
@@ -123,7 +135,20 @@ export async function initializeGame(navbar) {
 
 	// startTournament remains unchanged...
 	async function startTournament() {
-		console.log('Starting Tournament');
+		const player1_id = userData.id;
+		//! if create_tournament fail(database down) we exit from the start tournament and we show the menu
+		try {
+			//* Creating tournament with 0 total_player, taking the new tournamentId from the response to link all tournament match 1vs1 to a tournament
+			tournamentId = await create_tournament(tournamentId, player1_id);
+			if (!tournamentId) {
+				throw new Error('Failed to create tournament');
+			}
+		} catch (error) {
+			console.error("Error creating tournament:", error);
+			alert('Failed to create tournament. Please try again.');
+			showMenu(start1v1Game, startTournament, startCpuGame);
+			return;
+		}
 		if (navbar)
 			navbar.style.display = 'none';
 
@@ -134,6 +159,10 @@ export async function initializeGame(navbar) {
 		// buttonsHandler(startButton, cpuButton, tournamentButton, false);
 		if (!tournamentMatches.length) {
 			alert('No matches available for the tournament.');
+			//! aggiunto
+			navbar.style.display = 'block';
+			//!cambiato
+			deleteAllUsers();
 			showMenu(start1v1Game, startTournament, startCpuGame);
 			return;
 		}
@@ -167,22 +196,52 @@ export async function initializeGame(navbar) {
 		// Hide the canvas before alerting:
 		const gameCanvas = document.getElementById('gameCanvas');
 		const scores = document.getElementById('scores');
+		const scoreText = scores.textContent;
+		//we use \d+ to match all the digits in the string
+		//! changeed to parse only 1 digit after :
+		const scoreMatches = scoreText.match(/(?<=:\s*)\d/g);
+		const player1_score = parseInt(scoreMatches[0]);
+		const player2_score = parseInt(scoreMatches[1]);
 		gameCanvas.style.display = 'none';
 		scores.style.display = 'none';
 
 		const loser = (winner === player1) ? player2 : player1;
 		alert(`${winner} is victorious! Eliminating ${loser} from the tournament.`);
 
+		//*Creating payload for POST
+		const player1_id = userData.id;
+		const is_tournament = true;
+
+		const tournament_1vs1_payload = {
+			player1_id : player1_id,
+			player1_name : player1,
+			player2_name : player2,
+			player1_score : player1_score,
+			player2_score : player2_score,
+			winner : winner,
+			is_tournament : is_tournament,
+			tournament : tournamentId
+		}
+
+		//*POST for creating every 1vs1 tournament games
+		try {
+			await create_local_game(tournament_1vs1_payload);
+		} catch (error) {
+			console.error("Error creating tournament local game 1vs1:", error);
+			alert('Failed to create local game. Please try again.');
+			return;
+		}
 		//? this for now is the simpler version of the tournament positining
-		if (loser === userData.username) {
-			loggedUserTPosition = usersInTournament;
-			console.log("%cdamn you lost already? final position: ", "color: red", loggedUserTPosition);
+		//!cambiato
+		if (loser == userData.username)
+			check_lost = true;
+		if (loser != userData.username && check_lost != true) {
+			user_final_position -= 1;
 		}
 		// Delete the loser
 		await deleteUser(loser);
 		//update the number of users in the tournament for the final
 		//position of the logged user
-		usersInTournament -= 1;
 		// Check if all matches in the current round are played
 		if (!tournamentMatches.length) {
 			// Fetch remaining matches
@@ -202,13 +261,18 @@ export async function initializeGame(navbar) {
 
 			if (remainingUsers.length === 1) {
 				// Check if the remaining user is the logged user
-				if (remainingUsers[0].name === userData.username) {
-					loggedUserTPosition = 1;
-				}
+				// if (remainingUsers[0].name === userData.username) {
+				// 	loggedUserTPosition = 1;
+				// }
 				// Declare the remaining user as the champion
 				showWinningScreen(remainingUsers[0].name, restartGame);
 				//*added for next pull
-				console.log("a winner is decided");
+				if (winner === userData.username)
+					user_final_position = 1;
+
+				//*PATCH to update the total_players and user final position
+				await update_tournament(tournamentId, total_players, user_final_position)
+
 				deleteAllUsers();
 				return;
 			} else if (remainingUsers.length > 1) {
@@ -221,28 +285,28 @@ export async function initializeGame(navbar) {
 			}
 
 			// If no users remain or an unexpected state occurs
-			alert('No players left in the tournament.');
-			//!amatta tournament finito
-			showMenu(start1v1Game, startTournament, );
-			return;
+			// alert('No players left in the tournament.');
+			// showMenu(start1v1Game, startTournament, );
+			// return;
 		}
 
 		if (tournamentMatches.length) {
 			playTournamentMatch(tournamentMatches.shift());
 		}
 	}
-	function endGame(winner) {
+	async function endGame(winner) {
 		console.log('End Game:', winner);
 		if (gameMode === '1v1' || gameMode === 'cpu') {
 			const canvas = document.getElementById('gameCanvas');
 			const scores = document.getElementById('scores');
 			const scoreText = scores.textContent;
 			//we use \d+ to match all the digits in the string
-			const scoreMatches = scoreText.match(/\d+/g);
-			const player1Score = parseInt(scoreMatches[0]);
-			const player2Score = parseInt(scoreMatches[1]);
-			//? Will be used by amatta to know if the player1 won
-			const player1Won = winner === 'Player 1';
+			//! change this to parse match only after :  ex lol3434 : 3 has to take 3
+			const scoreMatches = scoreText.match(/(?<=:\s*)\d/g);
+			const player1_score = parseInt(scoreMatches[0]);
+			const player2_score = parseInt(scoreMatches[1]);
+			//*logged user has won the game now we use winner
+			// const logged_user_has_won = winner === userData.username;
 			const winningScreen = document.getElementById('winningScreen');
 			const winnerMessage = document.getElementById('winnerMessage');
 			const restartButton = document.getElementById('restartButton');
@@ -251,8 +315,32 @@ export async function initializeGame(navbar) {
 			scores.style.display = 'none';
 			winnerMessage.textContent = `${winner} wins!`;
 			winningScreen.style.display = 'block';
-			console.log("player1Score: ", player1Score);
-			console.log("player2Score: ", player2Score);
+
+			if (gameMode === '1v1'){
+				const player2_name = "guest";
+				const player1_id = userData.id;
+				const player1_name = userData.username;
+
+				//*Creating local game payload for the POST
+				const local_1vs1_payload = {
+					player1_id : player1_id,
+					player1_name : player1_name,
+					player2_name : player2_name,
+					player1_score : player1_score,
+					player2_score : player2_score,
+					winner : winner
+				}
+
+				try {
+					await create_local_game(local_1vs1_payload);
+				} catch (error) {
+					console.error("Error creating local game 1vs1:", error);
+					alert('Failed to create local game. Please try again.');
+					return;
+				}
+			}
+			//* tournament history api call end
+
 			restartButton.onclick = () => {
 				winningScreen.style.display = 'none';
 				showMenu(start1v1Game, startTournament, startCpuGame);
@@ -260,14 +348,18 @@ export async function initializeGame(navbar) {
 				navbar.style.display = 'block';
 			};
 		}
+
+
 	}
 
 	function restartGame() {
 		console.log('Restarting Game');
-		const player1ScoreElement = document.getElementById('player1Score');
-		const player2ScoreElement = document.getElementById('player2Score');
-		player1ScoreElement.textContent = 'Player 1: 0';
-		player2ScoreElement.textContent = 'Player 2: 0';
+		//!nicoter removed this 4 lines, navbar block is needed
+		navbar.style.display = 'block';
+		// const player1ScoreElement = document.getElementById('player1Score');
+		// const player2ScoreElement = document.getElementById('player2Score');
+		// player1ScoreElement.textContent = 'Player 1: 0';
+		// player2ScoreElement.textContent = 'Player 2: 0';
 		//!strange but true this works? BUT i need to analyze properly the
 		//!the part where i should show case the winner of the tournament or am i dumb?
 		showMenu(start1v1Game, startTournament, startCpuGame);

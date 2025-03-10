@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
 	'django_prometheus.middleware.PrometheusBeforeMiddleware', # prometheus
+	'history_app.middleware.DatabaseConnectionMiddleware',  # database middleware
 	'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

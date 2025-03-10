@@ -79,7 +79,7 @@ def	save_user_for_tournament(request):
 			User.objects.all().delete() #seeing that the tournament won't start i delete the db
 
 			#!added for testing out in case the microservice work strangely delete it
-			delete_all_users()
+			# delete_all_users()
 
 			return Response({'error': f'Duplicate name detected: {name}.'}, status=status.HTTP_400_BAD_REQUEST)
 
