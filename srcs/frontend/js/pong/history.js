@@ -23,6 +23,7 @@ export async function create_local_game(payload) {
 		// alert('Local match data saved successfully!');
 	} catch (error) {
 		console.log("Error saving Local game data.", error);
+		alert('Cannot create local match!')
 	}
 };
 
@@ -131,6 +132,11 @@ export async function get_local_matches_by_player(player1_id) {
 		}
 		// alert('Getting local matches successfully!');
 		const local_matches = await response.json()
+
+		if (!Array.isArray(local_matches)) {
+			throw new Error('Invalid data format: expected an array of local matches.');
+		}
+
 		// console.log("local matches by player: ", local_matches)
 		return local_matches;
 	} catch (error) {
@@ -160,6 +166,11 @@ export async function get_local_tournament_by_player(player1_id) {
 		// alert('Getting local tournament successfully!');
 		const local_tournament = await response.json()
 		// console.log("local tournament by player: ", local_tournament)
+
+		if (!Array.isArray(local_tournament)) {
+			throw new Error('Invalid data format: expected an array of local tournament.');
+		}
+
 		return local_tournament;
 	} catch (error) {
 		console.log("Error getting tournament game by player data.", error);

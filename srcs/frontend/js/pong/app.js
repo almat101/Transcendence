@@ -211,15 +211,6 @@ export async function initializeGame(navbar) {
 		//*Creating payload for POST
 		const player1_id = userData.id;
 		const is_tournament = true;
-		// console.log("player1_id: ", player1_id);
-		// console.log("player1_name: ", player1)
-		// console.log("player2_name: ", player2)
-		// console.log("player1_score: ", player1_score);
-		// console.log("player2_score: ", player2_score);
-		// console.log("winner: ", winner);
-		// console.log("is tournament", is_tournament);
-		// console.log("tournamentID :", tournamentId);
-		// console.log("user final position", user_final_position)
 
 		const tournament_1vs1_payload = {
 			player1_id : player1_id,
@@ -329,15 +320,8 @@ export async function initializeGame(navbar) {
 				const player2_name = "guest";
 				const player1_id = userData.id;
 				const player1_name = userData.username;
-				//*local game data
-				// console.log("local game")
-				// console.log("player1_id: ", player1_id);
-				// console.log("player1_name: ", player1_name)
-				// console.log("player2_name: ", player2_name)
-				// console.log("player1_score: ", player1_score);
-				// console.log("player2_score: ", player2_score);
-				// console.log("winner: ", winner);
 
+				//*Creating local game payload for the POST
 				const local_1vs1_payload = {
 					player1_id : player1_id,
 					player1_name : player1_name,
@@ -347,7 +331,6 @@ export async function initializeGame(navbar) {
 					winner : winner
 				}
 
-				//TODO check this when the db is down
 				try {
 					await create_local_game(local_1vs1_payload);
 				} catch (error) {
@@ -356,10 +339,9 @@ export async function initializeGame(navbar) {
 					return;
 				}
 			}
-			//* tournament history api call
+			//* tournament history api call end
 
 			restartButton.onclick = () => {
-				console.log("restarting game navbar is block??");
 				winningScreen.style.display = 'none';
 				showMenu(start1v1Game, startTournament, startCpuGame);
 				// buttonsHandler(startButton, cpuButton, tournamentButton, true);
