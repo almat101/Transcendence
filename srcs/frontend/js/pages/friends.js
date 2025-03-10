@@ -26,6 +26,11 @@ export async function renderFriendsPage() {
                 <div id="searchResults" class="search-results"></div>
             </div>
 
+            <div class="pending-requests mb-3">
+                <h6 class="friends-list-header">Pending Requests</h6>
+                <div id="pendingRequestsList" class="pending-list"></div>
+            </div>
+
             <div class="friends-list">
                 <h6 class="friends-list-header">Friends</h6>
                 <div id="friendsList"></div>
@@ -40,14 +45,17 @@ export async function renderFriendsPage() {
 
     // Initialize friends list
     loadFriendsList();
+    loadPendingRequests();
 
 	// Add click outside listener
     document.addEventListener('click', (e) => {
         const searchContainer = document.querySelector('.search-container');
         const searchResults = document.getElementById('searchResults');
 
-        if (!searchContainer.contains(e.target)) {
-            searchResults.style.display = 'none';
+        if (searchContainer && searchResults) {
+            if (!searchContainer.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
         }
     });
 
@@ -67,6 +75,88 @@ export async function renderFriendsPage() {
         searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
     });
 
+}
+
+async function loadPendingRequests() {
+    try {
+        const response = await fetch('/api/user/friends/requests/', {
+            headers: {
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch pending requests');
+
+        const requests = await response.json();
+        displayPendingRequests(requests);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to load pending requests', 'danger');
+    }
+}
+
+function displayPendingRequests(requests) {
+    const requestsList = document.getElementById('pendingRequestsList');
+
+    if (!requests.length) {
+        requestsList.innerHTML = '<p class="text-muted text-center">No pending requests</p>';
+        return;
+    }
+
+    requestsList.innerHTML = requests.map(request => `
+        <div class="friend-request-item">
+            <div class="user-info" onclick="window.location.href='/profile/${request.username}'">
+                <img src="${request.avatar || '/images/default-avatar.jpg'}"
+                     alt="${request.username}'s avatar"
+                     class="friend-avatar">
+                <span class="friend-name">${request.username}</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-success"
+                        onclick="event.stopPropagation(); respondToRequest('${request.id}', 'accept')">
+                    Accept
+                </button>
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="event.stopPropagation(); respondToRequest('${request.id}', 'reject')">
+                    Deny
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.respondToRequest = async function(userId, action) {
+    try {
+        const response = await fetch('/api/user/friends/respond/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            },
+            body: JSON.stringify({
+                id: userId,
+                action: action
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to ${action} friend request`);
+        }
+
+        showAlert(`Friend request ${action}ed successfully`, 'success');
+
+        // Refresh lists
+        loadPendingRequests();
+        if (action === 'accept') {
+            loadFriendsList();
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert(error.message || `Failed to ${action} friend request`, 'danger');
+    }
 }
 
 async function loadFriendsList() {
@@ -97,10 +187,13 @@ function displayFriendsList(friends) {
 
     friendsList.innerHTML = friends.map(friend => `
         <div class="friend-item" onclick="window.location.href='/profile/${friend.username}'">
-            <img src="${friend.avatar || '/images/default-avatar.jpg'}"
-                 alt="${friend.username}'s avatar"
-                 class="friend-avatar">
-            <span class="friend-name">${friend.username}</span>
+            <div class="friend-info">
+                <img src="${friend.avatar || '/images/default-avatar.jpg'}"
+                     alt="${friend.username}'s avatar"
+                     class="friend-avatar">
+                <span class="friend-name">${friend.username}</span>
+            </div>
+            <span class="status-indicator ${friend.is_online ? 'online' : 'offline'}"></span>
         </div>
     `).join('');
 }
@@ -138,7 +231,7 @@ function displaySearchResults(users) {
     }
 
     resultsDiv.innerHTML = users.map(user => {
-        const buttonConfig = getFriendButtonConfig(user.friendship_status);
+        const buttonConfig = getFriendButtonConfig(user.status);
 
         return `
             <div class="search-result-item">
@@ -171,11 +264,17 @@ function getFriendButtonConfig(status) {
                 class: 'btn-success disabled',
                 action: null
             };
-        case 'pending':
+        case 'pending_sent':
             return {
                 text: 'Pending',
                 class: 'btn-secondary disabled',
                 action: null
+            };
+        case 'pending_received':
+            return {
+                text: 'Respond',
+                class: 'btn-primary',
+                action: 'showResponseOptions'
             };
         default:
             return {
@@ -184,6 +283,27 @@ function getFriendButtonConfig(status) {
                 action: 'sendFriendRequest'
             };
     }
+}
+
+window.showResponseOptions = function(userId) {
+    const button = document.querySelector(`button[data-user-id="${userId}"]`);
+    if (!button) return;
+
+    const parentDiv = button.parentElement;
+
+    // Replace the button with accept/reject buttons
+    parentDiv.innerHTML = `
+        <div class="response-buttons">
+            <button class="btn btn-sm btn-success me-1"
+                    onclick="event.stopPropagation(); respondToRequest('${userId}', 'accept')">
+                Accept
+            </button>
+            <button class="btn btn-sm btn-outline-danger"
+                    onclick="event.stopPropagation(); respondToRequest('${userId}', 'reject')">
+                Deny
+            </button>
+        </div>
+    `;
 }
 
 window.sendFriendRequest = async function(userId) {
@@ -210,7 +330,7 @@ window.sendFriendRequest = async function(userId) {
         }
 
         showAlert('Friend request sent successfully', 'success');
-        updateButtonStatus(button, 'pending');
+        updateButtonStatus(button, 'pending_sent');
 
     } catch (error) {
         console.error('Error:', error);

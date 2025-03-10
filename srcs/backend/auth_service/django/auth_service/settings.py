@@ -13,9 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
-import json
-import hvac
-from dotenv import read_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,45 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-#with open(os.path.join(BASE_DIR, 'pgconf.json')) as config_file:
-#    config = json.load(config_file)
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# using HASHICORP VAULT
-
-#VAULT_ADDR = os.getenv("VAULT_ADDR", "http://vault:8200")
-#VAULT_ROLE_ID = os.getenv("VAULT_ROLE_ID")
-#VAULT_SECRET_ID = os.getenv("VAULT_SECRET_ID")
-
-#client = hvac.Client(url=VAULT_ADDR)
-#client.auth_approle(VAULT_ROLE_ID, VAULT_SECRET_ID)
-
-#try:
-    # Read secret from Vault
-#    secret = client.secrets.kv.read_secret_version(path='secret_key')
-#    SECRET_KEY = secret['data']['data']['SECRET_KEY']
-#except Exception as e:
-#    raise Exception(f"Failed to fetch SECRET_KEY from Vault: {str(e)}")
-
-# SECURITY WARNING: keep the secret key used in production secret!
-'''
 SECRET_KEY = os.getenv('SECRET_KEY')
 JWT_ALGORITHM = os.getenv('JWT_ALGO')
-JWT_EXPIRATION_DELTA = timedelta(hours=1)
-DB_NAME = os.getenv('POSTGRES_AUTH_DB')
-DB_USER = os.getenv('POSTGRES_USER')
-DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-DB_HOST = os.getenv('POSTGRES_HOST')
-DB_PORT = os.getenv('POSTGRES_PORT')
-'''
-
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-JWT_ALGORITHM = os.getenv('JWT_ALGO')
-JWT_EXPIRATION_DELTA = timedelta(hours=1)
 DB_NAME = os.getenv('POSTGRES_AUTH_DB')
 DB_USER = os.getenv('POSTGRES_USER')
 DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
@@ -71,25 +31,19 @@ CLIENT42_ID = os.getenv('42_CLIENT_ID')
 CLIENT42_SECRET = os.getenv('42_CLIENT_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
-
-# SECURITY WARNING: update this when you have the production host
-
-#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-#USE_X_FORWARDED_HOST = True
-#SECURE_SSL_REDIRECT = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # If using nginx/proxy
 ALLOWED_HOSTS = ['localhost', 'auth-service']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'youremail@gmail.com'
-EMAIL_HOST_PASSWORD = 'email_password'
-EMAIL_PORT = 587
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_USE_TLS = True
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_HOST_USER = 'youremail@gmail.com'
+# EMAIL_HOST_PASSWORD = 'email_password'
+# EMAIL_PORT = 587
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
@@ -139,10 +93,11 @@ CRONJOBS = [
 
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware', # prometheus
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'user_app.middleware.DatabaseConnectionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',

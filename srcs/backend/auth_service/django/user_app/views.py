@@ -1,13 +1,10 @@
 import os
-from rest_framework import status # type: ignore
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.core.exceptions import ValidationError # type: ignore
-from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import get_object_or_404
-from django.conf import settings
 from .serializers import (
     UserCreateSerializer,
     UserUpdateSerializer,
@@ -18,11 +15,6 @@ from .serializers import (
 )
 from .models import UserProfile, Friends
 from django.db import models
-import logging
-from django.core.mail import EmailMessage
-
-
-logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -217,16 +209,26 @@ def search_users(request):
         serializer = BaseUserSerializer(users, many=True)
 
         # Add friendship status to response
-        data = serializer.data
-        for user_data in data:
+        result = []
+        for user_data in serializer.data:
             matching_user = next(
                 (u for u in users if u.id == user_data['id']),
                 None
             )
-            if matching_user:
-                user_data['friendship_status'] = matching_user.friendship_status
 
-        return Response(data)
+            if matching_user:
+                status = matching_user.friendship_status
+
+                # Create an entry matching FriendSerializer format
+                result.append({
+                    'id': user_data['id'],
+                    'username': user_data['username'],
+                    'avatar': user_data['avatar'],
+                    'status': status,
+                    'is_online': user_data['is_online'],
+                })
+
+        return Response(result)
 
     except Exception as e:
         return Response({
@@ -247,58 +249,39 @@ def send_friend_request(request):
 
     friend = get_object_or_404(UserProfile, id=friend_id)
 
-    serializer = FriendSerializer(
-        data={},
-        context={
-            'user': request.user,
-            'friend': friend
-        }
-    )
-
-    if serializer.is_valid():
-        friend_request = Friends.objects.create(
-            user=request.user,
-            friend=friend,
-            status='pending'
-        )
-
-        # Send notification (implement this later)
-        # notify_user(friend, f"{request.user.username} sent you a friend request")
-
+    # Prevent self-friending
+    if friend == request.user:
         return Response({
-            'message': 'Friend request sent successfully',
-            'request': FriendSerializer(friend_request).data
-        }, status=status.HTTP_201_CREATED)
+            'error': 'You cannot send a friend request to yourself'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-'''
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_friend_status(request):
-    username = request.query_params.get('username')
-    if not username:
-        return Response(
-            {'error': 'Username is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    friend = get_object_or_404(UserProfile, username=username)
-
-    relationship = Friends.objects.filter(
-        models.Q(user=request.user, friend=friend) |
-        models.Q(user=friend, friend=request.user)
+    # Check for existing relationship
+    existing = Friends.objects.filter(
+        (models.Q(user=request.user, friend=friend) |
+         models.Q(user=friend, friend=request.user)),
+        status__in=['pending', 'accepted']
     ).first()
 
-    if not relationship:
-        return Response({'status': 'none'})
+    if existing:
+        status_msg = 'pending' if existing.status == 'pending' else 'already friends'
+        return Response({
+            'error': f'A friend request is already {status_msg}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the friend request
+    friend_request = Friends.objects.create(
+        user=request.user,
+        friend=friend,
+        status='pending'
+    )
+
+    # Serialize for response
+    serializer = FriendSerializer(friend_request, context={'request': request})
 
     return Response({
-        'status': relationship.status,
-        'initiator': relationship.user.username
-    })
-'''
-
+        'message': 'Friend request sent successfully',
+        'request': serializer.data
+    }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -319,7 +302,7 @@ def respond_to_friend_request(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    friend = get_object_or_404(UserProfile, username=friend_id)
+    friend = get_object_or_404(UserProfile, id=friend_id)
 
     friend_request = Friends.objects.filter(
         user=friend,
@@ -337,13 +320,6 @@ def respond_to_friend_request(request):
         friend_request.status = 'accepted'
         friend_request.save()
 
-        # Create reciprocal friends
-        Friends.objects.create(
-            user=request.user,
-            friend=friend,
-            status='accepted'
-        )
-
        #request.user.friends.add(friend)
 
         return Response(
@@ -357,45 +333,6 @@ def respond_to_friend_request(request):
         {'message': 'Friend request rejected'},
         status=status.HTTP_200_OK
     )
-
-
-'''
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def block_user(request):
-    """Block a user"""
-    friend_username = request.data.get('username')
-    friend = get_object_or_404(UserProfile, username=friend_username)
-
-    # Prevent self-blocking
-    if friend == request.user:
-        return Response(
-            {'error': 'You cannot block yourself'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Check if friends already exists
-    existing_friends = Friends.objects.filter(
-        user=request.user,
-        friend=friend
-    ).first()
-
-    if not existing_friends:
-        return Response(
-            {'error': 'No friends found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    # Block the user
-    existing_friends.status = 'blocked'
-    existing_friends.save()
-
-    return Response(
-        {'message': 'User blocked'},
-        status=status.HTTP_200_OK
-    )
-
-'''
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -421,20 +358,3 @@ def list_friend_requests(request):
 
     serializer = FriendSerializer(friend_requests, many=True, context={'request': request})
     return Response(serializer.data)
-
-
-'''
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_blocked_users(request):
-    blocked_users = Friends.objects.filter(
-        user=request.user,
-        status='blocked'
-    )
-
-    serializer = FriendsSerializer(blocked_users, many=True)
-    return Response(serializer.data)
-
-
-'''

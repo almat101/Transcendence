@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get -y upgrade && apt-get -y install curl && apt-get clean
+RUN apt-get update && apt-get -y upgrade && apt-get -y install curl cron && apt-get clean
 
 COPY requirements.txt requirements.txt
 

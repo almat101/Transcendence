@@ -1,3 +1,42 @@
+"""URLs Configuration for User App
+
+This module defines the URL patterns for the user management application.
+
+URL Patterns:
+  /signup/ (signup_view):
+    Handles user registration
+
+  /password-reset/ (reset_password):
+    Handles password reset functionality
+
+  /getuserinfo/ (user_info):
+    Retrieves information about the current user
+
+  /updateavatar/ (update_avatar):
+    Updates user's profile avatar
+
+  /updateuser/ (update_user):
+    Updates user profile information
+
+  /deleteuser/ (delete_user):
+    Deletes user account
+
+  /search/ (search_users):
+    Searches for users in the system
+
+  /friends/send/ (send_friend_request):
+    Sends a friend request to another user
+
+  /friends/respond/ (respond_to_friend_request):
+    Responds to pending friend requests
+
+  /friends/list-friends/ (list_friends):
+    Lists all friends of the current user
+
+  /friends/requests/ (list_friend_requests):
+    Lists all pending friend requests
+"""
+
 from django.urls import path
 from . import views
 
@@ -11,7 +50,7 @@ urlpatterns = [
     path('search/', views.search_users, name='search'),
 
     path('friends/send/', views.send_friend_request, name='send_friend_request'),
-    path('friends/respond', views.respond_to_friend_request, name='respond_to_friend_request'),
+    path('friends/respond/', views.respond_to_friend_request, name='respond_to_friend_request'),
   #  path('friends/block', views.block_user, name='block_user'),
     path('friends/list-friends/', views.list_friends, name='list_friends'),
     path('friends/requests/', views.list_friend_requests, name='list_friend_requests'),
