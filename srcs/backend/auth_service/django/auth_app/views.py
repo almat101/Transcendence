@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, logout
+from django.contrib.auth import authenticate, login, logout
 from .serializers import CustomTokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 import base64
@@ -72,6 +72,8 @@ def login_view(request):
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
+    login(request, user)
+
     response = Response({
         'access': access_token,
     }, status=status.HTTP_200_OK)
@@ -85,6 +87,7 @@ def login_view(request):
         samesite='Lax',  # Prevents CSRF attacks
         max_age=7 * 24 * 60 * 60,  # Match the refresh token lifetime (7 days in your settings)
     )
+
     return response
 
 """
