@@ -25,7 +25,7 @@ def oauth2_login(request):
         f"redirect_uri={config['REDIRECT_URI']}&"
         f"response_type=code&"
         f"scope={config['SCOPE']}&"
-        f"state=a_very_long_random_string_witchmust_be_unguessable"
+        f"state={config['STATE']}"
     )
 
     return Response({'authorization_url': auth_url})

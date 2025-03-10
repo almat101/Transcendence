@@ -29,6 +29,7 @@ DB_HOST = os.getenv('POSTGRES_AUTH_HOST')
 DB_PORT = os.getenv('POSTGRES_PORT')
 CLIENT42_ID = os.getenv('42_CLIENT_ID')
 CLIENT42_SECRET = os.getenv('42_CLIENT_SECRET')
+CLIENT42_STATE = os.getenv('42_STATE')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -186,7 +187,8 @@ OAUTH2_PROVIDERS = {
     '42': {
         'CLIENT_ID': CLIENT42_ID,
         'CLIENT_SECRET': CLIENT42_SECRET,
-        'REDIRECT_URI': 'https://localhost/api/oauth/callback',
+        'STATE': CLIENT42_STATE,
+        'REDIRECT_URI': 'https://localhost/',
         'AUTHORIZATION_URL': 'https://api.intra.42.fr/oauth/authorize',
         'TOKEN_URL': 'https://api.intra.42.fr/oauth/token',
         'USER_INFO_URL': 'https://api.intra.42.fr/v2/me',

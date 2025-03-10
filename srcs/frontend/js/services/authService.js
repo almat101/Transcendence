@@ -100,7 +100,7 @@ export const authService = {
 	async handleOAuthCallback(code) {
 		try {
 			const response = await fetch(`/api/oauth/42/callback`, {
-				method: 'GET',
+				method: 'POST',
 				credentials: 'include',
 				body: JSON.stringify({
 					code: code
@@ -111,6 +111,7 @@ export const authService = {
 
 			if (response.ok) {
 				tokenService.setAccessToken(data.access);
+				await this.fetchAndStoreUserData(); // Add this line
 				return { success: true };
 			}
 
