@@ -2,7 +2,7 @@ import { Ball } from './ball.js';
 import { Paddle } from './paddle.js';
 
 
-export function gameLoop(canvas, endGameCallback, player1Name = 'Player 1', player2Name = 'Player 2', isCpu = false) {
+export function gameLoop(canvas, endGameCallback, player1Name, player2Name, isCpu = false) {
 	const ctx = canvas.getContext('2d');
 	const ball = new Ball(canvas.width / 2, canvas.height / 2, 10, 4, 3, canvas);
 	const paddle1 = new Paddle(canvas, 10, 'w', 's');

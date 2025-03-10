@@ -11,9 +11,8 @@ import { renderOAuthCallbackPage } from "./pages/oauthCallback.js";
 import { tokenService } from "./services/authService.js";
 import { authService } from "./services/authService.js";
 import { userService } from "./services/userService.js";
+import { renderProfilePage } from "./pages/profile.js";
 //import { navigateTo } from "./router.js";
-
-console.log("register triggered")
 
 // Register routes
 registerRoute("/", renderHomePage);
@@ -25,6 +24,8 @@ registerRoute("/404", renderPageNotFound);
 registerRoute("/settings", renderSettingsPage);
 registerRoute("/logout", renderLogoutPage);
 registerRoute("/oauth/callback", renderOAuthCallbackPage);
+registerRoute("/profile", renderProfilePage);
+
 
 if (tokenService.getAccessToken() && !userService.hasUserData()) {
     authService.fetchAndStoreUserData();

@@ -18,7 +18,7 @@ clean :
 
 #clean the local volume binded to host folder
 lv-clean:
-	rm -rf /home/${USER}/Desktop/Transcendence/srcs/proxy/logs/*
+	sudo rm -rf /home/${USER}/Desktop/Transcendence/srcs/proxy/logs/*
 #	sudo rm -rf /home/${USER}/data/postgres/
 #	sudo rm -rf /home/${USER}/data/postgres_grafana/
 
