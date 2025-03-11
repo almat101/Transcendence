@@ -35,7 +35,7 @@ export class Ball {
 		const speedIncreaseFactor = 1.05;
 		this.speedX *= speedIncreaseFactor;
 		this.speedY *= speedIncreaseFactor;
-		console.log("%cSpeed increased to: ", "color: green;", this.speedX, this.speedY);
+		// console.log("%cSpeed increased to: ", "color: green;", this.speedX, this.speedY);
 	}
 
 	// Reset the ball to the center of the canvas

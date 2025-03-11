@@ -23,6 +23,15 @@ services:
         condition: service_healthy
       tournament-service:
         condition: service_healthy
+      #ELK
+      kibana:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+      es02:
+        condition: service_healthy
+      es03:
+        condition: service_healthy
     volumes:
       - ./media:/app/media:rw
       - ./proxy/logs:/var/log/nginx
@@ -256,7 +265,11 @@ services:
     build:
       context: ./backend/tournament-service
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+    command: >
+      bash -c "python manage.py makemigrations &&
+               python manage.py migrate &&
+               gunicorn tournament.wsgi:application --bind 0.0.0.0:8003 --workers=3"
     env_file:
       - .env
     restart: unless-stopped
@@ -298,7 +311,11 @@ services:
     build:
       context: ./backend/history
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    command: >
+      bash -c "python manage.py makemigrations &&
+               python manage.py migrate &&
+               gunicorn history_service.wsgi:application --bind 0.0.0.0:8002 --workers=3"
     env_file:
       - .env
     restart: unless-stopped
@@ -334,6 +351,264 @@ services:
     networks:
       - internal
 
+#ELK STACK
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: setup
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    command: /usr/share/elasticsearch/setup.sh
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - ./ELK/setup.sh:/usr/share/elasticsearch/setup.sh:ro
+      - ./ELK/elasticsearch/config/elastic:/usr/share/elasticsearch/config/elastic
+    user: "0"
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+    networks:
+      - internal
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: es01
+    labels:
+      co.elastic.logs/module: elasticsearch
+    environment:
+      - network.host=0.0.0.0
+      - ES_JAVA_OPTS=-Xmx512m -Xms512m
+      - node.name=es01
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es01/es01.key
+      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es01/es01.key
+      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - es_data01:/usr/share/elasticsearch/data
+    depends_on:
+      setup:
+        condition: service_healthy
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
+          # "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200/_cat/health | grep -E 'green|yellow'"
+          # "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200/_cluster/health | grep -E '\"status\":\"(green|yellow)'",
+          # "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+      # start_period: 60s
+    networks:
+      - internal
+
+  es02:
+    depends_on:
+      es01:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: es02
+    labels:
+      co.elastic.logs/module: elasticsearch
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - es_data02:/usr/share/elasticsearch/data
+    environment:
+      - network.host=0.0.0.0
+      - ES_JAVA_OPTS=-Xmx512m -Xms512m
+      - node.name=es02
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es02/es02.key
+      - xpack.security.http.ssl.certificate=certs/es02/es02.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es02/es02.key
+      - xpack.security.transport.ssl.certificate=certs/es02/es02.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+            "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - internal
+
+
+  es03:
+    depends_on:
+      es01:
+        condition: service_healthy
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: es03
+    labels:
+      co.elastic.logs/module: elasticsearch
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - es_data03:/usr/share/elasticsearch/data
+    environment:
+      - network.host=0.0.0.0
+      - ES_JAVA_OPTS=-Xmx512m -Xms512m
+      - node.name=es03
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es03/es03.key
+      - xpack.security.http.ssl.certificate=certs/es03/es03.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es03/es03.key
+      - xpack.security.transport.ssl.certificate=certs/es03/es03.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
+
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - internal
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    labels:
+      co.elastic.logs/module: kibana
+    environment:
+      - SERVERNAME=kibana
+      - SERVER_PUBLICBASEURL=https://localhost/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+      - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_REPORTING_ROLES_ENABLED=false
+      - XPACK_REPORTING_KIBANASERVER_HOSTNAME=localhost
+    volumes:
+      - certs:/usr/share/kibana/config/certs
+      - ./ELK/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kibana_data:/usr/share/kibana/data
+    depends_on:
+      es01:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f -k https://localhost:5601/kibana/api/status || exit 1"
+          # "curl -s -I -k https://localhost:5601/kibana/api/status | grep 'HTTP/1.1 200 OK'"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    mem_limit: ${KB_MEM_LIMIT}
+    networks:
+      - internal
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    container_name: logstash
+    labels:
+      co.elastic.logs/module: logstash
+    environment:
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+      - NODE_NAME="logstash"
+      - xpack.monitoring.enabled=false
+      - ELASTIC_USER=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_HOSTS=https://es01:9200
+    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    user: root
+    volumes:
+      - ./ELK/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./ELK/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
+      - logstash_data:/usr/share/logstash/data
+      - certs:/usr/share/logstash/certs
+    depends_on:
+      es01:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    mem_limit: ${LS_MEM_LIMIT}
+    networks:
+      - internal
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    container_name: filebeat
+    labels:
+      co.elastic.logs/module: filebeat
+    environment:
+      - container
+    volumes:
+      - ./ELK/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./proxy/logs:/var/log/nginx  # Mount logs
+      - certs:/usr/share/filebeat/certs
+    depends_on:
+      - logstash
+    networks:
+      - internal
+
+
 networks:
   internal:
     driver: bridge
@@ -347,3 +622,10 @@ volumes:
   alertmanager_data:
   postgres_tournament:
   postgres_history:
+  #ELK
+  certs:
+  es_data01:
+  es_data02:
+  es_data03:
+  kibana_data:
+  logstash_data:
