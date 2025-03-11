@@ -204,7 +204,7 @@ export async function update_tournament(tournamentId, total_players, user_final_
 
 		// Optionally, you can handle the success response here
 		const data = await response.json();
-		console.log('Tournament updated successfully:', data);
+		// console.log('Tournament updated successfully:', data);
 	} catch (error) {
 		console.log("Error updating tournament game data.", error);
 	}

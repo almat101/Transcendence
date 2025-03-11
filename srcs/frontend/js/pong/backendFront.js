@@ -73,7 +73,7 @@ export async function deleteUser(loserName) {
 		}
 
 		const remainingUsers = await response.json();
-		console.log('Remaining Users:', remainingUsers);
+		// console.log('Remaining Users:', remainingUsers);
 	} catch (error) {
 		console.error('Error deleting user:', error);
 		alert(`Failed to delete user: ${error.message}`);

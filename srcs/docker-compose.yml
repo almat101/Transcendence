@@ -265,7 +265,11 @@ services:
     build:
       context: ./backend/tournament-service
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+    command: >
+      bash -c "python manage.py makemigrations &&
+               python manage.py migrate &&
+               gunicorn tournament.wsgi:application --bind 0.0.0.0:8003 --workers=3"
     env_file:
       - .env
     restart: unless-stopped
@@ -307,7 +311,11 @@ services:
     build:
       context: ./backend/history
       dockerfile: Dockerfile
-    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    command: >
+      bash -c "python manage.py makemigrations &&
+               python manage.py migrate &&
+               gunicorn history_service.wsgi:application --bind 0.0.0.0:8002 --workers=3"
     env_file:
       - .env
     restart: unless-stopped
@@ -389,8 +397,6 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
-    ports:
-      - 9201:9200
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
       - es_data01:/usr/share/elasticsearch/data
@@ -429,8 +435,6 @@ services:
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
       - es_data02:/usr/share/elasticsearch/data
-    ports:
-      - 9202:9200
     environment:
       - network.host=0.0.0.0
       - ES_JAVA_OPTS=-Xmx512m -Xms512m
@@ -480,8 +484,6 @@ services:
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
       - es_data03:/usr/share/elasticsearch/data
-    ports:
-      - 9203:9200
     environment:
       - network.host=0.0.0.0
       - ES_JAVA_OPTS=-Xmx512m -Xms512m
@@ -538,8 +540,6 @@ services:
       - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
       - XPACK_REPORTING_ROLES_ENABLED=false
       - XPACK_REPORTING_KIBANASERVER_HOSTNAME=localhost
-    ports:
-      - ${KIBANA_PORT}:5601
     volumes:
       - certs:/usr/share/kibana/config/certs
       - ./ELK/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
@@ -581,8 +581,6 @@ services:
       - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
       - logstash_data:/usr/share/logstash/data
       - certs:/usr/share/logstash/certs
-    ports:
-      - "5044:5044"
     depends_on:
       es01:
         condition: service_healthy
