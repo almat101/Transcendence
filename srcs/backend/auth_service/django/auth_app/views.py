@@ -501,6 +501,8 @@ def verify_2fa_login(request):
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
+    login(request, user)
+
     response = Response({
         'access': access_token,
     }, status=status.HTTP_200_OK)
