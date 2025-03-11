@@ -1,0 +1,10 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/*.log
+  fields:
+    service: nginx  # Add a field to identify these logs
+
+output.logstash:
+  hosts: ["logstash:5044"] # Address and port of your Logstash instance

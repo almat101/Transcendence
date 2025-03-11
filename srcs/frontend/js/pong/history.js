@@ -265,9 +265,7 @@ export async function cleanupInvalidTournaments() {
             throw new Error(errorData.error || 'Failed to cleanup invalid tournaments.');
         }
 
-        if (response.status === 204) {
-            console.log('No content returned from cleanup endpoint.');
-        } else {
+        if (response.status !== 204) {
             const data = await response.json();
             console.log(data.detail);
         }

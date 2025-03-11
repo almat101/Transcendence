@@ -7,3 +7,4 @@ psycopg
 django-cors-headers # cors
 django-watchman
 django-prometheus
+gunicorn
