@@ -32,7 +32,7 @@ A next-generation Pong experience with tournaments, AI opponents, and advanced w
 
 
 ## 🛠️ Services Documentation
-
+<!---
 ### Game Services
 | Service          | Technology     | Description                                  |
 |-------------------|----------------|----------------------------------------------|
@@ -46,6 +46,20 @@ A next-generation Pong experience with tournaments, AI opponents, and advanced w
 | Auth Service      | JWT/Django     | Handles 2FA, login, and session management   |
 | User Service      |  Django        | Manages profiles, friends                    |
 | Match History     | PostgreSQL     | Stores game results and player performance   |
+--->
+
+<p align="center"> 
+<img src="https://skillicons.dev/icons?i=nginx" alt="nginx" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=docker" alt="docker" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=django" alt="django" width="40" height="40"/>
+<img src="https://skillicons.dev/icons?i=postgres" alt="postgres" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=bootstrap" alt="bootstrap" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=js" alt="js" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=threejs" alt="threejs" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=prometheus" alt="prometheus" width="40" height="40"/>
+<img src="https://skillicons.dev/icons?i=grafana" alt="grafana" width="40" height="40"/> 
+<img src="https://skillicons.dev/icons?i=elasticsearch" alt="elasticsearch" width="40" height="40"/> 
+</p>
 
 ### Infrastructure
 ```mermaid
@@ -90,10 +104,10 @@ graph TD
     end
 
     subgraph "📊 Monitoring"
-        Proxy -->|"GET /grafana/ HTTP/1.1 3000"| Grafana[("📈 Grafana
+        Proxy -->|"/grafana/ HTTP/1.1 3000"| Grafana[("📈 Grafana
         @ :3000
         ▪️ Dashboards")]
-        Proxy -->|"GET /prometheus/ HTTP/1.1 9090"| Prometheus[("📡 Prometheus
+        Proxy -->|"/prometheus/ HTTP/1.1 9090"| Prometheus[("📡 Prometheus
         @ :9090
         ▪️ Metrics storage")]
         Prometheus -->|"Scrape HTTP/1.1"| NodeExporter[("🖥️ Node Exporter
@@ -147,20 +161,21 @@ graph TD
     class Kibana,Elasticsearch elk;
     class Adminer utility;
 ```
-### Monitoring Stack
+### 🚦 Monitoring Stack
 Monitoring Architecture
 
 ### 🚀 Getting Started
-Prerequisites
 
-Docker 20.10+
+#### Prerequisites
 
-Installation
+- 🐋 Docker
+
+#### Installation
 ```bash
 Copy
-git clone https://github.com/yourusername/ft_transcendence.git
-cd ft_transcendence
-sudo make
+git clone https://github.com/OsemaFadhel/Transcendence.git
+cd Transcendence
+make
 ```
 
 <!---📸 Screenshots
@@ -183,4 +198,4 @@ User Profile	Profile
 🔍 Input Sanitization
 
 🌟 Contributors </br>
-[Osema F](https://github.com/OsemaFadhel) | [almat101](https://github.com/almat101) | [NicoTerabyte](https://github.com/NicoTerabyte)
+[Osema F 🔐](https://github.com/OsemaFadhel) | [almat101 🕵🏻](https://github.com/almat101) | [NicoTerabyte 👾](https://github.com/NicoTerabyte)
