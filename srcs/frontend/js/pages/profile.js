@@ -109,7 +109,7 @@ export async function renderProfilePage() {
         localGamesTableBody.innerHTML = '';
         if (localGames.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="4" class="text-center">No local games found.</td>`;
+            row.innerHTML = `<td colspan="5" class="text-center">No local games found.</td>`;
             localGamesTableBody.appendChild(row);
         } else {
             localGames.forEach(game => {
@@ -140,7 +140,7 @@ export async function renderProfilePage() {
         tournamentGamesTableBody.innerHTML = '';
         if (tournamentGames.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="5" class="text-center">No tournament games found.</td>`;
+            row.innerHTML = `<td colspan=6" class="text-center">No tournament games found.</td>`;
             tournamentGamesTableBody.appendChild(row);
         } else {
             tournamentGames.forEach(game => {
@@ -172,7 +172,7 @@ export async function renderProfilePage() {
         tournamentSummaryTableBody.innerHTML = '';
         if (tournamentSummary.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="3" class="text-center">No tournament summary found.</td>`;
+            row.innerHTML = `<td colspan="4" class="text-center">No tournament summary found.</td>`;
             tournamentSummaryTableBody.appendChild(row);
         } else {
             tournamentSummary.forEach(game => {

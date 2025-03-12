@@ -109,6 +109,16 @@ def cleanup_invalid_tournaments(request):
         invalid_tournaments = Match_tournament.objects.filter(total_players=0)
         count = invalid_tournaments.count()
         invalid_tournaments.delete()
-        return Response({"detail": f"Deleted {count} invalid tournaments."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+# @api_view(['DELETE'])
+# def cleanup_invalid_tournaments(request):
+#     try:
+#         invalid_tournaments = Match_tournament.objects.filter(total_players=0)
+#         invalid_tournaments.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+#     except Exception as e:
+#         return Response({"detail": "Service Unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

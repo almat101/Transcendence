@@ -22,7 +22,6 @@ export function showMenu(start1v1Callback, startTournamentCallback, startCpuGame
 
 	// 1v1 mode
 	newStart1v1Button.addEventListener('click', () => {
-	  console.log('Start 1v1 Game Button Clicked');
 	  menu.style.display = 'none';
 	  start1v1Callback();
 	});

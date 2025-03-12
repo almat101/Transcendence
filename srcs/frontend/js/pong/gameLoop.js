@@ -19,7 +19,7 @@ export function gameLoop(canvas, endGameCallback, player1Name, player2Name, isCp
 	function updateScores() {
 		// i reduce the ball speed of 20%
 		if ((ball.speedX > 4 && ball.speedY > 3 ) || (-ball.speedX > 4 && -ball.speedY > 3) ){
-			console.log("%cSpeed decreased to: ", "color: red;", ball.speedX, ball.speedY);
+			// console.log("%cSpeed decreased to: ", "color: red;", ball.speedX, ball.speedY);
 			ball.speedX = ball.speedX < 0 ? -ball.speedX * 0.8 : ball.speedX * 0.8;
 			ball.speedY = ball.speedY < 0 ? -ball.speedY * 0.8 : ball.speedY * 0.8;
 		}
