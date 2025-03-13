@@ -599,6 +599,38 @@ def respond_to_friend_request(request):
         status=status.HTTP_200_OK
     )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_friend(request):
+    """Remove a friend relationship"""
+    friend_id = request.data.get('id')
+
+    if not friend_id:
+        return Response(
+            {'error': 'Friend ID is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friend = get_object_or_404(UserProfile, id=friend_id)
+
+    friend_request = Friends.objects.filter(
+        (models.Q(user=request.user, friend=friend) |
+         models.Q(user=friend, friend=request.user)),
+        status='accepted'
+    ).first()
+
+    if not friend_request:
+        return Response(
+            {'error': 'No friend relationship found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    friend_request.delete()
+    return Response(
+        {'message': 'Friend removed successfully'},
+        status=status.HTTP_200_OK
+    )
+
 """
 Retrieve a list of accepted friends for the authenticated user.
 

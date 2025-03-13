@@ -140,7 +140,7 @@ export function renderSignupPage() {
         showAlert('Signup successful! Redirecting to login page...', 'success');
         setTimeout(() => {
           window.location.href = '/login';
-        }, 2000);
+        }, 1000);
       } else {
         // Handle different error cases
         if (data.username) {

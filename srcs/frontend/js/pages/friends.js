@@ -193,9 +193,40 @@ function displayFriendsList(friends) {
                      class="friend-avatar">
                 <span class="friend-name">${friend.username}</span>
             </div>
+            <button class="btn btn-sm btn-outline-danger"
+                    onclick="event.stopPropagation(); removeFriend('${friend.id}')">
+                Remove Friend
+            </button>
             <span class="status-indicator ${friend.is_online ? 'online' : 'offline'}"></span>
         </div>
     `).join('');
+}
+
+window.removeFriend = async function(userId) {
+    try {
+        const response = await fetch('/api/user/friends/remove/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokenService.getAccessToken()}`
+            },
+            body: JSON.stringify({ id: userId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to remove friend`);
+        }
+
+        showAlert(`Friend removed successfully`, 'success');
+
+        loadFriendsList();
+
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert(error.message || `Failed to remove friend`, 'danger');
+    }
 }
 
 async function performSearch(query) {
