@@ -59,6 +59,11 @@ def login_view(request):
             'error': 'Invalid credentials',
         }, status=status.HTTP_400_BAD_REQUEST)
 
+    if not user.email_verified:
+        return Response({
+            'error': 'Email is not verified',
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     # Check if 2FA is enabled for this user
     if user.has_2fa:
         # Store user ID in session to continue authentication after 2FA verification

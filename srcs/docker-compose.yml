@@ -599,7 +599,7 @@ services:
       - container
     volumes:
       - ./ELK/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers
+      #- /var/lib/docker/containers:/var/lib/docker/containers
       - /var/run/docker.sock:/var/run/docker.sock
       - ./proxy/logs:/var/log/nginx  # Mount logs
       - certs:/usr/share/filebeat/certs

@@ -1,6 +1,7 @@
 import { authService } from "../services/authService.js";
 import { navigateTo } from '../router.js';
 import { showAlert } from '../components/alert.js';
+import { EmailVerification } from '../components/emailVerification.js';
 
 export function renderLoginPage() {
   const root = document.getElementById("root");
@@ -63,7 +64,8 @@ export function renderLoginPage() {
                 </div>
               </form>
             </div>
-            <p class="mb-5">Don't have an account yet? <a href="/signup" class="fw-bold">Signup</a></p>
+            <p>Don't have an account yet? <a href="/signup" class="fw-bold">Signup</a></p>
+            <p class="mb-5">Need to verify your email? <a onclick="verifyEmail()" class="fw-bold">Send Email</a></p>
           </div>
         </div>
         <div class="col-lg-6 mb-5 mb-lg-0 d-none d-lg-block">
@@ -74,6 +76,7 @@ export function renderLoginPage() {
   `;
 
   section.innerHTML = container;
+
   root.appendChild(section);
 
   const oauthButton = document.getElementById('oauth-42');
@@ -100,4 +103,8 @@ export function renderLoginPage() {
       navigateTo("/");
     }
   });
+}
+
+window.verifyEmail = function() {
+  EmailVerification.showEmailVerificationModal();
 }
