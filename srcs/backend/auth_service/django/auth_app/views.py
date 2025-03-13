@@ -484,29 +484,35 @@ def verify_2fa_login(request):
     """Verify 2FA code during login process"""
     token = request.data.get('token')
     user_id = request.session.get('2fa_user_id')
+    print(f"2FA user ID: {request.session.get('2fa_user_id')}")
 
     if not token or not user_id:
-        return Response({'error': 'Token and session are required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Refresh the page and retry'}, status=status.HTTP_400_BAD_REQUEST)
 
     User = get_user_model()
     try:
         user = User.objects.get(id=user_id)
+        print(f"User 2FA secret: {user.twofa_secret[:5]}...")
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    totp = pyotp.TOTP(user.twofa_secret)
-    if not totp.verify(token, valid_window=1):
-        return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Clear the session
-    del request.session['2fa_user_id']
+    try:
+        totp = pyotp.TOTP(user.twofa_secret)
+        if not totp.verify(token, valid_window=1):
+            return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print(f"2FA verification error: {str(e)}")
+        return Response({'error': '2FA verification failed'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Generate tokens
     refresh = CustomTokenObtainPairSerializer.get_token(user)
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
-    login(request, user)
+    try:
+        login(request, user)
+    except Exception as e:
+        print(f"Login error: {str(e)}")
 
     response = Response({
         'access': access_token,

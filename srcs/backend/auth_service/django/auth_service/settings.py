@@ -220,7 +220,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    #'django.contrib.auth.backends.ModelBackend',  # Default backend
     'auth_app.backends.EmailOrUsernameModelBackend',  # Custom backend
 ]
 

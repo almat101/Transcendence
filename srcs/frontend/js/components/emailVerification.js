@@ -181,6 +181,7 @@ export const EmailVerification = {
                 if (response.ok) {
                     showAlert('Email verified successfully! You can now log in.', 'success');
                     modalInstance.hide();
+                    window.location.href = '/login';
                 } else {
                     // Reset loading state
                     submitBtn.disabled = false;
