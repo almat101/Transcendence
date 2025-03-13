@@ -18,6 +18,29 @@ from django.db import models
 
 # Create your views here.
 
+"""
+Handle user registration endpoint.
+
+This view handles the signup process for new users. It accepts POST requests with user
+registration data, validates it using UserCreateSerializer, and creates a new user if
+the data is valid.
+
+Args:
+    request: DRF Request object containing the registration data in request.data
+            Expected fields are defined in UserCreateSerializer
+
+Returns:
+    Response: A JSON response with:
+        - On success: 201 Created status with success message
+        - On failure: 400 Bad Request status with validation errors
+
+Permissions:
+    - AllowAny: This endpoint is publicly accessible
+
+Note:
+    Password hashing is handled automatically by the serializer.
+    Email verification functionality is currently commented out.
+"""
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup_view(request):
@@ -41,6 +64,45 @@ def signup_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+"""
+Update user password endpoint (not allowed for OAuth users).
+
+This endpoint allows authenticated users to update their password by providing their old
+password and a new password. OAuth users are not allowed to use this endpoint.
+
+Args:
+    request (Request): The HTTP request object containing user data and authentication.
+
+Returns:
+    Response: JSON response with success/error message and appropriate HTTP status code.
+        - 200 OK: Password successfully updated
+        - 400 Bad Request:
+            * If user is OAuth authenticated
+            * If old password is incorrect
+            * If password validation fails
+            * If request data is invalid
+
+Required Headers:
+    - Authorization: Bearer <token>
+
+Request Body:
+    - old_password (str): User's current password
+    - new_password (str): Desired new password
+
+Example Success Response:
+    {
+        "message": "Password updated successfully"
+    }
+
+Example Error Response:
+    {
+        "error": "OAuth users cannot update their password"
+    }
+    or
+    {
+        "error": ["Wrong password."]
+    }
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reset_password(request):
@@ -69,6 +131,29 @@ def reset_password(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+"""
+Retrieve user information based on the provided user_id or the authenticated user.
+
+This endpoint returns detailed information about a user profile. If a user_id is provided
+in the query parameters, it returns information about that specific user. Otherwise,
+it returns information about the authenticated user making the request.
+
+Args:
+    request (Request): The HTTP request object containing query parameters and user authentication.
+
+Returns:
+    Response: A JSON response containing:
+        - User profile information serialized by BaseUserSerializer
+        - 'is_self' boolean field indicating if the profile belongs to the requesting user
+        - HTTP_200_OK status on success
+
+Raises:
+    HTTP_500_INTERNAL_SERVER_ERROR: If there's an error during user info retrieval
+    HTTP_404_NOT_FOUND: If the requested user_id doesn't exist
+
+Required Permissions:
+    - IsAuthenticated: User must be authenticated to access this endpoint
+"""
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info(request):
@@ -89,7 +174,40 @@ def user_info(request):
             'error': f'Failed to fetch user info: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+"""
+Update the avatar of the authenticated user.
 
+This view handles the POST request to update a user's avatar image. It processes
+the uploaded file, manages the old avatar deletion, and saves the new avatar
+with a unique filename based on the username.
+
+Args:
+    request: The HTTP request object containing:
+        - FILES['avatar']: The uploaded avatar image file
+        - user: The authenticated user object
+
+Returns:
+    Response: A JSON response containing:
+        - On success:
+            - message: Success confirmation
+            - avatar: URL path to the new avatar
+            - status: 200 OK
+        - On validation error:
+            - Serializer validation errors
+            - status: 400 BAD REQUEST
+        - On processing error:
+            - error: Error description
+            - status: 500 INTERNAL SERVER ERROR
+
+Requires:
+    - User authentication (@IsAuthenticated)
+    - POST method
+    - MultiPart form data with 'avatar' file
+
+Note:
+    The old avatar file is deleted if it exists and is not the default avatar.
+    The new avatar filename is formatted as: avatar_username{extension}
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_avatar(request):
@@ -132,6 +250,34 @@ def update_avatar(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+"""
+Update user profile information.
+
+This view allows authenticated users to update their profile information through a PATCH request.
+The update can be partial, meaning only the fields that are provided will be updated.
+
+Args:
+    request: HTTP request object containing user data to update.
+        The request must be authenticated and can include the following fields:
+        - username (optional)
+        - email (optional)
+        - bio (optional)
+        - avatar (optional)
+
+Returns:
+    Response: A JSON response containing:
+        - message: Success message indicating what was updated
+        - user: Updated user data serialized through UserUpdateSerializer
+
+    Status codes:
+        - 200: Successful update
+        - 400: Invalid data provided
+        - 401: Unauthorized request
+
+Requires:
+    - Authentication
+    - UserUpdateSerializer
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user(request):
@@ -153,6 +299,31 @@ def update_user(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+"""Delete user account with password confirmation.
+
+This view function handles the deletion of a user account. It requires authentication
+and password confirmation for non-OAuth users.
+
+Args:
+    request: HTTP request object containing:
+        - user: The authenticated user object
+        - data: Request data containing 'password' for non-OAuth users
+        - COOKIES: Request cookies containing 'refresh_token'
+
+Returns:
+    Response object with:
+        - On success: 200 status code with success message and cleared refresh token cookie
+        - On invalid/missing password: 400 status code with error message
+        - On deletion failure: 500 status code with error message
+
+Raises:
+    Exception: If user deletion process fails
+
+Security:
+    - Requires authentication (@IsAuthenticated)
+    - Requires password confirmation for non-OAuth users
+    - Blacklists refresh token on successful deletion
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_user(request):
@@ -193,6 +364,43 @@ def delete_user(request):
             'error': 'Failed to delete account'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+"""
+Search users by username or email.
+
+This endpoint allows authenticated users to search for other users by their username or email.
+The search is case-insensitive and matches partial strings.
+
+Args:
+    request: HTTP request object containing:
+        - query_params['q']: Search query string (min 2 characters)
+
+Returns:
+    Response: A JSON response containing a list of matching users with their:
+        - id: User ID
+        - username: Username
+        - avatar: Avatar URL
+        - status: Friendship status with requesting user
+        - is_online: Online status
+
+Response Format:
+    [
+        {
+            "id": int,
+            "username": str,
+            "avatar": str,
+            "status": str,
+            "is_online": bool
+        },
+        ...
+    ]
+
+Raises:
+    400 Bad Request: If search query is less than 2 characters
+    500 Internal Server Error: If search operation fails
+
+Required Permissions:
+    - User must be authenticated
+"""
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
@@ -238,6 +446,36 @@ def search_users(request):
 
 #FRIENDS VIEWS
 
+"""
+Send a friend request to another user.
+
+This view handles the creation of friend requests between authenticated users.
+It prevents self-friending and duplicate friend requests.
+
+Args:
+    request (HttpRequest): The HTTP request object containing:
+        - id (int): The ID of the user to send the friend request to
+        - user (User): The authenticated user sending the request (from authentication)
+
+Returns:
+    Response: A JSON response with:
+        - On success (201):
+            - message: Success confirmation
+            - request: Serialized friend request data
+        - On error (400):
+            - error: Error message describing why request failed
+
+Raises:
+    Http404: If the target user does not exist
+
+Permission:
+    Requires authentication
+
+Request Body:
+    {
+        "id": integer
+    }
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_friend_request(request):
@@ -283,6 +521,33 @@ def send_friend_request(request):
         'request': serializer.data
     }, status=status.HTTP_201_CREATED)
 
+"""
+Accept or reject a friend request from another user.
+
+This endpoint handles the response to a friend request, allowing the user to either accept
+or reject a pending friend request. The requesting user must be authenticated.
+
+Args:
+    request: HTTP request object containing:
+        - id (int): The ID of the user who sent the friend request
+        - action (str): Either 'accept' or 'reject'
+
+Returns:
+    Response: A JSON response with:
+        - On success:
+            - message: Success message
+            - status: 200 OK
+        - On error:
+            - error: Error message
+            - status: 400 BAD REQUEST if invalid/missing parameters
+            - status: 404 NOT FOUND if no pending request exists
+
+Raises:
+    Http404: If the friend with given ID doesn't exist
+
+Required permissions:
+    - User must be authenticated (IsAuthenticated)
+"""
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
@@ -334,6 +599,66 @@ def respond_to_friend_request(request):
         status=status.HTTP_200_OK
     )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_friend(request):
+    """Remove a friend relationship"""
+    friend_id = request.data.get('id')
+
+    if not friend_id:
+        return Response(
+            {'error': 'Friend ID is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friend = get_object_or_404(UserProfile, id=friend_id)
+
+    friend_request = Friends.objects.filter(
+        (models.Q(user=request.user, friend=friend) |
+         models.Q(user=friend, friend=request.user)),
+        status='accepted'
+    ).first()
+
+    if not friend_request:
+        return Response(
+            {'error': 'No friend relationship found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    friend_request.delete()
+    return Response(
+        {'message': 'Friend removed successfully'},
+        status=status.HTTP_200_OK
+    )
+
+"""
+Retrieve a list of accepted friends for the authenticated user.
+
+This view returns all friendship relationships where the authenticated user
+is either the initiator or the recipient, and the friendship status is 'accepted'.
+
+Args:
+    request: The HTTP request object containing the authenticated user.
+
+Returns:
+    Response: A JSON response containing serialized friend relationships data.
+        Each relationship includes details about both users involved in the friendship.
+
+Requires:
+    - User must be authenticated (IsAuthenticated permission class)
+    - GET request method
+
+Example response:
+    [
+        {
+            "user": "user1",
+            "friend": "user2",
+            "status": "accepted",
+            "created_at": "2023-01-01T00:00:00Z"
+        },
+        ...
+    ]
+"""
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
@@ -348,6 +673,39 @@ def list_friends(request):
     return Response(serializer.data)
 
 
+
+"""
+Retrieve a list of pending friend requests for the authenticated user.
+
+This view function returns all friend requests where the authenticated user
+is the recipient and the status is 'pending'.
+
+Args:
+    request: The HTTP request object containing user authentication details.
+
+Returns:
+    Response: A JSON response containing serialized friend request data.
+        Each friend request object includes details about the requesting user
+        and the status of the request.
+
+Required Permissions:
+    - User must be authenticated (IsAuthenticated)
+
+HTTP Methods:
+    - GET: Retrieve pending friend requests
+
+Example Response:
+    [
+        {
+            "id": 1,
+            "user": {"id": 2, "username": "john_doe"},
+            "friend": {"id": 1, "username": "current_user"},
+            "status": "pending",
+            "created_at": "2023-01-01T00:00:00Z"
+        },
+        ...
+    ]
+"""
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friend_requests(request):

@@ -30,6 +30,9 @@ URL Patterns:
   /friends/respond/ (respond_to_friend_request):
     Responds to pending friend requests
 
+  /friends/remoove/ (remove_friend):
+    Removes a friend from the user's friend list
+
   /friends/list-friends/ (list_friends):
     Lists all friends of the current user
 
@@ -37,7 +40,7 @@ URL Patterns:
     Lists all pending friend requests
 """
 
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -48,11 +51,11 @@ urlpatterns = [
     path('updateuser/', views.update_user, name='update_user'),
     path('deleteuser/', views.delete_user, name='delete_user'),
     path('search/', views.search_users, name='search'),
-
-    path('friends/send/', views.send_friend_request, name='send_friend_request'),
-    path('friends/respond/', views.respond_to_friend_request, name='respond_to_friend_request'),
-  #  path('friends/block', views.block_user, name='block_user'),
-    path('friends/list-friends/', views.list_friends, name='list_friends'),
-    path('friends/requests/', views.list_friend_requests, name='list_friend_requests'),
-  #  path('friends/list_blocked_users', views.list_blocked_users, name='list_blocked_users'),
+    path('friends/', include([
+      path('send/', views.send_friend_request, name='send_friend_request'),
+      path('respond/', views.respond_to_friend_request, name='respond_to_friend_request'),
+      path('remove/', views.remove_friend, name='remove_friend'),
+      path('list-friends/', views.list_friends, name='list_friends'),
+      path('requests/', views.list_friend_requests, name='list_friend_requests'),
+    ])),
 ]

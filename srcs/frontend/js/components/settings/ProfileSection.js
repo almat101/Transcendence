@@ -26,18 +26,18 @@ export const ProfileSection = {
 
                             <form id="profileForm" class="flex-grow-1 d-flex flex-column">
                                 <div class="mb-3">
-                                    <label class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" value="${userData.username || ''}" required>
+                                    <label for"username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="${userData.username || ''}" autocomplete="off" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" value="${userData.email || ''}" required>
+                                    <label for"email"  class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" value="${userData.email || ''}" autocomplete="off" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Bio</label>
-                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''}">
+                                    <label for"bio" class="form-label">Bio</label>
+                                    <input type="bio" class="form-control" id="bio" value="${userData.bio || ''} autocomplete="off"">
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 mt-4 mb-4">Update Profile</button>

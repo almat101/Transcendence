@@ -34,22 +34,22 @@ export function renderSignupPage() {
               <form id="login-form">
                 <div class="form-outline mb-4">
                   <label class="form-label" for="username">Username</label>
-                  <input type="text" id="username" class="form-control" required />
+                  <input type="text" id="username" class="form-control" required autocomplete="username"/>
                 </div>
 
                 <div class="form-outline mb-4">
                   <label class="form-label" for="email">Email address</label>
-                  <input type="email" id="email" class="form-control" required />
+                  <input type="email" id="email" class="form-control" required autocomplete="email"/>
                 </div>
 
                 <div class="form-outline mb-4">
                   <label class="form-label" for="password">Password</label>
-                  <input type="password" id="password" class="form-control" required />
+                  <input type="password" id="password" class="form-control" required autocomplete="new-password"/>
                 </div>
 
                 <div class="form-outline mb-4">
                   <label class="form-label" for="confirm-password">Confirm Password</label>
-                  <input type="password" id="confirm-password" class="form-control" required />
+                  <input type="password" id="confirm-password" class="form-control" required autocomplete="new-password"/>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block mb-4">
@@ -140,7 +140,7 @@ export function renderSignupPage() {
         showAlert('Signup successful! Redirecting to login page...', 'success');
         setTimeout(() => {
           window.location.href = '/login';
-        }, 2000);
+        }, 1000);
       } else {
         // Handle different error cases
         if (data.username) {
