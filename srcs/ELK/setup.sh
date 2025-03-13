@@ -24,18 +24,6 @@ if [ ! -f config/certs/certs.zip ]; then
   "      - localhost\n"\
   "    ip:\n"\
   "      - 127.0.0.1\n"\
-  "  - name: es02\n"\
-  "    dns:\n"\
-  "      - es02\n"\
-  "      - localhost\n"\
-  "    ip:\n"\
-  "      - 127.0.0.1\n"\
-  "  - name: es03\n"\
-  "    dns:\n"\
-  "      - es03\n"\
-  "      - localhost\n"\
-  "    ip:\n"\
-  "      - 127.0.0.1\n"\
   "  - name: kibana\n"\
   "    dns:\n"\
   "      - kibana\n"\
@@ -77,21 +65,19 @@ curl -X PUT "https://es01:9200/_index_template/nginx_index_template" \
   -d @config/elastic/nginx_index_template.json
 echo "Index template created. Setup complete!";
 
-sleep 10;
+sleep 15;
 
-# echo "Creating index pattern..."
-# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import?createNewCopies=true" \
+# echo "Importing nginx Dashboard..."
+# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
 #   -H "kbn-xsrf: true" \
-#   --form "file=@/usr/share/elasticsearch/config/elastic/export_index_pattern.ndjson" \
+#   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard.ndjson" \
 #   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
-# echo "Index pattern created!"
-
-# sleep 3;
+# echo "Nginx dashboard imported!"
 
 echo "Importing nginx Dashboard..."
-curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import?createNewCopies=true" \
+curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
   -H "kbn-xsrf: true" \
-  --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_last.ndjson" \
+  --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_3.ndjson" \
   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 echo "Nginx dashboard imported!"
 
