@@ -19,6 +19,9 @@ COPY conf/nginx.conf /etc/nginx/nginx.conf
 # Copy Nginx conf.d
 COPY conf.d/gateway.conf /etc/nginx/conf.d/
 
+# Copy frontend directory into var/www/html of the container
+COPY frontend /var/www/html
+
 # Enable ModSecurity in Nginx
 # RUN ln -s /etc/nginx/modsec/modsecurity.conf /etc/nginx/modsec/modsecurity-enabled.conf
 
