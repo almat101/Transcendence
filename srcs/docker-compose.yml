@@ -486,8 +486,6 @@ services:
     networks:
       - internal
 
-
-
 networks:
   internal:
     driver: bridge

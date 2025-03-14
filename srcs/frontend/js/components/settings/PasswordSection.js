@@ -10,17 +10,17 @@ export const PasswordSection = {
                             <h3 class="card-title mb-4">Change Password</h3>
                             <form id="passwordForm">
                                 <div class="mb-3">
-                                    <label class="form-label">Current Password</label>
+                                    <label for"currentPassword"  class="form-label">Current Password</label>
                                     <input type="password" class="form-control" id="currentPassword" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">New Password</label>
+                                    <label for"newPassword" class="form-label">New Password</label>
                                     <input type="password" class="form-control" id="newPassword" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Re-type New Password</label>
+                                    <label for"confirmPassword" class="form-label">Re-type New Password</label>
                                     <input type="password" class="form-control" id="confirmPassword" required>
                                 </div>
 
