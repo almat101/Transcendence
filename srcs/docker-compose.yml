@@ -506,5 +506,6 @@ volumes:
   es_data01:
   # es_data02:
   # es_data03:
+  #####
   kibana_data:
   logstash_data:
