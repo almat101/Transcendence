@@ -16,6 +16,11 @@ from .serializers import (
 from .models import UserProfile, Friends
 from django.db import models
 
+from .utils import generate_otp, verify_otp
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+
 # Create your views here.
 
 """
@@ -49,13 +54,25 @@ def signup_view(request):
     if serializer.is_valid():
         user = serializer.save()  # No need to hash password, serializer handles it
 
-        '''
-        create otp code and send email
+        # Send email verification
+        email_otp = generate_otp()
+        user.email_otp = email_otp
+        user.save()
 
-        token = RefreshToken.for_user(user)
-        email = EmailMessage('Verify your email', 'Your OTP code is: ' + token, to=[user.email])
-        email.send()
-        '''
+        try:
+            send_mail(
+                'TRANSCENDENCE -- Email Verification OTP',
+                f'Your OTP for email verification is: {email_otp}',
+                settings.EMAIL_HOST_USER,
+                [user.email],
+                fail_silently=False,
+            )
+            request.session['id'] = user.id
+        except Exception as e:
+            user.delete()
+            return Response({
+                'error': 'Failed to send verification email. Please try again.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({
             'message': 'User created successfully',
@@ -63,6 +80,64 @@ def signup_view(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email_otp(request):
+    user = UserProfile.objects.get(id=request.session['id'])
+    email_otp = request.data.get('email_otp')
+
+    if verify_otp(email_otp, user.email_otp):
+        user.email_verified = True
+        user.email_otp = None
+        user.save()
+        return Response({
+            'message': 'Email verified successfully',
+        }, status=status.HTTP_200_OK)
+
+    del request.session['id']
+
+    return Response({
+        'error': 'Invalid OTP'
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_email_otp(request):
+    email = request.data.get('email')
+    try:
+        user = UserProfile.objects.get(email=email)
+    except UserProfile.DoesNotExist:
+        return Response({
+            'error': 'User not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    if (user.email_verified):
+        return Response({
+            'error': 'Email already verified'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    email_otp = generate_otp()
+    user.email_otp = email_otp
+    user.save()
+
+    try:
+        send_mail(
+            'TRANSCENDENCE -- Email Verification OTP',
+            f'Your OTP for email verification is: {email_otp}',
+            settings.EMAIL_HOST_USER,
+            [user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        return Response({
+            'error': 'Failed to send verification email. Please try again.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    request.session['id'] = user.id
+
+    return Response({
+        'message': 'Email OTP resent successfully',
+    }, status=status.HTTP_200_OK)
 
 """
 Update user password endpoint (not allowed for OAuth users).

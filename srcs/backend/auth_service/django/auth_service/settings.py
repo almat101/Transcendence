@@ -30,6 +30,8 @@ DB_PORT = os.getenv('POSTGRES_PORT')
 CLIENT42_ID = os.getenv('42_CLIENT_ID')
 CLIENT42_SECRET = os.getenv('42_CLIENT_SECRET')
 CLIENT42_STATE = os.getenv('42_STATE')
+EMAIL_HOST_USER = os.getenv('ALERTMANAGER_EMAIL')
+EMAIL_HOST_PASSWORD = os.getenv('ALERTMANAGER_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -39,12 +41,12 @@ ALLOWED_HOSTS = ['localhost', 'auth-service']
 
 AUTH_USER_MODEL = 'user_app.UserProfile'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_HOST_USER = 'youremail@gmail.com'
-# EMAIL_HOST_PASSWORD = 'email_password'
-# EMAIL_PORT = 587
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your email provider's SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
@@ -218,7 +220,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    #'django.contrib.auth.backends.ModelBackend',  # Default backend
     'auth_app.backends.EmailOrUsernameModelBackend',  # Custom backend
 ]
 

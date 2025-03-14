@@ -1,5 +1,6 @@
 import { showAlert } from '../components/alert.js';
 import { authService } from '../services/authService.js';
+import { EmailVerification } from '../components/emailVerification.js';
 
 export function renderSignupPage() {
   const root = document.getElementById("root");
@@ -52,8 +53,9 @@ export function renderSignupPage() {
                   <input type="password" id="confirm-password" class="form-control" required autocomplete="new-password"/>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block mb-4">
-                  Sign up
+                <button id="signupbutt" type="submit" class="btn btn-primary btn-block mb-4">
+                  <span class="spinner-border spinner-border-sm d-none" id="subSpinner" role="status" aria-hidden="true"></span>
+                  Signup
                 </button>
 
                 <div class="text-center">
@@ -64,7 +66,8 @@ export function renderSignupPage() {
                 </div>
               </form>
             </div>
-            <p class="mb-5">Already have an account? <a href="/login" class="fw-bold">Login</a></p>
+            <p>Already have an account? <a href="/login" class="fw-bold">Login</a></p>
+            <p class="mb-5">Need to verify your email? <a onclick="verifyEmail()" class="fw-bold">Send Email</a></p>
           </div>
         </div>
         <div class="col-lg-6 mb-5 mb-lg-0 d-none d-lg-block">
@@ -119,6 +122,13 @@ export function renderSignupPage() {
       return;
     }
 
+    // Show loading state
+    const submitBtn = document.getElementById('signupbutt');
+    const spinner = document.getElementById('subSpinner');
+
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+
     try {
       const response = await fetch('/api/user/signup/', {
         method: 'POST',
@@ -137,12 +147,17 @@ export function renderSignupPage() {
       const data = await response.json();
 
       if (response.ok) {
-        showAlert('Signup successful! Redirecting to login page...', 'success');
+        showAlert('Account created! Please verify your email.', 'success');
         setTimeout(() => {
-          window.location.href = '/login';
-        }, 1000);
+          EmailVerification.showOTPVerificationModal(email);
+        }, 500);
+        submitBtn.disabled = false;
+        spinner.classList.add('d-none');
       } else {
         // Handle different error cases
+        submitBtn.disabled = false;
+        spinner.classList.add('d-none');
+
         if (data.username) {
           showAlert(data.username);
         } else if (data.email) {
@@ -158,8 +173,11 @@ export function renderSignupPage() {
       }
     } catch (error) {
       console.error('Error:', error);
+
+      submitBtn.disabled = false;
+      spinner.classList.add('d-none');
+
       showAlert('Something went wrong. Please try again later.', 'danger');
     }
   });
 }
-
