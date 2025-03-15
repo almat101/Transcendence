@@ -29,7 +29,7 @@ services:
       # es01:
       #   condition: service_healthy
     volumes:
-      - ./media:/app/media:rw 
+      - media:/app/media:rw 
       - ./proxy/logs:/var/log/nginx
     healthcheck:
       test: ["CMD-SHELL", "curl -f -k https://localhost:8090 || exit 1"]
@@ -63,7 +63,7 @@ services:
       - .env
     restart: unless-stopped
     volumes:
-      - ./media:/app/media:rw  # Shared volume with read/write access
+      - media:/app/media:rw  # Shared volume with read/write access
     depends_on:
       auth_db:
         condition: service_healthy
@@ -111,6 +111,39 @@ services:
   #     - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
   #     - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
   #     - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
+  #     # - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
+  #   depends_on:
+  #     prometheus:
+  #       condition: service_healthy
+  #     grafana_db:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - internal
+
+  # grafana:
+  #   image: grafana
+  #   build:
+  #     context: ./monitoring/grafana
+  #     dockerfile: Dockerfile
+  #   container_name: grafana
+  #   env_file: ".env"
+  #   restart: unless-stopped
+  #   environment:
+  #     - GF_SERVER_ROOT_URL=https://localhost/grafana/
+  #     - GF_SERVER_SERVE_FROM_SUB_PATH="true"
+  #   # volumes:
+  #   #   - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
+  #   #   - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+  #   #   - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+  #   #   - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
+  #   #   - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
+  #   #   - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
   #     # - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
   #   depends_on:
   #     prometheus:
@@ -174,6 +207,37 @@ services:
   #   networks:
   #     - internal
 
+# #TODO add retention policy to prometheus container
+  # prometheus:
+  #   image: prometheus
+  #   build:
+  #     context: ./monitoring/prometheus
+  #     dockerfile: Dockerfile
+  #   container_name: prometheus
+  #   restart: unless-stopped
+  #   volumes:
+  #     # - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     # - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
+  #     # - ./monitoring/prometheus/rules_2.yml:/etc/prometheus/rules_2.yml
+  #     # - ./monitoring/prometheus/rules_3.yml:/etc/prometheus/rules_3.yml
+  #     # - ./monitoring/prometheus/rules_4.yml:/etc/prometheus/rules_4.yml
+  #     - prometheus_data:/prometheus/data
+  #   # command:
+  #   #   - '--config.file=/etc/prometheus/prometheus.yml'
+  #   #   - '--storage.tsdb.path=/prometheus'
+  #   #   - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
+  #   depends_on:
+  #     auth-service:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - internal
+
 
   # node-exporter:
   #   image: prom/node-exporter:v1.8.2
@@ -192,7 +256,7 @@ services:
   #     timeout: 10s
   #   networks:
   #     - internal
-
+#TODO remove slack api, add a script that create alertmanager.yml file with the slack api key from env file
   # alertmanager:
   #   image: prom/alertmanager:v0.28.0
   #   container_name: alertmanager
@@ -504,3 +568,4 @@ volumes:
   es_data01:
   kibana_data:
   logstash_data:
+  media:
