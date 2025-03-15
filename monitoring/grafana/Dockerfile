@@ -1,7 +1,7 @@
 FROM debian:bullseye
 
 # Install necessary packages
-RUN apt update && apt -y upgrade && apt -y install wget vim adduser libfontconfig1 musl
+RUN apt update && apt -y upgrade && apt -y install wget vim adduser libfontconfig1 musl curl
 
 # Download and install Grafana
 RUN wget https://dl.grafana.com/enterprise/release/grafana-enterprise_11.3.0+security~01_amd64.deb

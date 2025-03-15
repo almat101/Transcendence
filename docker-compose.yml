@@ -9,10 +9,10 @@ services:
     ports:
       - "8090:8090"
     depends_on:
-      # grafana:
-      #   condition: service_healthy
-      # prometheus:
-      #   condition: service_healthy
+      grafana:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
       # node-exporter:
       #   condition: service_healthy
       # alertmanager:
@@ -126,58 +126,59 @@ services:
   #   networks:
   #     - internal
 
-  # grafana:
-  #   image: grafana
-  #   build:
-  #     context: ./monitoring/grafana
-  #     dockerfile: Dockerfile
-  #   container_name: grafana
-  #   env_file: ".env"
-  #   restart: unless-stopped
-  #   environment:
-  #     - GF_SERVER_ROOT_URL=https://localhost/grafana/
-  #     - GF_SERVER_SERVE_FROM_SUB_PATH="true"
-  #   # volumes:
-  #   #   - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
-  #   #   - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-  #   #   - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-  #   #   - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
-  #   #   - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
-  #   #   - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
-  #     # - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
-  #   depends_on:
-  #     prometheus:
-  #       condition: service_healthy
-  #     grafana_db:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   networks:
-  #     - internal
+    # volumes:
+    #   - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
+    #   - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    #   - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    #   - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
+    #   - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
+    #   - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
+    #   - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
 
-  # grafana_db:
-  #   image: postgres:15
-  #   container_name: grafana_db
-  #   env_file: ".env"
-  #   environment:
-  #    - POSTGRES_USER=${POSTGRES_USER}
-  #    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #    - POSTGRES_DB=${POSTGRES_G_DB}
-  #    - POSTGRES_HOST=${POSTGRES_G_HOST}
-  #   restart: always
-  #   volumes:
-  #     - postgres_grafana:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - internal
+  grafana:
+    image: grafana
+    build:
+      context: ./monitoring/grafana
+      dockerfile: Dockerfile
+    container_name: grafana
+    env_file: ".env"
+    restart: unless-stopped
+    environment:
+      - GF_SERVER_ROOT_URL=https://localhost:8090/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      grafana_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - internal
+
+  grafana_db:
+    image: postgres:15
+    container_name: grafana_db
+    env_file: ".env"
+    environment:
+     - POSTGRES_USER=${POSTGRES_USER}
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+     - POSTGRES_DB=${POSTGRES_G_DB}
+     - POSTGRES_HOST=${POSTGRES_G_HOST}
+    restart: always
+    volumes:
+      - postgres_grafana:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
   # prometheus:
   #   image: prom/prometheus:v3.1.0
@@ -207,36 +208,36 @@ services:
   #   networks:
   #     - internal
 
-# #TODO add retention policy to prometheus container
-  # prometheus:
-  #   image: prometheus
-  #   build:
-  #     context: ./monitoring/prometheus
-  #     dockerfile: Dockerfile
-  #   container_name: prometheus
-  #   restart: unless-stopped
-  #   volumes:
-  #     # - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #     # - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
-  #     # - ./monitoring/prometheus/rules_2.yml:/etc/prometheus/rules_2.yml
-  #     # - ./monitoring/prometheus/rules_3.yml:/etc/prometheus/rules_3.yml
-  #     # - ./monitoring/prometheus/rules_4.yml:/etc/prometheus/rules_4.yml
-  #     - prometheus_data:/prometheus/data
-  #   # command:
-  #   #   - '--config.file=/etc/prometheus/prometheus.yml'
-  #   #   - '--storage.tsdb.path=/prometheus'
-  #   #   - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
-  #   depends_on:
-  #     auth-service:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   networks:
-  #     - internal
+# #TODO rember to add retention policy to prometheus container 
+  prometheus:
+    image: prometheus
+    build:
+      context: ./monitoring/prometheus
+      dockerfile: Dockerfile
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      # - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      # - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
+      # - ./monitoring/prometheus/rules_2.yml:/etc/prometheus/rules_2.yml
+      # - ./monitoring/prometheus/rules_3.yml:/etc/prometheus/rules_3.yml
+      # - ./monitoring/prometheus/rules_4.yml:/etc/prometheus/rules_4.yml
+      - prometheus_data:/prometheus/data
+    # command:
+    #   - '--config.file=/etc/prometheus/prometheus.yml'
+    #   - '--storage.tsdb.path=/prometheus'
+    #   - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - internal
 
 
   # node-exporter:
@@ -556,10 +557,11 @@ networks:
   #   driver: bridge
 
 volumes:
+#TODO check if logs works with local volume
   # proxy_logs: 
   postgres_auth:
-  # postgres_grafana:
-  # prometheus_data:
+  postgres_grafana:
+  prometheus_data:
   # alertmanager_data:
   postgres_tournament:
   postgres_history:
