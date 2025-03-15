@@ -29,6 +29,7 @@ services:
       # es01:
       #   condition: service_healthy
     volumes:
+    #TODO check if logs works bind mount or they need to be in a local volume
       - media:/app/media:rw 
       - ./proxy/logs:/var/log/nginx
     healthcheck:
