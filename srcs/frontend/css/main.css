@@ -180,6 +180,7 @@ canvas {
   border: 2px solid #fff;
   border-radius: 10px;
   cursor: pointer;
+  z-index: 10; /* only for 3d canvas i'm testing out*/
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -205,3 +206,47 @@ you don't need to specify the id of the button
   font-family: 'Press Start 2P', cursive !important;
 }
 
+
+#gameCanvas3dContainer {
+  position: relative;
+}
+
+/* */
+
+#gameOver
+{
+  font-family: 'Press Start 2P', cursive; /* Use pixel art font */
+  font-size: 24px;
+  padding: 15px 30px;
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 10; /* only for 3d canvas i'm testing out*/
+  transition: background-color 0.3s, color 0.3s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+#gameCanvas3dContainer
+{
+    text-align: center;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    position: fixed;
+    width: 100%;
+}
+
+#gameCanvas3dContainer button:hover
+{
+  background-color: #fff;
+  color: #000;
+}
