@@ -11,5 +11,7 @@ COPY config/elastic/ /usr/share/elasticsearch/config/elastic/
 RUN chmod +x /usr/share/elasticsearch/setup.sh
 
 
+USER elasticsearch
+
 # Define the command to run
 CMD ["/usr/share/elasticsearch/setup.sh"]

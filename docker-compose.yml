@@ -28,9 +28,8 @@ services:
       es01:
         condition: service_healthy
     volumes:
-    #TODO check if logs works bind mount or they need to be in a local volume
       - media:/app/media:rw 
-      - ./proxy/logs:/var/log/nginx
+      - proxy_logs:/var/log/nginx
     healthcheck:
       test: ["CMD-SHELL", "curl -f -k https://localhost:8090 || exit 1"]
       interval: 30s
@@ -377,7 +376,7 @@ services:
     command: /usr/share/elasticsearch/setup.sh
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-    user: "0"
+    # user: "0"
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
       interval: 1s
@@ -582,12 +581,9 @@ services:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://es01:9200
-    # command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-    user: root
     volumes:
-      # - ./ELK/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      # - ./ELK/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
+      # - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
+      - proxy_logs:/var/log/nginx
       - logstash_data:/usr/share/logstash/data
       - certs:/usr/share/logstash/certs
       # - proxy_logs:/var/log/nginx #mount nginx logs
@@ -636,7 +632,7 @@ networks:
 
 volumes:
 #TODO check if logs works with local volume
-  # proxy_logs: 
+  proxy_logs: 
   postgres_auth:
   postgres_grafana:
   prometheus_data:

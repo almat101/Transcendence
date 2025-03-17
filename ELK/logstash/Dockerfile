@@ -1,6 +1,7 @@
 # Use the official Logstash image from Docker Elastic
 FROM docker.elastic.co/logstash/logstash:8.16.4
 
+USER root
 # Set working directory
 WORKDIR /usr/share/logstash
 
