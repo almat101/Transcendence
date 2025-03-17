@@ -74,13 +74,20 @@ sleep 15;
 #   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 # echo "Nginx dashboard imported!"
 
+# echo "Importing nginx Dashboard..."
+# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
+#   -H "kbn-xsrf: true" \
+#   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_3.ndjson" \
+#   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
+# echo "Nginx dashboard imported!"
+
 echo "Importing nginx Dashboard..."
 curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
   -H "kbn-xsrf: true" \
-  --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_3.ndjson" \
+  --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_final.ndjson" \
   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 echo "Nginx dashboard imported!"
 
-sleep 10
+sleep 10;
 
 # tail -f /dev/null;

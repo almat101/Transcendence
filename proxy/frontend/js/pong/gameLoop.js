@@ -87,7 +87,7 @@ export function gameLoop(canvas, endGameCallback, player1Name, player2Name, isCp
 					}
 
 					predictedY = simulatedY - paddle2.height / 2;
-					predictedY += Math.random() * 130 - 65; // Add some randomness to the prediction
+					predictedY += Math.random() * 140 - 65; // Add some randomness to the prediction
 					predictedY = Math.min(Math.max(predictedY, minY), maxY);
 					lastReactionTime = currentTime;
 				}
