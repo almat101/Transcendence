@@ -13,10 +13,10 @@ services:
         condition: service_healthy
       prometheus:
         condition: service_healthy
-      # node-exporter:
-      #   condition: service_healthy
-      # alertmanager:
-      #   condition: service_healthy
+      node-exporter:
+        condition: service_healthy
+      alertmanager:
+        condition: service_healthy
       auth-service:
         condition: service_healthy
       history-service:
@@ -41,18 +41,6 @@ services:
     networks:
       - internal
 
-  # nginx-prometheus-exporter:
-  #   image: nginx/nginx-prometheus-exporter:1.4
-  #   container_name: nginx-prometheus-exporter
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - proxy
-  #   command: [
-  #     "--nginx.scrape-uri", "http://proxy:8080/stub_status",
-  #   ]
-  #   networks:
-  #     - internal
-
   auth-service:
     image: auth-service
     container_name: auth-service
@@ -64,7 +52,7 @@ services:
       - .env
     restart: unless-stopped
     volumes:
-      - media:/app/media:rw  # Shared volume with read/write access
+      - media:/app/media:rw
     depends_on:
       auth_db:
         condition: service_healthy
@@ -97,227 +85,6 @@ services:
     networks:
       - internal
 
-  # grafana:
-  #   image: grafana/grafana:11.4.0
-  #   container_name: grafana
-  #   env_file: ".env"
-  #   restart: unless-stopped
-  #   environment:
-  #     - GF_SERVER_ROOT_URL=https://localhost/grafana/
-  #     - GF_SERVER_SERVE_FROM_SUB_PATH="true"
-  #   volumes:
-  #     - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
-  #     - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-  #     - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-  #     - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
-  #     - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
-  #     - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
-  #     # - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
-  #   depends_on:
-  #     prometheus:
-  #       condition: service_healthy
-  #     grafana_db:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   networks:
-  #     - internal
-
-    # volumes:
-    #   - ./monitoring/grafana/conf/grafana.ini:/etc/grafana/grafana.ini
-    #   - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-    #   - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-    #   - ./monitoring/grafana/dashboards/django.json:/var/lib/grafana/dashboards/django.json
-    #   - ./monitoring/grafana/dashboards/django2.json:/var/lib/grafana/dashboards/django2.json
-    #   - ./monitoring/grafana/dashboards/node.json:/var/lib/grafana/dashboards/node.json
-    #   - ./grafana/logs:/var/log/grafana  # Mount host directory for logs
-
-  grafana:
-    image: grafana
-    build:
-      context: ./monitoring/grafana
-      dockerfile: Dockerfile
-    container_name: grafana
-    env_file: ".env"
-    restart: unless-stopped
-    environment:
-      - GF_SERVER_ROOT_URL=https://localhost:8090/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
-    depends_on:
-      prometheus:
-        condition: service_healthy
-      grafana_db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - internal
-
-  grafana_db:
-    image: postgres:15
-    container_name: grafana_db
-    env_file: ".env"
-    environment:
-     - POSTGRES_USER=${POSTGRES_USER}
-     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-     - POSTGRES_DB=${POSTGRES_G_DB}
-     - POSTGRES_HOST=${POSTGRES_G_HOST}
-    restart: always
-    volumes:
-      - postgres_grafana:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - internal
-
-  # prometheus:
-  #   image: prom/prometheus:v3.1.0
-  #   container_name: prometheus
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #     - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
-  #     - ./monitoring/prometheus/rules_2.yml:/etc/prometheus/rules_2.yml
-  #     - ./monitoring/prometheus/rules_3.yml:/etc/prometheus/rules_3.yml
-  #     - ./monitoring/prometheus/rules_4.yml:/etc/prometheus/rules_4.yml
-
-  #     - prometheus_data:/prometheus/data
-  #   command:
-  #     - '--config.file=/etc/prometheus/prometheus.yml'
-  #     - '--storage.tsdb.path=/prometheus'
-  #     - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
-  #   depends_on:
-  #     auth-service:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   networks:
-  #     - internal
-
-# #TODO rember to add retention policy to prometheus container 
-  prometheus:
-    image: prometheus
-    build:
-      context: ./monitoring/prometheus
-      dockerfile: Dockerfile
-    container_name: prometheus
-    restart: unless-stopped
-    volumes:
-      # - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      # - ./monitoring/prometheus/rules_1.yml:/etc/prometheus/rules_1.yml
-      # - ./monitoring/prometheus/rules_2.yml:/etc/prometheus/rules_2.yml
-      # - ./monitoring/prometheus/rules_3.yml:/etc/prometheus/rules_3.yml
-      # - ./monitoring/prometheus/rules_4.yml:/etc/prometheus/rules_4.yml
-      - prometheus_data:/prometheus/data
-    # command:
-    #   - '--config.file=/etc/prometheus/prometheus.yml'
-    #   - '--storage.tsdb.path=/prometheus'
-    #   - '--storage.tsdb.retention.time=10d'  # Retain data for 10 days
-    depends_on:
-      auth-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - internal
-
-
-  # node-exporter:
-  #   image: prom/node-exporter:v1.8.2
-  #   container_name: node-exporter
-  #   restart: unless-stopped
-  #   depends_on:
-  #    - prometheus
-  #   command:
-  #     - '--no-collector.thermal_zone'
-  #     - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)'
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget --spider http://localhost:9100 || exit 1"]
-  #     interval: 30s
-  #     retries: 3
-  #     start_period: 10s
-  #     timeout: 10s
-  #   networks:
-  #     - internal
-#TODO remove slack api, add a script that create alertmanager.yml file with the slack api key from env file
-  # alertmanager:
-  #   image: prom/alertmanager:v0.28.0
-  #   container_name: alertmanager
-  #   env_file: ".env"
-  #   restart: unless-stopped
-  #   depends_on:
-  #    - prometheus
-  #   volumes:
-  #     - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-  #     - ./monitoring/alertmanager/smtp_password.txt:/etc/alertmanager/smtp_password.txt
-  #     - alertmanager_data:/data
-  #   command:
-  #     - --config.file=/etc/alertmanager/alertmanager.yml
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget --spider http://localhost:9093 || exit 1"]
-  #     interval: 30s
-  #     retries: 3
-  #     start_period: 10s
-  #     timeout: 10s
-  #   networks:
-  #     - internal
-
-  # postgres-exporter-grafana:
-  #   image: prometheuscommunity/postgres-exporter:v0.16.0
-  #   container_name: postgres-exporter-grafana
-  #   environment:
-  #     DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@grafana_db:5432/grafana_db?sslmode=disable"
-  #   restart: unless-stopped
-  #   command:
-  #     - '--web.listen-address=:9188'
-  #   depends_on:
-  #     prometheus:
-  #       condition: service_healthy
-  #     grafana_db:
-  #       condition: service_healthy
-  #   networks:
-  #     - internal
-
-  # postgres-exporter-auth-db:
-  #   image: prometheuscommunity/postgres-exporter:v0.16.0
-  #   container_name: postgres-exporter-auth-db
-  #   environment:
-  #     DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth_db:5432/auth_db?sslmode=disable"
-  #   restart: unless-stopped
-  #   depends_on:
-  #     prometheus:
-  #       condition: service_healthy
-  #     auth_db:
-  #       condition: service_healthy
-  #   networks:
-  #     - internal
-
-  adminer:
-    image: adminer
-    container_name: adminer
-    restart: unless-stopped
-    networks:
-      - internal
-
 
   tournament-service:
     image: tournament-service
@@ -325,7 +92,6 @@ services:
     build:
       context: ./backend/tournament-service
       dockerfile: Dockerfile
-    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
     command: >
       bash -c "python manage.py makemigrations &&
                python manage.py migrate &&
@@ -371,7 +137,6 @@ services:
     build:
       context: ./backend/history
       dockerfile: Dockerfile
-    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
     command: >
       bash -c "python manage.py makemigrations &&
                python manage.py migrate &&
@@ -408,6 +173,195 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+
+  #monitoring
+  grafana:
+    image: grafana
+    build:
+      context: ./monitoring/grafana
+      dockerfile: Dockerfile
+    container_name: grafana
+    env_file: ".env"
+    restart: unless-stopped
+    environment:
+      - GF_SERVER_ROOT_URL=https://localhost:8090/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      grafana_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - internal
+
+  grafana_db:
+    image: postgres:15
+    container_name: grafana_db
+    env_file: ".env"
+    environment:
+     - POSTGRES_USER=${POSTGRES_USER}
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+     - POSTGRES_DB=${POSTGRES_G_DB}
+     - POSTGRES_HOST=${POSTGRES_G_HOST}
+    restart: always
+    volumes:
+      - postgres_grafana:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  
+  prometheus:
+    image: prometheus
+    build:
+      context: ./monitoring/prometheus
+      dockerfile: Dockerfile
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - prometheus_data:/prometheus/data
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - internal
+
+  node-exporter:
+    image: node-exporter
+    build:
+      context: ./monitoring/node-exporter
+      dockerfile: Dockerfile
+    container_name: node-exporter
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:9100 || exit 1"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    networks: 
+      - internal
+
+  alertmanager:
+    image: alertmanager
+    build:
+      context: ./monitoring/alertmanager
+      dockerfile: Dockerfile
+    container_name: alertmanager
+    env_file: ".env"
+    restart: unless-stopped
+    depends_on:
+     - prometheus
+    volumes:
+      - alertmanager_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:9093 || exit 1"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    networks:
+      - internal
+
+  nginx-prometheus-exporter:
+    image: nginx/nginx-prometheus-exporter:1.4
+    container_name: nginx-prometheus-exporter
+    restart: unless-stopped
+    depends_on:
+      - proxy
+    command: [
+      "--nginx.scrape-uri", "http://proxy:8080/stub_status",
+    ]
+    networks:
+      - internal
+
+  postgres-exporter-grafana:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-exporter-grafana
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@grafana_db:5432/grafana_db?sslmode=disable"
+    restart: unless-stopped
+    command:
+      - '--web.listen-address=:9188'
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      grafana_db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  postgres-exporter-auth-db:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-exporter-auth-db
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth_db:5432/auth_db?sslmode=disable"
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      auth_db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  postgres-exporter-tournament-db:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-exporter-tournament-db
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@tournament_db:5432/tournament_db?sslmode=disable"
+    restart: unless-stopped
+    command:
+      - '--web.listen-address=:9189'
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      tournament_db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  postgres-exporter-history-db:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-exporter-history-db
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@history_db:5432/history_db?sslmode=disable"
+    restart: unless-stopped
+    command:
+      - '--web.listen-address=:9190'
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      history_db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
     networks:
       - internal
 
@@ -563,7 +517,7 @@ volumes:
   postgres_auth:
   postgres_grafana:
   prometheus_data:
-  # alertmanager_data:
+  alertmanager_data:
   postgres_tournament:
   postgres_history:
   #ELK
