@@ -376,7 +376,6 @@ services:
     command: /usr/share/elasticsearch/setup.sh
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-    # user: "0"
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
       interval: 1s
@@ -386,7 +385,7 @@ services:
       - internal
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.5
     container_name: es01
     labels:
       co.elastic.logs/module: elasticsearch
@@ -396,8 +395,6 @@ services:
       - node.name=es01
       - cluster.name=${CLUSTER_NAME}
       - discovery.type= single-node #single node version
-      # - cluster.initial_master_nodes=es01,es02,es03
-      # - discovery.seed_hosts=es01,es02,es03
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=false
       - xpack.security.enabled=true
@@ -421,111 +418,13 @@ services:
       test:
         [
           "CMD-SHELL",
-          # "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200/_cat/health | grep -E 'green'"
           "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
         ]
       interval: 10s
       timeout: 10s
       retries: 120
-      # start_period: 60s
     networks:
       - internal
-
-
-
-  # es01:
-  #   image: elasticsearch
-  #   build:
-  #     context: ./ELK/elasticsearch
-  #     dockerfile: Dockerfile
-  #   container_name: es01
-  #   labels:
-  #     co.elastic.logs/module: elasticsearch
-  #   environment:
-  #     - network.host=0.0.0.0
-  #     - ES_JAVA_OPTS=-Xmx512m -Xms512m
-  #     - node.name=es01
-  #     - cluster.name=${CLUSTER_NAME}
-  #     - discovery.type= single-node #single node version
-  #     # - cluster.initial_master_nodes=es01,es02,es03
-  #     # - discovery.seed_hosts=es01,es02,es03
-  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-  #     - bootstrap.memory_lock=true
-  #     - xpack.security.enabled=true
-  #     - xpack.security.http.ssl.enabled=true
-  #     - xpack.security.http.ssl.key=certs/es01/es01.key
-  #     - xpack.security.http.ssl.certificate=certs/es01/es01.crt
-  #     - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
-  #     - xpack.security.transport.ssl.enabled=true
-  #     - xpack.security.transport.ssl.key=certs/es01/es01.key
-  #     - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
-  #     - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
-  #     - xpack.security.transport.ssl.verification_mode=certificate
-  #     - xpack.license.self_generated.type=${LICENSE}
-  #   volumes:
-  #     - certs:/usr/share/elasticsearch/config/certs
-  #     - es_data01:/usr/share/elasticsearch/data
-  #   depends_on:
-  #     setup:
-  #       condition: service_healthy
-  #   mem_limit: 2g
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   healthcheck:
-  #     test:
-  #       [
-  #         "CMD-SHELL",
-  #         "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200/_cat/health | grep -E 'green'"
-  #         # "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
-  #       ]
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 120
-  #     # start_period: 60s
-  #   networks:
-  #     - internal
-
-
-  # kibana:
-  #   image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-  #   container_name: kibana
-  #   labels:
-  #     co.elastic.logs/module: kibana
-  #   environment:
-  #     - SERVERNAME=kibana
-  #     - ELASTICSEARCH_HOSTS=https://es01:9200
-  #     - ELASTICSEARCH_USERNAME=kibana_system
-  #     - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-  #     - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-  #     - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-  #     - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-  #     - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-  #     - XPACK_REPORTING_ROLES_ENABLED=false
-  #     - XPACK_REPORTING_KIBANASERVER_HOSTNAME=localhost
-  #   volumes:
-  #     - certs:/usr/share/kibana/config/certs
-  #     - kibana_data:/usr/share/kibana/data
-  #   ports:
-  #     - "5601:5601" 
-  #   depends_on:
-  #     es01:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test:
-  #       [
-  #         "CMD-SHELL",
-  #         "curl -f -k https://localhost:5601/kibana/api/status || exit 1"
-  #         # "curl -s -I -k https://localhost:5601/kibana/api/status | grep 'HTTP/1.1 200 OK'"
-  #       ]
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 120
-  #   mem_limit: ${KB_MEM_LIMIT}
-  #   networks:
-  #     - internal
-
 
   kibana:
     image: kibana
@@ -582,11 +481,9 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://es01:9200
     volumes:
-      # - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
       - proxy_logs:/var/log/nginx
       - logstash_data:/usr/share/logstash/data
       - certs:/usr/share/logstash/certs
-      # - proxy_logs:/var/log/nginx #mount nginx logs
     depends_on:
       es01:
         condition: service_healthy
@@ -595,43 +492,12 @@ services:
     networks:
       - internal
 
-  # logstash:
-  #   image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-  #   container_name: logstash
-  #   labels:
-  #     co.elastic.logs/module: logstash
-  #   environment:
-  #     - LS_JAVA_OPTS=-Xmx512m -Xms512m
-  #     - NODE_NAME="logstash"
-  #     - xpack.monitoring.enabled=false
-  #     - ELASTIC_USER=elastic
-  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-  #     - ELASTIC_HOSTS=https://es01:9200
-  #   command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-  #   user: root
-  #   volumes:
-  #     - ./ELK/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-  #     - ./ELK/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-  #     - ./proxy/logs:/var/log/nginx  # Mount Nginx logs to Logstash
-  #     - logstash_data:/usr/share/logstash/data
-  #     - certs:/usr/share/logstash/certs
-  #     # - proxy_logs:/var/log/nginx #mount nginx logs
-  #   depends_on:
-  #     es01:
-  #       condition: service_healthy
-  #     kibana:
-  #       condition: service_healthy
-  #   networks:
-  #     - internal
-
 networks:
   internal:
     driver: bridge
-  # monitoring:
-  #   driver: bridge
+
 
 volumes:
-#TODO check if logs works with local volume
   proxy_logs: 
   postgres_auth:
   postgres_grafana:
@@ -639,7 +505,6 @@ volumes:
   alertmanager_data:
   postgres_tournament:
   postgres_history:
-  #ELK
   certs:
   es_data01:
   kibana_data:
