@@ -1,4 +1,6 @@
-FROM docker.elastic.co/kibana/kibana:8.16.4
+# FROM docker.elastic.co/kibana/kibana:8.16.4
+FROM docker.elastic.co/kibana/kibana:8.16.5
+
 
 # # Set environment variables
 # ENV SERVERNAME=kibana \

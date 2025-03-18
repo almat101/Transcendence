@@ -26,3 +26,9 @@ server.maxPayload: 1048576
 
 # Set any additional proxy or reverse proxy settings (if behind a reverse proxy)
 server.rewriteBasePath: true
+csp.strict: false
+csp.warnLegacyBrowsers: false
+csp.script_src:
+  - unsafe-inline
+  - self
+  - unsafe-eval
