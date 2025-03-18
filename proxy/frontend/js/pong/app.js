@@ -19,12 +19,7 @@ let check_lost = false;
 let tournamentId = null;
 
 export async function initializeGame(navbar) {
-	//!moved inside the initialize game to avoid error
 	const userData = userService.getUserData();
-	console.log("initizalizing game");
-	//this is the calssic setup done to make the tournament part avaible
-	// showMenu(start1v1Game, startTournament, startCpuGame);
-	// If these elements exist in your rendered HTML, you can attach event listeners.
 	const playerNamesForm = document.getElementById('playerNamesForm');
 	if (playerNamesForm) {
 		playerNamesForm.addEventListener('submit', async (event) => {
@@ -75,26 +70,10 @@ export async function initializeGame(navbar) {
 		});
 	}
 
-	// Attach event listeners for game buttons
-	// const startButton = document.getElementById('startGameButton');
-	// if (startButton) {
-	//   startButton.addEventListener('click', start1v1Game);
-	// }
-
-	// const tournamentButton = document.getElementById('tournamentButton');
-	// if (tournamentButton) {
-	//   tournamentButton.addEventListener('click', tournamentSetup());
-	// }
-
-	// const cpuButton = document.getElementById('cpuButton');
-	// if (cpuButton) {
-	//   cpuButton.addEventListener('click', startCpuGame);
-	// }
-
+	
 
 	async function start1v1Game() {
 
-		console.log('Starting 1v1 Game');
 		if (navbar)
 			navbar.style.display = 'none';
 
@@ -116,7 +95,6 @@ export async function initializeGame(navbar) {
 	}
 
 	function startCpuGame() {
-		console.log('Starting Game Against CPU');
 		if (navbar)
 			navbar.style.display = 'none';
 		gameMode = 'cpu';
@@ -170,7 +148,6 @@ export async function initializeGame(navbar) {
 	}
 
 	function playTournamentMatch(match) {
-		console.log("starting tournament with this matchup");
 		const { player1, player2 } = match;
 		const matchAnnouncement = document.getElementById('matchAnnouncement');
 		const matchAnnouncementText = document.getElementById('matchAnnouncementText');
@@ -246,9 +223,9 @@ export async function initializeGame(navbar) {
 		if (!tournamentMatches.length) {
 			// Fetch remaining matches
 			const remainingMatches = await fetchMatches();
-			console.log("remaining matches: ", remainingMatches);
+			
 			const remainingUsers = await fetchAllUsers();
-			console.log("remaining users ", remainingUsers);
+			
 			if (remainingMatches.length > 0) {
 				// More matches to play, start the next match
 				tournamentMatches = remainingMatches;
@@ -260,10 +237,7 @@ export async function initializeGame(navbar) {
 			// const remainingUsers = await fetchAllUsers();
 
 			if (remainingUsers.length === 1) {
-				// Check if the remaining user is the logged user
-				// if (remainingUsers[0].name === userData.username) {
-				// 	loggedUserTPosition = 1;
-				// }
+				
 				// Declare the remaining user as the champion
 				showWinningScreen(remainingUsers[0].name, restartGame);
 				//*added for next pull
@@ -284,10 +258,6 @@ export async function initializeGame(navbar) {
 				}
 			}
 
-			// If no users remain or an unexpected state occurs
-			// alert('No players left in the tournament.');
-			// showMenu(start1v1Game, startTournament, );
-			// return;
 		}
 
 		if (tournamentMatches.length) {
@@ -295,7 +265,6 @@ export async function initializeGame(navbar) {
 		}
 	}
 	async function endGame(winner) {
-		console.log('End Game:', winner);
 		if (gameMode === '1v1' || gameMode === 'cpu') {
 			const canvas = document.getElementById('gameCanvas');
 			const scores = document.getElementById('scores');
@@ -353,30 +322,7 @@ export async function initializeGame(navbar) {
 	}
 
 	function restartGame() {
-		console.log('Restarting Game');
-		//!nicoter removed this 4 lines, navbar block is needed
 		navbar.style.display = 'block';
-		// const player1ScoreElement = document.getElementById('player1Score');
-		// const player2ScoreElement = document.getElementById('player2Score');
-		// player1ScoreElement.textContent = 'Player 1: 0';
-		// player2ScoreElement.textContent = 'Player 2: 0';
-		//!strange but true this works? BUT i need to analyze properly the
-		//!the part where i should show case the winner of the tournament or am i dumb?
 		showMenu(start1v1Game, startTournament, startCpuGame);
 	}
 }
-
-
-/*
-*Task di oggi di revisione e per aggiustare le cose a livello
-*organizzativo:
-	// vincitore del 1vs1 [X]
-	TODO: sistemare il github di django, avendo la modalità (no priorità)
-		TODO: torneo non funzionante
-
-	//  Revisionare algoritmo della CPU ora come ora non va bene com'è fatto [X]
-
-	// * fare schermata di vittoria per locale amatta c'è già
-	// salvare scores per 1vs1 di amatta, fare la conversione a modo [X]
-	// per il torneo posizione [X] e numero utenti [X]
-*/

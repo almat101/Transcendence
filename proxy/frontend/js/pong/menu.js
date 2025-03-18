@@ -28,14 +28,14 @@ export function showMenu(start1v1Callback, startTournamentCallback, startCpuGame
 
 	// Tournament mode: just show the tournament setup form
 	newStartTournamentButton.addEventListener('click', () => {
-	  console.log('Start Tournament Button Clicked');
+	//   console.log('Start Tournament Button Clicked');
 	  menu.style.display = 'none';
 	  document.getElementById('tournamentSetup').style.display = 'block';
 	});
 
 	// CPU mode: start the game against the bot
 	newStartCpuGameButton.addEventListener('click', () => {
-	  console.log('Play Against CPU Button Clicked');
+	//   console.log('Play Against CPU Button Clicked');
 	  menu.style.display = 'none';
 	  startCpuGameCallback();
 	});

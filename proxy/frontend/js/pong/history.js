@@ -238,7 +238,7 @@ export async function create_tournament(tournamentId,player1_id){
 		const responseData = await response.json();
 		//*now i have the tournament id to link all local match of the tournament
 		tournamentId = responseData.id;
-		console.log('Tournament created with ID:', tournamentId);
+		// console.log('Tournament created with ID:', tournamentId);
 		return tournamentId;
 		// alert('Tournament data saved successfully!');
 	} catch (error) {
