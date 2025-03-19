@@ -55,9 +55,9 @@ export function Navbar() {
   const togglerList = document.createElement("ul");
   togglerList.className = "navbar-nav justify-content-center flex-grow-0 w-100";
 
+  // { name: "Home", route: "/" },
   const links = [
-    { name: "Home", route: "/" },
-    { name: "Games", route: "/pong" },
+    { name: "Pong", route: "/" },
     { name: "Friends", route: "/friends" },
     { name: "Profile ", route: "/profile"}
   ];

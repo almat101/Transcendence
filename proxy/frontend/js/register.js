@@ -1,7 +1,6 @@
 import { registerRoute, loadPage } from "./router.js";
 import { renderLoginPage } from "./pages/login.js";
 import { renderSignupPage } from "./pages/signup.js";
-import { renderHomePage } from "./pages/home.js";
 import { renderFriendsPage } from "./pages/friends.js";
 import { renderPongPage } from "./pages/pong.js";
 import { renderSettingsPage } from "./pages/settings.js";
@@ -11,14 +10,12 @@ import { tokenService } from "./services/authService.js";
 import { authService } from "./services/authService.js";
 import { userService } from "./services/userService.js";
 import { renderProfilePage } from "./pages/profile.js";
-//import { navigateTo } from "./router.js";
 
 // Register routes
-registerRoute("/", renderHomePage);
+registerRoute("/", renderPongPage);
 registerRoute("/login", renderLoginPage);
 registerRoute("/signup", renderSignupPage);
 registerRoute("/friends", renderFriendsPage);
-registerRoute("/pong", renderPongPage);
 registerRoute("/404", renderPageNotFound);
 registerRoute("/settings", renderSettingsPage);
 registerRoute("/logout", renderLogoutPage);

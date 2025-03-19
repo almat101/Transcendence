@@ -27,7 +27,7 @@ export const TwoFASection = {
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title" id="disable2faModalLabel">Disable Two-Factor Authentication</h5>
-							<i class="bi bi-x-lg" data-bs-dismiss="modal" aria-label="Close"></i>
+							<i class="bi bi-x-lg" data-bs-dismiss="modal"></i>
 						</div>
 						<div class="modal-body">
 							<p>Please enter your authentication code to disable 2FA:</p>
