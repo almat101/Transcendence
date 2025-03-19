@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7rsuc(m^3(%fw@tv21fwv$l7j80um+i_d$57+roq2%7)a6nz#f'
+# SECRET_KEY = 'django-insecure-7rsuc(m^3(%fw@tv21fwv$l7j80um+i_d$57+roq2%7)a6nz#f'
+SECRET_KEY = os.getenv('SECRET_KEY_TOURNAMENT')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -123,9 +124,10 @@ WSGI_APPLICATION = 'tournament.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_TOURNAMENT_DB"),
 		'USER': os.environ.get("POSTGRES_USER"),
 		'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),

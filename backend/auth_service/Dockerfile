@@ -23,7 +23,7 @@ python manage.py crontab add\n\
 service cron start\n\
 python manage.py makemigrations\n\
 python manage.py migrate\n\
-python manage.py runserver 0.0.0.0:8001\n\
+gunicorn auth_service.wsgi:application --bind 0.0.0.0:8001 --workers=3\n\
 ' > /app/start.sh
 
 RUN chmod +x /app/start.sh
