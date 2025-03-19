@@ -74,53 +74,6 @@ export const authService = {
 		}
 	},
 
-	async oauth42Login() {
-		try {
-			const response = await fetch(`/api/oauth/42/login/`, {
-				method: 'GET',
-				headers: {
-					'Accept': 'application/json'
-				}
-			});
-
-			if (!response.ok) {
-				return { success: false, error: 'Failed to connect to 42' };
-			}
-
-			const data = await response.json();
-			if (data.authorization_url) {
-				return { success: true, url: data.authorization_url };
-			}
-			return { success: false, error: data.error };
-		} catch (error) {
-			return { success: false, error: error.message };
-		}
-	},
-
-	async handleOAuthCallback(code) {
-		try {
-			const response = await fetch(`/api/oauth/42/callback`, {
-				method: 'POST',
-				credentials: 'include',
-				body: JSON.stringify({
-					code: code
-				}),
-			});
-
-			const data = await response.json();
-
-			if (response.ok) {
-				tokenService.setAccessToken(data.access);
-				await this.fetchAndStoreUserData(); // Add this line
-				return { success: true };
-			}
-
-			return { success: false, error: data.error };
-		} catch (error) {
-			return { success: false, error: error.message };
-		}
-	},
-
 	async fetchAndStoreUserData() {
         try {
             const response = await fetch('/api/user/getuserinfo/', {

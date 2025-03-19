@@ -28,7 +28,7 @@ services:
       es01:
         condition: service_healthy
     volumes:
-      - media:/app/media:rw 
+      - media:/app/media:rw
       - proxy_logs:/var/log/nginx
     healthcheck:
       test: ["CMD-SHELL", "curl -f -k https://localhost:8090 || exit 1"]
@@ -220,7 +220,7 @@ services:
     networks:
       - internal
 
-  
+
   prometheus:
     image: prometheus
     build:
@@ -258,7 +258,7 @@ services:
       retries: 3
       start_period: 10s
       timeout: 10s
-    networks: 
+    networks:
       - internal
 
   alertmanager:
@@ -353,13 +353,6 @@ services:
         condition: service_healthy
       history_db:
         condition: service_healthy
-    networks:
-      - internal
-
-  adminer:
-    image: adminer
-    container_name: adminer
-    restart: unless-stopped
     networks:
       - internal
 
@@ -498,7 +491,7 @@ networks:
 
 
 volumes:
-  proxy_logs: 
+  proxy_logs:
   postgres_auth:
   postgres_grafana:
   prometheus_data:

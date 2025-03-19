@@ -7,7 +7,6 @@ import { renderPongPage } from "./pages/pong.js";
 import { renderSettingsPage } from "./pages/settings.js";
 import { renderLogoutPage } from "./pages/logout.js";
 import { renderPageNotFound } from "./pages/404.js";
-import { renderOAuthCallbackPage } from "./pages/oauthCallback.js";
 import { tokenService } from "./services/authService.js";
 import { authService } from "./services/authService.js";
 import { userService } from "./services/userService.js";
@@ -23,7 +22,6 @@ registerRoute("/pong", renderPongPage);
 registerRoute("/404", renderPageNotFound);
 registerRoute("/settings", renderSettingsPage);
 registerRoute("/logout", renderLogoutPage);
-registerRoute("/oauth/callback", renderOAuthCallbackPage);
 registerRoute("/profile", renderProfilePage);
 
 

@@ -105,7 +105,7 @@ function displayPendingRequests(requests) {
 
     requestsList.innerHTML = requests.map(request => `
         <div class="friend-request-item">
-            <div class="user-info" onclick="window.location.href='/profile/${request.username}'">
+            <div class="user-info">
                 <img src="${request.avatar || '/images/default-avatar.jpg'}"
                      alt="${request.username}'s avatar"
                      class="friend-avatar">

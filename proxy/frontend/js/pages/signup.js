@@ -58,12 +58,6 @@ export function renderSignupPage() {
                   Signup
                 </button>
 
-                <div class="text-center">
-                  <p>or sign up with:</p>
-                  <button type="button" class="btn btn-link btn-floating mx-1" id="oauth-42">
-                    <img src="/assets/42_Logo.svg.png" alt="42 Logo" style="width: 20px; height: 20px;">
-                  </button>
-                </div>
               </form>
             </div>
             <p>Already have an account? <a href="/login" class="fw-bold">Login</a></p>
@@ -80,16 +74,6 @@ export function renderSignupPage() {
   section.innerHTML = container;
   root.appendChild(section);
 
-  const oauthButton = document.getElementById('oauth-42');
-  oauthButton.addEventListener('click', async () => {
-    const result = await authService.oauth42Login();
-    if (result.success) {
-        window.location.href = result.url;
-    } else {
-        console.error('Error:', result.error);
-        showAlert('Servers are busy, try again!', 'danger');
-      }
-  });
 
   // Add form submission handler
   const form = document.getElementById('login-form');
