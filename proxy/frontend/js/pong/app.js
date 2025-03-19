@@ -33,7 +33,6 @@ export async function initializeGame(navbar) {
 			const deleteSuccess = await deleteAllUsers();
 			if(deleteSuccess) {
 				saveUsers(names, startTournament);
-				//!cambiato
 				user_final_position = names.length;
 				total_players = names.length;
 			}
@@ -137,9 +136,7 @@ export async function initializeGame(navbar) {
 		// buttonsHandler(startButton, cpuButton, tournamentButton, false);
 		if (!tournamentMatches.length) {
 			alert('No matches available for the tournament.');
-			//! aggiunto
 			navbar.style.display = 'block';
-			//!cambiato
 			deleteAllUsers();
 			showMenu(start1v1Game, startTournament, startCpuGame);
 			return;

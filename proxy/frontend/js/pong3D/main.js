@@ -9,7 +9,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { Navbar } from '../components/navbar.js';
 import { userService } from '../services/userService.js';
-
+import { create_local_game } from '../pong/history.js';
 
 
 export async function initializeGame3D(Navbar) {
@@ -137,18 +137,18 @@ export async function initializeGame3D(Navbar) {
       scene.remove(leftScoreMesh);
       scene.remove(rightScoreMesh);
       document.getElementById('gameOver').style.display = 'block';
-      createWinnerText('Upper player');
+      createWinnerText('Upper player', rightScore, leftScore);
     } else if (rightScore >= winningScore) {
       gameOver = true;
       scene.remove(leftScoreMesh);
       scene.remove(rightScoreMesh);
 
       document.getElementById('gameOver').style.display = 'block';
-      createWinnerText(player1Name);
+      createWinnerText(player1Name, rightScore, leftScore);
     }
   }
 
-  function createWinnerText(winner) {
+  async function createWinnerText(winner,score1,score2) {
     if (winnerMesh) scene.remove(winnerMesh);
     const winnerGeometry = new TextGeometry(`${winner} wins!`, {
       font: font,
@@ -162,6 +162,28 @@ export async function initializeGame3D(Navbar) {
     winnerMesh = new THREE.Mesh(winnerGeometry, material);
     winnerMesh.position.set(-playArea.width / 2, 20, 0);
     scene.add(winnerMesh);
+  
+    const player1_id = userData.id;
+    const player1_name = userData.username;
+    const player2_name = "Upper player";
+
+    const local_1vs1_3D_payload = {
+      player1_id : player1_id,
+      player1_name : player1_name,
+      player2_name : player2_name,
+      player1_score : score1,
+      player2_score : score2,
+      winner : winner
+    }
+
+    //api call to create a local 3d game
+    try {
+      await create_local_game(local_1vs1_3D_payload);
+    } catch (error) {
+      console.error("Error creating local 3d game 1vs1:", error);
+      alert('Failed to create local 3D game. Please try again.');
+      return;
+    }
   }
 
   function updatePaddles() {
