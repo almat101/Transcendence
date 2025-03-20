@@ -305,6 +305,30 @@ export async function initializeGame(navbar) {
 					return;
 				}
 			}
+			else if (gameMode === 'cpu'){
+				const player2_name = "CPU";
+				const player1_id = userData.id;
+				const player1_name = userData.username;
+
+				//*Creating local game payload for the POST
+				const local_1vs1_cpu_payload = {
+					player1_id : player1_id,
+					player1_name : player1_name,
+					player2_name : player2_name,
+					player1_score : player1_score,
+					player2_score : player2_score,
+					winner : winner
+				}
+
+				try {
+					await create_local_game(local_1vs1_cpu_payload);
+				} catch (error) {
+					console.error("Error creating local game 1vsCPU:", error);
+					alert('Failed to create local cpu game. Please try again.');
+					return;
+				}
+			}
+
 			//* tournament history api call end
 
 			restartButton.onclick = () => {
