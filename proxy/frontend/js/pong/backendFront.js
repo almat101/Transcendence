@@ -18,7 +18,7 @@ export async function fetchMatches() {
 		// console.log('Fetched Matches:', matches);
 		return matches;
 	} catch (error) {
-		console.error('Error fetching matches:', error);
+		console.log('Error fetching matches:', error);
 		alert(`Error fetching matches: ${error.message}`);
 		return [];
 	}
@@ -50,7 +50,7 @@ export async function saveUsers(names, afterSaveCallback) {
 
 		if (afterSaveCallback) afterSaveCallback();
 	} catch (error) {
-		console.error('Error saving users:', error);
+		console.log('Error saving users:', error);
 		alert(`Failed to save users: ${error.message}`);
 	}
 }
@@ -75,7 +75,7 @@ export async function deleteUser(loserName) {
 		const remainingUsers = await response.json();
 		// console.log('Remaining Users:', remainingUsers);
 	} catch (error) {
-		console.error('Error deleting user:', error);
+		console.log('Error deleting user:', error);
 		alert(`Failed to delete user: ${error.message}`);
 	}
 }
@@ -90,14 +90,19 @@ export async function deleteAllUsers() {
 			},
 		});
 		if (!response.ok) {
-			const errorData = await response.json();
-			throw new Error(errorData.error || 'Failed to delete all users.');
-		}
+			let errorData;
+            try {
+                errorData = await response.json();
+            } catch (jsonError) {
+                throw new Error('Failed to cleanup invalid tournaments. Server returned non-JSON response.');
+            }
+            throw new Error(errorData.error || 'Failed to cleanup invalid tournaments.');
+        }
 		// console.log('All users were deleted successfully.');
 		// Return a success flag
 		return true;
 	} catch (error) {
-		console.error('Error deleting all users:', error);
+		console.log('Error deleting all users:', error);
 		// alert(`Failed to delete all users: ${error.message}`);
 		return false;
 	}
@@ -120,7 +125,7 @@ export async function fetchAllUsers() {
 		// console.log('Fetched All Users:', users);
 		return users;
 	} catch (error) {
-		console.error('Error fetching all users:', error);
+		console.log('Error fetching all users:', error);
 		alert(`Error fetching all users: ${error.message}`);
 		return [];
 	}

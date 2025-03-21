@@ -65,7 +65,7 @@ curl -X PUT "https://es01:9200/_index_template/nginx_index_template" \
   -d @config/elastic/nginx_index_template.json
 echo "Index template created. Setup complete!";
 
-sleep 25;
+sleep 15;
 
 # echo "Importing nginx Dashboard..."
 # curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
@@ -84,7 +84,6 @@ sleep 25;
 # echo "Importing nginx Dashboard..."
 # curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
 #   -H "kbn-xsrf: true" \
-#   -H "Content-Type: application/json" \
 #   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_final.ndjson" \
 #   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 # echo "Nginx dashboard imported!"
@@ -96,6 +95,7 @@ curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_final.ndjson" \
   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 echo "Nginx dashboard imported!"
+
 
 sleep 10;
 

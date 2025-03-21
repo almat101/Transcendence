@@ -30,14 +30,20 @@ export async function initializeGame(navbar) {
 				.filter(name => name);
 				//* we add the logged user in the tournament as well
 				names.push(userData.username);
-			const deleteSuccess = await deleteAllUsers();
-			if(deleteSuccess) {
+			try {
+				const deleteSuccess = await deleteAllUsers();
+				if(deleteSuccess) {
 				saveUsers(names, startTournament);
 				user_final_position = names.length;
 				total_players = names.length;
 			}
 			else {
 				console.log("failed");
+			}
+			} catch (error) {
+				console.error("Error creating tournament local game 1vs1:", error);
+				alert('Failed to create local game. Please try again.');
+				return;
 			}
 		});
 	}
@@ -56,14 +62,18 @@ export async function initializeGame(navbar) {
 	if (deleteUserBtn) {
 		deleteUserBtn.addEventListener('click', async () => {
 			if (confirm('Are you sure you want to delete ALL users from the DB?')) {
-				const success = await deleteAllUsers();
-				if (success) {
-					const setupForm = document.getElementById('playerNamesForm');
-					if (setupForm) {
-						setupForm.reset();
-						document.getElementById('tournamentSetup').style.display = 'none';
+				try {
+					const success = await deleteAllUsers();
+					if (success) {
+						const setupForm = document.getElementById('playerNamesForm');
+						if (setupForm) {
+							setupForm.reset();
+							document.getElementById('tournamentSetup').style.display = 'none';
+						}
+						showMenu(start1v1Game, startTournament, startCpuGame);
 					}
-					showMenu(start1v1Game, startTournament, startCpuGame);
+				} catch (error) {
+					console.error('An error occurred while deleting users or updating the UI:', error);
 				}
 			}
 		});
@@ -137,7 +147,11 @@ export async function initializeGame(navbar) {
 		if (!tournamentMatches.length) {
 			alert('No matches available for the tournament.');
 			navbar.style.display = 'block';
-			deleteAllUsers();
+			try {
+				await deleteAllUsers();
+			} catch (error) {
+				console.error('An error occurred while deleting users:', error);
+			}
 			showMenu(start1v1Game, startTournament, startCpuGame);
 			return;
 		}
@@ -213,54 +227,77 @@ export async function initializeGame(navbar) {
 			user_final_position -= 1;
 		}
 		// Delete the loser
-		await deleteUser(loser);
+		try {
+			await deleteUser(loser);
+		} catch (error) {
+			console.error(`An error occurred while deleting the user ${loser}:`, error);
+		}
 		//update the number of users in the tournament for the final
 		//position of the logged user
 		// Check if all matches in the current round are played
 		if (!tournamentMatches.length) {
-			// Fetch remaining matches
-			const remainingMatches = await fetchMatches();
-			
-			const remainingUsers = await fetchAllUsers();
-			
-			if (remainingMatches.length > 0) {
-				// More matches to play, start the next match
-				tournamentMatches = remainingMatches;
-				playTournamentMatch(tournamentMatches.shift());
-				return;
-			}
-
-			// No matches remain, check if only one user remains
-			// const remainingUsers = await fetchAllUsers();
-
-			if (remainingUsers.length === 1) {
-				
-				// Declare the remaining user as the champion
-				showWinningScreen(remainingUsers[0].name, restartGame);
-				//*added for next pull
-				if (winner === userData.username)
-					user_final_position = 1;
-
-				//*PATCH to update the total_players and user final position
-				await update_tournament(tournamentId, total_players, user_final_position)
-
-				deleteAllUsers();
-				return;
-			} else if (remainingUsers.length > 1) {
-			// If multiple users remain without matches, start a new round
-				tournamentMatches = await fetchMatches();
-				if (tournamentMatches.length > 0) {
+			try {
+				// Fetch remaining matches
+				const remainingMatches = await fetchMatches();
+		
+				const remainingUsers = await fetchAllUsers();
+		
+				if (remainingMatches.length > 0) {
+					// More matches to play, start the next match
+					tournamentMatches = remainingMatches;
 					playTournamentMatch(tournamentMatches.shift());
 					return;
 				}
+		
+				// No matches remain, check if only one user remains
+				if (remainingUsers.length === 1) {
+					// Declare the remaining user as the champion
+					showWinningScreen(remainingUsers[0].name, restartGame);
+		
+					//*added for next pull
+					if (winner === userData.username) {
+						user_final_position = 1;
+					}
+		
+					//*PATCH to update the total_players and user final position
+					try {
+						await update_tournament(tournamentId, total_players, user_final_position);
+					} catch (error) {
+						console.error("Error updating tournament:", error);
+					}
+		
+					try {
+						await deleteAllUsers();
+					} catch (error) {
+						console.error("Error deleting all users:", error);
+					}
+		
+					return;
+				} else if (remainingUsers.length > 1) {
+					// If multiple users remain without matches, start a new round
+					try {
+						tournamentMatches = await fetchMatches();
+					} catch (error) {
+						console.error("Error fetching matches for new round:", error);
+						return;
+					}
+		
+					if (tournamentMatches.length > 0) {
+						playTournamentMatch(tournamentMatches.shift());
+						return;
+					}
+				}
+			} catch (error) {
+				console.error("Error fetching matches or users:", error);
 			}
-
 		}
+		
 
 		if (tournamentMatches.length) {
 			playTournamentMatch(tournamentMatches.shift());
 		}
 	}
+
 	async function endGame(winner) {
 		if (gameMode === '1v1' || gameMode === 'cpu') {
 			const canvas = document.getElementById('gameCanvas');
