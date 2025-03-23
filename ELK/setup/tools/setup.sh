@@ -65,38 +65,14 @@ curl -X PUT "https://es01:9200/_index_template/nginx_index_template" \
   -d @config/elastic/nginx_index_template.json
 echo "Index template created. Setup complete!";
 
-sleep 15;
+until curl -s -I --cacert config/certs/ca/ca.crt https://kibana:5601/kibana/api/status | grep "HTTP/1.1 200 OK"; do sleep 15; done;
 
-# echo "Importing nginx Dashboard..."
-# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
-#   -H "kbn-xsrf: true" \
-#   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard.ndjson" \
-#   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
-# echo "Nginx dashboard imported!"
-
-# echo "Importing nginx Dashboard..."
-# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
-#   -H "kbn-xsrf: true" \
-#   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_3.ndjson" \
-#   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
-# echo "Nginx dashboard imported!"
-
-# echo "Importing nginx Dashboard..."
-# curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
-#   -H "kbn-xsrf: true" \
-#   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_final.ndjson" \
-#   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
-# echo "Nginx dashboard imported!"
-
-echo "Importing nginx Dashboard..."
+echo "Waiting for Kibana availability";
 curl -X POST "https://kibana:5601/kibana/api/saved_objects/_import" \
   -H "kbn-xsrf: true" \
   -H "Content-Type: multipart/form-data" \
   --form "file=@/usr/share/elasticsearch/config/elastic/dashboard_final.ndjson" \
   -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt -k
 echo "Nginx dashboard imported!"
-
-
-sleep 10;
 
 # tail -f /dev/null;
