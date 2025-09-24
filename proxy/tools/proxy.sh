@@ -1,4 +1,4 @@
-#!bin/bash
+#!bin/sh
 
 # Create a self-signed SSL certificate then move to a script.sh
 echo "Create a self-signed SSL certificate"
