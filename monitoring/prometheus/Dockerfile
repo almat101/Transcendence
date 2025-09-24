@@ -8,11 +8,11 @@ COPY rules/rules_2.yml /etc/prometheus/rules_2.yml
 COPY rules/rules_3.yml /etc/prometheus/rules_3.yml
 COPY rules/rules_4.yml /etc/prometheus/rules_4.yml
 
-# Set the command to run Prometheus with the specified configuration
 CMD [ \
   "--config.file=/etc/prometheus/prometheus.yml", \
   "--storage.tsdb.path=/prometheus", \
-  "--storage.tsdb.retention.time=10d" \ 
+  "--storage.tsdb.retention.time=10d", \
+  "--web.external-url=https://localhost:8090/prometheus/" \
 ]
 
 #retention time 10 days then delete the scraped data

@@ -1,9 +1,9 @@
-FROM nginx:latest
+FROM nginx:1.25-bookworm 
 
 # Install ModSecurity dependencies
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install -y openssl vim sudo curl net-tools
+RUN apt-get update && \
+	apt-get upgrade -y && \
+	apt-get install -y openssl vim sudo curl net-tools
 	# libmodsecurity3 \
 	# libnginx-mod-security \
 	# modsecurity-crs \
