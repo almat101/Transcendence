@@ -12,7 +12,8 @@ CMD [ \
   "--config.file=/etc/prometheus/prometheus.yml", \
   "--storage.tsdb.path=/prometheus", \
   "--storage.tsdb.retention.time=10d", \
-  "--web.external-url=https://localhost:8090/prometheus/" \
+  "--web.external-url=https://localhost:8090/prometheus/", \
+  "--web.route-prefix=/" \
 ]
 
 #retention time 10 days then delete the scraped data

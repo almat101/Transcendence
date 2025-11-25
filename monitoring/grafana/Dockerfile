@@ -10,4 +10,4 @@ COPY /dashboards /var/lib/grafana/dashboards
 COPY /provisioning /etc/grafana/provisioning
 
 # Start Grafana server
-CMD ["/run.sh"]
+# CMD ["/run.sh"]

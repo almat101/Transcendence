@@ -1,0 +1,195 @@
+@startuml ft_transcendence_architecture
+
+title ft_transcendence - Modern Pong Evolution Architecture
+
+cloud "Internet" as internet
+
+' Frontend & Proxy
+rectangle "Proxy Layer" as proxy_layer {
+    component "NGINX Proxy\n:8090 (HTTPS)" as nginx {
+        note right
+            - SSL termination
+            - Rate limiting (5r/s auth, 20r/s API)
+            - API routing
+            - JWT validation
+        end note
+    }
+}
+
+' Backend Services
+rectangle "Backend Services" as backend {
+    component "Auth Service\n:8001" as auth {
+        note right
+            - JWT Authentication
+            - 2FA
+            - User management
+            - Django + Gunicorn
+        end note
+    }
+    
+    component "Tournament Service\n:8003" as tournament {
+        note right
+            - Matchmaking
+            - Tournament logic
+            - Player pairing
+            - Django + Gunicorn
+        end note
+    }
+    
+    component "History Service\n:8002" as history {
+        note right
+            - Match records
+            - Game statistics
+            - Player history
+            - Django + Gunicorn
+        end note
+    }
+}
+
+' Databases
+rectangle "Databases" as databases {
+    database "Auth DB\nPostgreSQL\n:5432" as auth_db
+    database "Tournament DB\nPostgreSQL\n:5432" as tournament_db
+    database "History DB\nPostgreSQL\n:5432" as history_db
+    database "Grafana DB\nPostgreSQL\n:5432" as grafana_db
+}
+
+' Monitoring Stack
+rectangle "Monitoring Stack" as monitoring {
+    component "Prometheus\n:9090" as prometheus {
+        note right
+            - Metrics collection
+            - Time-series DB
+            - Alert rules
+            - --web.external-url config
+        end note
+    }
+    
+    component "Grafana\n:3000" as grafana {
+        note right
+            - Dashboards
+            - Visualization
+            - Alerting UI
+            - PostgreSQL backend
+        end note
+    }
+    
+    component "Node Exporter\n:9100" as node_exporter {
+        note right
+            - System metrics
+            - CPU, Memory, Disk
+        end note
+    }
+    
+    component "AlertManager\n:9093" as alertmanager {
+        note right
+            - Email notifications
+            - Alert routing
+        end note
+    }
+    
+    component "NGINX Exporter\n:9113" as nginx_exporter {
+        note right
+            - NGINX metrics
+            - /stub_status
+        end note
+    }
+    
+    rectangle "PostgreSQL Exporters" as pg_exporters {
+        component "Auth DB Exporter\n:9187" as pg_auth
+        component "Grafana DB Exporter\n:9188" as pg_grafana  
+        component "Tournament DB Exporter\n:9189" as pg_tournament
+        component "History DB Exporter\n:9190" as pg_history
+    }
+}
+
+' ELK Stack (Simplified)
+rectangle "Logging Stack" as elk {
+    component "Elasticsearch\n:9200" as elasticsearch {
+        note right
+            - Single node cluster
+            - Log storage & search
+            - SSL enabled
+            - X-Pack security
+        end note
+    }
+    
+    component "Logstash\n:5044" as logstash {
+        note right
+            - Log processing
+            - Nginx log parsing
+            - Data transformation
+            - Direct log file reading
+        end note
+    }
+    
+    component "Kibana\n:5601" as kibana {
+        note right
+            - Log visualization
+            - Dashboard creation
+            - Query interface
+            - /kibana/ reverse proxy
+        end note
+    }
+}
+
+' Log Files
+folder "Log Files" as logs {
+    file "Nginx Access Logs" as nginx_logs
+    file "Nginx Error Logs" as nginx_error_logs
+    file "Django Logs" as django_logs
+}
+
+' Connections
+internet --> nginx : HTTPS/8090
+
+' Proxy routing
+nginx --> auth : /api/auth/*
+nginx --> tournament : /api/tournament/*  
+nginx --> history : /api/history/*
+nginx --> grafana : /grafana/*
+nginx --> prometheus : /prometheus/*
+nginx --> kibana : /kibana/*
+
+' Database connections
+auth --> auth_db : PostgreSQL
+tournament --> tournament_db : PostgreSQL
+history --> history_db : PostgreSQL
+grafana --> grafana_db : PostgreSQL
+
+' Monitoring connections
+prometheus --> node_exporter : :9100/metrics
+prometheus --> nginx_exporter : :9113/metrics
+prometheus --> auth : :8001/metrics
+prometheus --> tournament : :8003/metrics
+prometheus --> history : :8002/metrics
+prometheus --> pg_auth : :9187/metrics
+prometheus --> pg_grafana : :9188/metrics
+prometheus --> pg_tournament : :9189/metrics
+prometheus --> pg_history : :9190/metrics
+prometheus --> alertmanager : Alerts
+
+grafana --> prometheus : Query metrics
+
+' PostgreSQL Exporter connections
+pg_auth --> auth_db : Monitor
+pg_grafana --> grafana_db : Monitor  
+pg_tournament --> tournament_db : Monitor
+pg_history --> history_db : Monitor
+
+' NGINX Exporter connection
+nginx_exporter --> nginx : /stub_status
+
+' Logging connections
+nginx --> nginx_logs : Generate logs
+auth --> django_logs : Generate logs
+tournament --> django_logs
+history --> django_logs
+
+logstash --> nginx_logs : Direct file reading
+logstash --> nginx_error_logs : Direct file reading
+logstash --> elasticsearch : Process & store
+
+kibana --> elasticsearch : Query logs
+
+@enduml

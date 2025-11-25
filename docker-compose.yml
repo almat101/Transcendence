@@ -23,10 +23,10 @@ services:
         condition: service_healthy
       tournament-service:
         condition: service_healthy
-      # kibana:
-      #   condition: service_healthy
-      # es01:
-      #   condition: service_healthy
+      kibana:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
     volumes:
       - media:/app/media:rw
       - proxy_logs:/var/log/nginx
@@ -234,7 +234,7 @@ services:
       auth-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/prometheus/-/healthy || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -356,134 +356,134 @@ services:
     networks:
       - internal
 
-# #ELK STACK
-#   setup:
-#     image: setup
-#     build:
-#       context: ./ELK/setup
-#       dockerfile: Dockerfile
-#     container_name: setup
-#     environment:
-#       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-#       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
-#     command: /usr/share/elasticsearch/setup.sh
-#     volumes:
-#       - certs:/usr/share/elasticsearch/config/certs
-#     healthcheck:
-#       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
-#       interval: 1s
-#       timeout: 5s
-#       retries: 120
-#     networks:
-#       - internal
+#ELK STACK
+  setup:
+    image: setup
+    build:
+      context: ./ELK/setup
+      dockerfile: Dockerfile
+    container_name: setup
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    command: /usr/share/elasticsearch/setup.sh
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+    networks:
+      - internal
 
-#   es01:
-#     image: docker.elastic.co/elasticsearch/elasticsearch:8.16.5
-#     container_name: es01
-#     labels:
-#       co.elastic.logs/module: elasticsearch
-#     environment:
-#       - network.host=0.0.0.0
-#       - ES_JAVA_OPTS=-Xmx1g -Xms1g
-#       - node.name=es01
-#       - cluster.name=${CLUSTER_NAME}
-#       - discovery.type= single-node #single node version
-#       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-#       - bootstrap.memory_lock=false
-#       - xpack.security.enabled=true
-#       - xpack.security.http.ssl.enabled=true
-#       - xpack.security.http.ssl.key=certs/es01/es01.key
-#       - xpack.security.http.ssl.certificate=certs/es01/es01.crt
-#       - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
-#       - xpack.security.transport.ssl.enabled=true
-#       - xpack.security.transport.ssl.key=certs/es01/es01.key
-#       - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
-#       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
-#       - xpack.security.transport.ssl.verification_mode=certificate
-#       - xpack.license.self_generated.type=${LICENSE}
-#     volumes:
-#       - certs:/usr/share/elasticsearch/config/certs
-#       - es_data01:/usr/share/elasticsearch/data
-#     depends_on:
-#       setup:
-#         condition: service_healthy
-#     healthcheck:
-#       test:
-#         [
-#           "CMD-SHELL",
-#           "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
-#         ]
-#       interval: 10s
-#       timeout: 10s
-#       retries: 120
-#     networks:
-#       - internal
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.5
+    container_name: es01
+    labels:
+      co.elastic.logs/module: elasticsearch
+    environment:
+      - network.host=0.0.0.0
+      - ES_JAVA_OPTS=-Xmx1g -Xms1g
+      - node.name=es01
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.type= single-node #single node version
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=false
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es01/es01.key
+      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es01/es01.key
+      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=${LICENSE}
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - es_data01:/usr/share/elasticsearch/data
+    depends_on:
+      setup:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -u elastic:${ELASTIC_PASSWORD} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -E 'my-cluster'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - internal
 
-#   kibana:
-#     image: kibana
-#     build:
-#       context: ./ELK/kibana
-#       dockerfile: Dockerfile
-#     container_name: kibana
-#     labels:
-#       co.elastic.logs/module: kibana
-#     environment:
-#       - SERVERNAME=kibana
-#       - SERVER_PUBLICBASEURL=https://localhost/kibana
-#       - SERVER_REWRITEBASEPATH=true
-#       - ELASTICSEARCH_HOSTS=https://es01:9200
-#       - ELASTICSEARCH_USERNAME=kibana_system
-#       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-#       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-#       - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-#       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-#       - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
-#       - XPACK_REPORTING_ROLES_ENABLED=false
-#       - XPACK_REPORTING_KIBANASERVER_HOSTNAME=localhost
-#     volumes:
-#       - certs:/usr/share/kibana/config/certs
-#       - kibana_data:/usr/share/kibana/data
-#     depends_on:
-#       es01:
-#         condition: service_healthy
-#     healthcheck:
-#       test:
-#         [
-#           "CMD-SHELL",
-#           "curl -f -k https://localhost:5601/kibana/api/status || exit 1"
-#         ]
-#       interval: 10s
-#       timeout: 10s
-#       retries: 120
-#     networks:
-#       - internal
+  kibana:
+    image: kibana
+    build:
+      context: ./ELK/kibana
+      dockerfile: Dockerfile
+    container_name: kibana
+    labels:
+      co.elastic.logs/module: kibana
+    environment:
+      - SERVERNAME=kibana
+      - SERVER_PUBLICBASEURL=https://localhost/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+      - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_REPORTING_ROLES_ENABLED=false
+      - XPACK_REPORTING_KIBANASERVER_HOSTNAME=localhost
+    volumes:
+      - certs:/usr/share/kibana/config/certs
+      - kibana_data:/usr/share/kibana/data
+    depends_on:
+      es01:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f -k https://localhost:5601/kibana/api/status || exit 1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - internal
 
-#   logstash:
-#     image: logstash
-#     build:
-#       context: ./ELK/logstash
-#       dockerfile: Dockerfile
-#     container_name: logstash
-#     labels:
-#       co.elastic.logs/module: logstash
-#     environment:
-#       - LS_JAVA_OPTS=-Xmx512m -Xms512m
-#       - NODE_NAME="logstash"
-#       - xpack.monitoring.enabled=false
-#       - ELASTIC_USER=elastic
-#       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-#       - ELASTIC_HOSTS=https://es01:9200
-#     volumes:
-#       - proxy_logs:/var/log/nginx
-#       - logstash_data:/usr/share/logstash/data
-#       - certs:/usr/share/logstash/certs
-#     depends_on:
-#       es01:
-#         condition: service_healthy
-#       kibana:
-#         condition: service_healthy
-#     networks:
-#       - internal
+  logstash:
+    image: logstash
+    build:
+      context: ./ELK/logstash
+      dockerfile: Dockerfile
+    container_name: logstash
+    labels:
+      co.elastic.logs/module: logstash
+    environment:
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+      - NODE_NAME="logstash"
+      - xpack.monitoring.enabled=false
+      - ELASTIC_USER=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_HOSTS=https://es01:9200
+    volumes:
+      - proxy_logs:/var/log/nginx
+      - logstash_data:/usr/share/logstash/data
+      - certs:/usr/share/logstash/certs
+    depends_on:
+      es01:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    networks:
+      - internal
 
 networks:
   internal:
